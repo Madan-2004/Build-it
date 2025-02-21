@@ -1,0 +1,94 @@
+.council-container {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .title {
+    color: #007ea7;
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .council-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .council-card {
+    background-color: #f7f7f7;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+  }
+  
+  .council-card h2 {
+    color: #007ea7;
+    margin-bottom: 10px;
+  }
+  
+  .council-image {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+  
+  .error {
+    color: red;
+  }
+  
+  .council-details {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007ea7;
+    margin-bottom: 20px;
+  }
+  
+  .club-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    padding: 10px;
+  }
+  
+  .club-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: left;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .club-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .club-header h3 {
+    font-size: 1.5rem;
+    color: #007ea7;
+    margin-bottom: 5px;
+  }
+  
+  .club-head {
+    font-size: 1rem;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  .club-description {
+    font-size: 1rem;
+    color: #666;
+    margin-top: 10px;
+  }
+  
