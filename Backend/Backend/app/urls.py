@@ -1,12 +1,23 @@
 from django.urls import path
-from .views import get_councils, get_council_detail, get_clubs, create_council, delete_council,clubs_by_council
+from .views import (
+    get_councils,
+    get_council_detail,
+    get_clubs,
+    create_council,
+    delete_council,
+    clubs_by_council_crud,
+    club_crud,
+)
 
 urlpatterns = [
-    path('api/councils/', get_councils, name="get_councils"), 
-    path('api/councils/<int:council_id>/', get_council_detail, name="get_council_detail"),
-    path('api/councils/create/', create_council, name="create_council"),
-    path('api/councils/delete/<int:council_id>/', delete_council, name="delete_council"),
-    path('api/council/<int:council_id>/clubs/', clubs_by_council, name='clubs-by-council'),
-    
-    path('api/clubs/', get_clubs, name="get_clubs"),
+    # Councils
+    path("api/councils/", get_councils, name="get_councils"),  # Get all councils
+    path("api/councils/<str:council_name>/", get_council_detail, name="get_council_detail"),  # Get single council
+    path("api/councils/create/", create_council, name="create_council"),  # Create council
+    path("api/councils/<int:council_id>/delete/", delete_council, name="delete_council"),  # Delete council
+
+    # Clubs
+    path("api/clubs/", get_clubs, name="get_clubs"),  # Get all clubs
+    path("api/councils/<str:council_name>/clubs/", clubs_by_council_crud, name="clubs_by_council"),  # Clubs under a specific council
+    path("api/councils/<str:council_name>/clubs/<int:club_id>/", club_crud, name="club_crud"),  # CRUD for individual clubs
 ]

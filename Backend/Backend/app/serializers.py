@@ -7,7 +7,7 @@ class CouncilSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ClubSerializer(serializers.ModelSerializer):
-    council = CouncilSerializer()  # Nested serialization
+    council = serializers.PrimaryKeyRelatedField(queryset=Council.objects.all())
 
     class Meta:
         model = Club

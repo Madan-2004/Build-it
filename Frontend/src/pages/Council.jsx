@@ -32,13 +32,11 @@ function Council() {
 
       <div className="council-list">
         {councils.map((council) => (
-          <Link key={council.id} to={`/council/${council.id}`} className="council-card">
-            <h2>{council.name}</h2>
-            <p>{council.description}</p>
-            {council.image && (
-              <img src={`${BASE_URL}${council.image}`} alt={council.name} />
-            )}
-          </Link>
+         <Link key={council.id} to={`/council/${encodeURIComponent(council.name)}/clubs`} className="council-card">
+         <h2>{council.name}</h2>
+         <p>{council.description}</p>
+         {council.image && <img src={`${BASE_URL}${council.image}`} alt={council.name} />}
+       </Link>       
         ))}
       </div>
     </div>

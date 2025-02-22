@@ -18,7 +18,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/council" element={<Council />} />
-        <Route path="/council/:councilId" element={<CouncilDetails />} />
+        <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
       </Routes>
     </BrowserRouter>
   );
