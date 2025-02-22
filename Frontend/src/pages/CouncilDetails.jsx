@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom"; // Changed for React
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import "../styles/councildetails.css";
 
@@ -31,63 +31,21 @@ const ClubForm = ({ club, onSubmit, onClose }) => {
             <div className="modal-content">
                 <h2>{club ? "Edit Club" : "Add New Club"}</h2>
                 <form onSubmit={handleSubmit}>
-                    <label>Club Name</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <label>Club Head</label>
-                    <input
-                        type="text"
-                        name="head"
-                        value={formData.head}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <label>Description</label>
-                    <input
-                        type="text"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <label>Upcoming Events</label>
-                    <input
-                        type="text"
-                        name="upcoming_events"
-                        value={formData.upcoming_events}
-                        onChange={handleChange}
-                    />
-
-                    <label>Members</label>
-                    <input
-                        type="text"
-                        name="members"
-                        value={formData.members}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <label>Projects</label>
-                    <input
-                        type="text"
-                        name="projects"
-                        value={formData.projects}
-                        onChange={handleChange}
-                    />
-
+                    {["name", "head", "description", "upcoming_events", "members", "projects"].map((field) => (
+                        <div key={field}>
+                            <label>{field.replace("_", " ").toUpperCase()}</label>
+                            <input
+                                type="text"
+                                name={field}
+                                value={formData[field]}
+                                onChange={handleChange}
+                                required={field !== "upcoming_events" && field !== "projects"}
+                            />
+                        </div>
+                    ))}
                     <div className="modal-actions">
-                        <button type="button" onClick={onClose}>
-                            Cancel
-                        </button>
-                        <button type="submit">{club ? "Update Club" : "Create Club"}</button>
+                        <button type="button" onClick={onClose} className="btn-cancel">Cancel</button>
+                        <button type="submit" className="btn-submit">{club ? "Update" : "Create"}</button>
                     </div>
                 </form>
             </div>
@@ -98,7 +56,6 @@ const ClubForm = ({ club, onSubmit, onClose }) => {
 const CouncilDetails = () => {
     const { councilName } = useParams();
     const [clubs, setClubs] = useState([]);
-    const [councilName1, setcouncilName1] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showForm, setShowForm] = useState(false);
@@ -108,12 +65,10 @@ const CouncilDetails = () => {
         setLoading(true);
         axios.get(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/`)
             .then((response) => {
-                setcouncilName1(response.data.council);
                 setClubs(response.data.clubs);
                 setLoading(false);
             })
             .catch((error) => {
-                console.error("Error fetching clubs:", error);
                 setError("Failed to load clubs");
                 setLoading(false);
             });
@@ -122,43 +77,29 @@ const CouncilDetails = () => {
     useEffect(() => {
         fetchClubs();
     }, [councilName]);
-    
-    const handleAddClub = async (formData) => {
-        try {
-            await axios.post(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/`, formData);
-            fetchClubs();
-            setShowForm(false);
-        } catch (error) {
-            setError("Failed to add club");
-            console.error("Error adding club:", error);
-        }
-    };
 
-    const handleUpdateClub = async (formData) => {
+    const handleAddOrUpdateClub = async (formData) => {
         try {
-            await axios.put(
-                `${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/${editingClub.id}/`,
-                formData
-            );
+            if (editingClub) {
+                await axios.put(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/${editingClub.id}/`, formData);
+            } else {
+                await axios.post(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/`, formData);
+            }
             fetchClubs();
-            setEditingClub(null);
             setShowForm(false);
+            setEditingClub(null);
         } catch (error) {
-            setError("Failed to update club");
-            console.error("Error updating club:", error);
+            setError("Failed to save club");
         }
     };
 
     const handleDeleteClub = async (clubId) => {
         if (window.confirm("Are you sure you want to delete this club?")) {
             try {
-                await axios.delete(
-                    `${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/${clubId}/`
-                );
+                await axios.delete(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/${clubId}/`);
                 fetchClubs();
             } catch (error) {
                 setError("Failed to delete club");
-                console.error("Error deleting club:", error);
             }
         }
     };
@@ -168,44 +109,36 @@ const CouncilDetails = () => {
             <div className="council-header">
                 <h1 className="council-title">{councilName}</h1>
                 <p className="council-subtitle">Student Clubs & Organizations</p>
-                <button className="btn-add" onClick={() => {
-                    setEditingClub(null);
-                    setShowForm(true);
-                }}>
-                    Add New Club
+                <button className="btn-add" onClick={() => { setEditingClub(null); setShowForm(true); }}>
+                    + Add Club
                 </button>
             </div>
 
             {showForm && (
-                <ClubForm
-                    club={editingClub}
-                    onSubmit={editingClub ? handleUpdateClub : handleAddClub}
-                    onClose={() => setShowForm(false)}
-                />
+                <ClubForm club={editingClub} onSubmit={handleAddOrUpdateClub} onClose={() => setShowForm(false)} />
             )}
 
-            {loading && (
+            {loading ? (
                 <div className="loading-state">
                     <div className="loading-spinner"></div>
                     <p>Loading clubs...</p>
                 </div>
-            )}
-
-            {error && <div className="error-state">{error}</div>}
-
-            {!loading && !error && (
+            ) : error ? (
+                <div className="error-state">{error}</div>
+            ) : (
                 <div className="clubs-grid">
                     {clubs.map((club) => (
                         <div key={club.id} className="club-card">
-                            <h3>{club.name}</h3>
-                            <p>{club.description}</p>
-                            <button onClick={() => {
-                                setEditingClub(club);
-                                setShowForm(true);
-                            }}>
-                                Edit
-                            </button>
-                            <button onClick={() => handleDeleteClub(club.id)}>Delete</button>
+                            <h3 className="club-name">{club.name}</h3>
+                            <p className="club-head"><strong>Head:</strong> {club.head}</p>
+                            <p className="club-description">{club.description}</p>
+                            {club.upcoming_events && <p className="club-events"><strong>Upcoming Events:</strong> {club.upcoming_events}</p>}
+                            <p className="club-members"><strong>Members:</strong> {club.members}</p>
+                            {club.projects && <p className="club-projects"><strong>Projects:</strong> {club.projects}</p>}
+                            <div className="club-actions">
+                                <button className="btn-edit" onClick={() => { setEditingClub(club); setShowForm(true); }}>Edit</button>
+                                <button className="btn-delete" onClick={() => handleDeleteClub(club.id)}>Delete</button>
+                            </div>
                         </div>
                     ))}
                 </div>

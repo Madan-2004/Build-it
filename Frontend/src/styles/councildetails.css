@@ -192,3 +192,81 @@
     text-align: center;
     padding: 10px;
 }
+
+.council-details-container {
+    padding: 20px;
+    text-align: center;
+}
+
+.council-header {
+    margin-bottom: 20px;
+}
+
+.council-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.btn-add {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.clubs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.club-card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+.club-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.club-description {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.club-head {
+    color: #2c3e50;
+}
+
+.club-events, .club-members, .club-projects {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.club-actions {
+    margin-top: 10px;
+}
+
+.btn-edit, .btn-delete {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-edit {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #e74c3c;
+    color: white;
+}
