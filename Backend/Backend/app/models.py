@@ -9,15 +9,75 @@ class Council(models.Model):
     def __str__(self):
         return self.name
 
+# class User(models.Model):
+#     STATUS_CHOICES = [
+#         ("head", "Head"),
+#         ("member", "Member"),
+#     ]
 
-class Club(models.Model):
-    name = models.CharField(max_length=255)
-    head = models.CharField(max_length=255)
-    description = models.TextField()
-    upcoming_events = models.TextField(blank=True, null=True)
-    members = models.TextField()
-    projects = models.TextField(blank=True, null=True)
-    council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")
+#     name = models.CharField(max_length=100)
+#     email = models.EmailField(unique=True)
+#     roll_no = models.CharField(max_length=20, unique=True)
+#     branch = models.CharField(max_length=100)
+#     degree = models.CharField(max_length=100)
+#     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+
+#     def __str__(self):
+#         return f"{self.name} ({self.status})"
+    
+# class Club(models.Model):
+#     name = models.CharField(max_length=255)  # Mandatory
+#     head = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs")  # Optional
+#     description = models.TextField(blank=True, null=True)  # Optional
+#     upcoming_events = models.TextField(blank=True, null=True)  # Optional
+#     members = models.ManyToManyField(User, related_name="member_clubs", blank=True)  # Optional
+#     projects = models.TextField(blank=True, null=True)  # Optional
+#     council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
+
+#     def __str__(self):
+#         return self.name
+
+#     def __str__(self):
+#         return self.name
+    
+class User(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    roll_no = models.CharField(max_length=20, unique=True)
+    branch = models.CharField(max_length=100)
+    degree = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
+class Club(models.Model):
+    name = models.CharField(max_length=255)  # Mandatory
+    head = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs"
+    )  # Optional
+    description = models.TextField(blank=True, null=True)  # Optional
+    upcoming_events = models.TextField(blank=True, null=True)  # Optional
+    projects = models.TextField(blank=True, null=True)  # Optional
+    council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
+
+    # Many-to-Many relationship with users via an intermediate model
+    members = models.ManyToManyField(User, through="ClubMembership", related_name="member_clubs", blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ClubMembership(models.Model):
+    STATUS_CHOICES = [
+        ("head", "Head"),
+        ("member", "Member"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="member")
+
+    class Meta:
+        unique_together = ("user", "club")  # Prevent duplicate memberships
+
+    def __str__(self):
+        return f"{self.user.name} - {self.club.name} ({self.status})"    

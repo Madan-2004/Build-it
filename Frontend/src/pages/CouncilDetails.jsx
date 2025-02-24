@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams,Link } from "react-router-dom";
 import axios from "axios";
 import "../styles/councildetails.css";
 
@@ -66,6 +66,7 @@ const CouncilDetails = () => {
         axios.get(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/`)
             .then((response) => {
                 setClubs(response.data.clubs);
+                console.log(response.data.clubs);
                 setLoading(false);
             })
             .catch((error) => {
@@ -129,11 +130,12 @@ const CouncilDetails = () => {
                 <div className="clubs-grid">
                     {clubs.map((club) => (
                         <div key={club.id} className="club-card">
-                            <h3 className="club-name">{club.name}</h3>
-                            <p className="club-head"><strong>Head:</strong> {club.head}</p>
+                            <Link to={`/clubs/${encodeURIComponent(club.name)}`} className="club-link">
+                                <h3 className="club-name">{club.name}</h3>
+                                </Link>
+                            <p className="club-head"><strong>Head:</strong> {club?.head?.name}</p>
                             <p className="club-description">{club.description}</p>
                             {club.upcoming_events && <p className="club-events"><strong>Upcoming Events:</strong> {club.upcoming_events}</p>}
-                            <p className="club-members"><strong>Members:</strong> {club.members}</p>
                             {club.projects && <p className="club-projects"><strong>Projects:</strong> {club.projects}</p>}
                             <div className="club-actions">
                                 <button className="btn-edit" onClick={() => { setEditingClub(club); setShowForm(true); }}>Edit</button>

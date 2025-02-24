@@ -7,6 +7,7 @@ from .views import (
     delete_council,
     clubs_by_council_crud,
     club_crud,
+    get_club_by_name
 )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
 
     # Clubs
     path("api/clubs/", get_clubs, name="get_clubs"),  # Get all clubs
+    path("api/clubs/<str:club_name>/", get_club_by_name, name="club-detail"),
     path("api/councils/<str:council_name>/clubs/", clubs_by_council_crud, name="clubs_by_council"),  # Clubs under a specific council
     path("api/councils/<str:council_name>/clubs/<int:club_id>/", club_crud, name="club_crud"),  # CRUD for individual clubs
 ]

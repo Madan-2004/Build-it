@@ -8,6 +8,7 @@ import Events from './pages/events/Events';
 import Contact from './pages/contact';
 import Council from './pages/Council';
 import CouncilDetails from './pages/CouncilDetails';
+import ClubProfile from './pages/ClubProfile';
 // import SignUp from './pages/signup';
 // import SignIn from './pages/signin';
 
@@ -22,6 +23,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/council" element={<Council />} />
         <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
+        <Route path="/clubs/:clubName" element={<ClubProfile />} />
       </Routes>
       <Footer />
     </BrowserRouter>

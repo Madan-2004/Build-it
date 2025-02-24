@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Council, Club
-from .serializers import CouncilSerializer, ClubSerializer
+from .models import Council, Club, User, ClubMembership
+from .serializers import CouncilSerializer, ClubSerializer, UserSerializer
 
 # Get all councils
 @api_view(['GET'])
@@ -48,10 +48,11 @@ def clubs_by_council(request, council_name):
     print(council_name)
     council = get_object_or_404(Council, name=council_name)
     clubs = Club.objects.filter(council=council)
-
+    serializer = ClubSerializer(clubs, many=True)
     data = {
         "council": council.name,
-        "clubs": list(clubs.values("id", "name", "head", "description", "members", "projects"))
+        "clubs": serializer.data
+        # "clubs": list(clubs.values("id", "name", "head", "description", "members", "projects"))
     }
     return JsonResponse(data)
 
@@ -73,31 +74,86 @@ def clubs_by_council_crud(request, council_name):
         })
 
     elif request.method == 'POST':
-        data = {**request.data, 'council': council.id}  # Use ID internally
-        serializer = ClubSerializer(data=data)
+        head_id = request.data.get("head")
+        member_ids = request.data.get("members", [])
+        head = None
+        if head_id:
+            head = get_object_or_404(User, id=head_id)
+        club_data = {**request.data, "council": council.id, "head": head.id if head else None}
+        serializer = ClubSerializer(data=club_data)
         if serializer.is_valid():
-            serializer.save()
+            club = serializer.save()
+
+            # Add members
+            for member_id in member_ids:
+                member = get_object_or_404(User, id=member_id)
+                ClubMembership.objects.create(user=member, club=club, status="member")
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'DELETE'])
+# @api_view(['GET', 'PUT', 'DELETE'])
+# def club_crud(request, council_name, club_id):
+#     council = get_object_or_404(Council, name=council_name)
+#     club = get_object_or_404(Club, council=council, pk=club_id)
+
+#     if request.method == 'GET':
+#         serializer = ClubSerializer(club)
+#         return Response(serializer.data)
+
+#     elif request.method == 'PUT':
+#         print(request.data)
+#         data = {**request.data, 'council': council.id}  
+#         serializer = ClubSerializer(club, data=data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     elif request.method == 'DELETE':
+#         club.delete()
+#         return Response({"message": "Club deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+@api_view(["GET", "PUT", "DELETE"])
 def club_crud(request, council_name, club_id):
     council = get_object_or_404(Council, name=council_name)
     club = get_object_or_404(Club, council=council, pk=club_id)
 
-    if request.method == 'GET':
+    if request.method == "GET":
         serializer = ClubSerializer(club)
         return Response(serializer.data)
 
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         print(request.data)
-        data = {**request.data, 'council': council.id}  
-        serializer = ClubSerializer(club, data=data, partial=True)
+        head_id = request.data.get("head")
+        member_ids = request.data.get("members", [])
+
+        # Validate the head user
+        head = None
+        if head_id:
+            head = get_object_or_404(User, id=head_id)
+
+        # Update club details
+        club_data = {**request.data, "council": council.id, "head": head.id if head else None}
+        serializer = ClubSerializer(club, data=club_data, partial=True)
+
         if serializer.is_valid():
-            serializer.save()
+            club = serializer.save()
+
+            # Update members
+            ClubMembership.objects.filter(club=club).delete()  # Clear existing members
+            for member_id in member_ids:
+                member = get_object_or_404(User, id=member_id)
+                ClubMembership.objects.create(user=member, club=club, status="member")
+
             return Response(serializer.data)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         club.delete()
         return Response({"message": "Club deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+@api_view(["GET"])
+def get_club_by_name(request, club_name):
+    club = get_object_or_404(Club, name=club_name)
+    serializer = ClubSerializer(club)
+    return Response(serializer.data)    
