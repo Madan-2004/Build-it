@@ -23,12 +23,12 @@ export default function Navbar() {
   return (
     <Nav>
       <NavLogo to="/">
-          <LogoImage src={Logo} alt="Institute Logo" />
-          <LogoText>
-            <InstituteName>IIT Indore</InstituteName>
-            <SubHeading>Students' Gymkhana</SubHeading>
-          </LogoText>
-        </NavLogo>
+        <LogoImage src={Logo} alt="Institute Logo" />
+        <LogoText>
+          <InstituteName>IIT Indore</InstituteName>
+          <SubHeading>Students' Gymkhana</SubHeading>
+        </LogoText>
+      </NavLogo>
 
       <Bars onClick={toggleMenu} aria-label="Open navigation menu" />
 
@@ -59,6 +59,15 @@ export default function Navbar() {
           })}
         >
           COUNCIL
+        </NavLink>
+        <NavLink
+          to="/events"
+          onClick={toggleMenu}
+          style={({ isActive }) => ({
+            color: isActive ? "#f7f7f7" : "#007ea7",
+          })}
+        >
+          EVENTS
         </NavLink>
         <NavLink
           to="/elections"

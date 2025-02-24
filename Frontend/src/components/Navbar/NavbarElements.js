@@ -20,6 +20,8 @@ export const NavLogo = styled(Link)`
   cursor: pointer;
   color: #00a8e8; 
   display: flex;
+  position: absolute;
+  left: 50px;
   align-items: center;
   gap: 1rem;
   text-decoration: none;
