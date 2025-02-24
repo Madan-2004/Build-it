@@ -43,9 +43,11 @@ class Council(models.Model):
 class User(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    roll_no = models.CharField(max_length=20, unique=True)
-    branch = models.CharField(max_length=100)
-    degree = models.CharField(max_length=100)
+    image = models.ImageField(upload_to="user_images/", blank=True, null=True)  # Optional profile picture
+
+    def __str__(self):
+        return self.name
+
 
     def __str__(self):
         return self.name
@@ -58,6 +60,7 @@ class Club(models.Model):
     upcoming_events = models.TextField(blank=True, null=True)  # Optional
     projects = models.TextField(blank=True, null=True)  # Optional
     council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
+    image = models.ImageField(upload_to="club_images/", blank=True, null=True)
 
     # Many-to-Many relationship with users via an intermediate model
     members = models.ManyToManyField(User, through="ClubMembership", related_name="member_clubs", blank=True)

@@ -128,22 +128,49 @@ const CouncilDetails = () => {
                 <div className="error-state">{error}</div>
             ) : (
                 <div className="clubs-grid">
-                    {clubs.map((club) => (
-                        <div key={club.id} className="club-card">
-                            <Link to={`/clubs/${encodeURIComponent(club.name)}`} className="club-link">
-                                <h3 className="club-name">{club.name}</h3>
-                                </Link>
-                            <p className="club-head"><strong>Head:</strong> {club?.head?.name}</p>
-                            <p className="club-description">{club.description}</p>
-                            {club.upcoming_events && <p className="club-events"><strong>Upcoming Events:</strong> {club.upcoming_events}</p>}
-                            {club.projects && <p className="club-projects"><strong>Projects:</strong> {club.projects}</p>}
-                            <div className="club-actions">
-                                <button className="btn-edit" onClick={() => { setEditingClub(club); setShowForm(true); }}>Edit</button>
-                                <button className="btn-delete" onClick={() => handleDeleteClub(club.id)}>Delete</button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                {clubs.map((club) => (
+                  <div key={club.id} className="club-card shadow-lg rounded-lg overflow-hidden bg-white flex p-4 hover:shadow-2xl transition-shadow">
+                    {/* Club Image on the Left */}
+                    {club.image ? (
+                      <img src={club.image} alt={club.name} className="w-32 h-32 object-cover rounded-lg" />
+                    ) : (
+                      <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg">
+                        <span className="text-gray-500">No Image</span>
+                      </div>
+                    )}
+              
+                    {/* Club Details on the Right */}
+                    <div className="flex flex-col justify-between flex-grow ml-4">
+                      <div>
+                        <Link to={`/clubs/${encodeURIComponent(club.name)}`} className="text-xl font-bold text-blue-600 hover:underline">
+                          {club.name}
+                        </Link>
+                        <p className="text-gray-700 text-sm mt-1">
+                            {club.description.length > 100 ? `${club.description.slice(0, 100)}...` : club.description}
+                        </p>
+                      </div>
+              
+                      {/* Club Head */}
+                      {club.head && (
+                        <p className="text-gray-600 text-sm mt-2">
+                          <strong>Head:</strong> {club.head.name}
+                        </p>
+                      )}
+              
+                      {/* Club Actions */}
+                      <div className="mt-4 flex gap-3">
+                        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition" onClick={() => { setEditingClub(club); setShowForm(true); }}>
+                          Edit
+                        </button>
+                        <button className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition" onClick={() => handleDeleteClub(club.id)}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
             )}
         </div>
     );

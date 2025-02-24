@@ -11,7 +11,7 @@ class CouncilSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "name", "email", "roll_no", "branch", "degree"]
+        fields = ["id", "name", "email", "image"]
 
 
 class ClubMembershipSerializer(serializers.ModelSerializer):
