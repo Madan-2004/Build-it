@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
@@ -152,8 +153,74 @@ def club_crud(request, council_name, club_id):
     elif request.method == "DELETE":
         club.delete()
         return Response({"message": "Club deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    
 @api_view(["GET"])
 def get_club_by_name(request, club_name):
     club = get_object_or_404(Club, name=club_name)
     serializer = ClubSerializer(club)
-    return Response(serializer.data)    
+    return Response(serializer.data)
+
+
+class AddMemberView(APIView):
+    """Add a new member to a club."""
+
+    def post(self, request, club_id):
+        club = get_object_or_404(Club, id=club_id)
+        name = request.data.get("name")
+        email = request.data.get("email")
+        role = request.data.get("role", "Member")
+
+        if not name or not email:
+            return Response({"error": "Name and email are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if user already exists or create a new one
+        user, created = User.objects.get_or_create(email=email, defaults={"name": name})
+
+        # Add user as a club member
+        membership, created = ClubMembership.objects.get_or_create(club=club, user=user, defaults={"status": role})
+
+        if not created:
+            return Response({"error": "User is already a member."}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(ClubSerializer(club).data, status=status.HTTP_201_CREATED)
+
+
+class EditMemberView(APIView):
+    """Edit a club member's details (name, email, role)."""
+
+    def put(self, request, club_id, user_id):
+        club = get_object_or_404(Club, id=club_id)
+        membership = get_object_or_404(ClubMembership, club=club, user_id=user_id)
+
+        name = request.data.get("name")
+        email = request.data.get("email")
+        role = request.data.get("role")
+
+        if not name or not email or not role:
+            return Response({"error": "Name, email, and role are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update user details
+        user = membership.user
+        user.name = name
+        user.email = email
+        user.save()
+
+        # Update membership role
+        membership.status = role
+        membership.save()
+
+        return Response(ClubSerializer(club).data, status=status.HTTP_200_OK)
+
+
+class RemoveMemberView(APIView):
+    """Remove a member from a club."""
+
+    def delete(self, request, club_id, user_id):
+        club = get_object_or_404(Club, id=club_id)
+        membership = ClubMembership.objects.filter(club=club, user_id=user_id).first()
+
+        if not membership:
+            return Response({"error": "User is not a member of this club."}, status=status.HTTP_404_NOT_FOUND)
+
+        membership.delete()
+        return Response(ClubSerializer(club).data, status=status.HTTP_200_OK)    
