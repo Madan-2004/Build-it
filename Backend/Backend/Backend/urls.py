@@ -37,13 +37,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from Backend.views import google_login, google_callback 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls')),  # Include councils app URLs
-    path('accounts/', include('allauth.urls')),  # allauth URLs
-    path('login/google/', google_login, name='google_login'),
-    path('login/google/callback/', google_callback, name='google_callback'),
 ]
 
 if settings.DEBUG:
