@@ -4,13 +4,12 @@ import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import Home from './pages/home/Home';
 import About from './pages/aboutus/AboutUs';
-import Events from './pages/events/Events';
+import Events from './pages/Events/Events';
+import EventDetails from './pages/Events/EventDetails';  // Import Event Details Page
 import Contact from './pages/contact';
 import Council from './pages/Council';
 import CouncilDetails from './pages/CouncilDetails';
 import ClubProfile from './pages/ClubProfile';
-// import SignUp from './pages/signup';
-// import SignIn from './pages/signin';
 
 function App() {
   return (
@@ -20,6 +19,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/events" element={<Events />} />
+        <Route path="/events/:eventTitle" element={<EventDetails />} /> {/* Event Details Route */}
         <Route path="/contact" element={<Contact />} />
         <Route path="/council" element={<Council />} />
         <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
@@ -31,4 +31,3 @@ function App() {
 }
 
 export default App;
-
