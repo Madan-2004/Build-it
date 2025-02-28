@@ -1,4 +1,6 @@
 from django.urls import path
+from .views import google_login
+from rest_framework_simplejwt.views import TokenRefreshView,TokenVerifyView
 from .views import (
     get_councils,
     get_council_detail,
@@ -8,7 +10,7 @@ from .views import (
     clubs_by_council_crud,
     club_crud,
     get_club_by_name
-    , AddMemberView, RemoveMemberView, EditMemberView
+    , AddMemberView, RemoveMemberView, EditMemberView,get_user_profile
 )
 
 urlpatterns = [
@@ -26,4 +28,10 @@ urlpatterns = [
     path("api/clubs/<int:club_id>/add-member/", AddMemberView.as_view(), name="add-member"),
     path("api/clubs/<int:club_id>/edit-member/<int:user_id>/", EditMemberView.as_view(), name="edit-member"),
     path("api/clubs/<int:club_id>/remove-member/<int:user_id>/", RemoveMemberView.as_view(), name="remove-member"),
+
+    #google
+    path('api/auth/google/', google_login, name='google_login'),
+    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('api/auth/profile/', get_user_profile, name='user_profile'),
 ]

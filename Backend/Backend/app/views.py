@@ -303,3 +303,84 @@ class RemoveMemberView(APIView):
         
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+import requests
+from django.contrib.auth import get_user_model
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
+import uuid
+
+User = get_user_model()
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_login(request):
+    token = request.data.get("token")
+    if not token:
+        return Response({"error": "Token is required"}, status=400)
+    
+    google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
+    response = requests.get(google_url)
+    
+    if response.status_code != 200:
+        return Response({"error": "Invalid Google token"}, status=400)
+    
+    user_info = response.json()
+    email = user_info.get("email")
+    
+    if not email:
+        return Response({"error": "Email not provided by Google"}, status=400)
+    
+    # Extract name or use email prefix as username
+    name = user_info.get("name", email.split('@')[0])
+    
+    # Check if user exists
+    try:
+        user = User.objects.get(email=email)
+        # Update user info if needed
+        if user.username != name:
+            user.username = name
+            user.save()
+    except User.DoesNotExist:
+        # Create new user
+        # Generate unique username if necessary
+        username = name
+        if User.objects.filter(username=username).exists():
+            username = f"{name}_{uuid.uuid4().hex[:8]}"
+        
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=user_info.get('given_name', ''),
+            last_name=user_info.get('family_name', '')
+        )
+    
+    # Generate JWT tokens
+    refresh = RefreshToken.for_user(user)
+    
+    return Response({
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "name": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        },
+    })
+
+@api_view(['GET'])
+def get_user_profile(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "email": user.email,
+        "name": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+    })

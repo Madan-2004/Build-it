@@ -87,6 +87,15 @@ export default function Navbar() {
         >
           FEEDBACK
         </NavLink>
+        <NavLink
+          to="/profile"
+          onClick={toggleMenu}
+          style={({ isActive }) => ({
+            color: isActive ? "#f7f7f7" : "#007ea7",
+          })}
+        >
+          PROFILE
+        </NavLink>
 
         <NavBtn>
           <NavBtnLink to="/contact" onClick={toggleMenu}>
