@@ -26,6 +26,9 @@ from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'b51e511a-d7b5-4178-9ab8-0085d8aec941')
+GOOGLE_OAUTH2_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_OAUTH2_REDIRECT_URI = os.environ.get('REDIRECT_URI', 'http://localhost:8000/api/auth/google/callback')
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -83,8 +86,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app.middleware.auth_cookie_middleware',  # Add this if you're using custom middleware
     'allauth.account.middleware.AccountMiddleware'
+    
 ]
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend URL
 ]
@@ -161,12 +167,20 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+SESSION_COOKIE_SECURE = True
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_COOKIE': 'access_token',  # Cookie name for the access token
+    'AUTH_COOKIE_SECURE': not DEBUG,  # Set to True in production
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_SAMESITE': 'None',
 }
 
 SITE_ID = 1

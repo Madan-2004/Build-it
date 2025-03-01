@@ -1,32 +1,22 @@
 import React from 'react';
-import { GoogleLogin } from '@react-oauth/google';
 import { authService } from '../services/auth';
 
-const GoogleLoginButton = ({ onLoginSuccess }) => {
-  const handleSuccess = async (tokenResponse) => {
-    try {
-      const user = await authService.googleLogin(tokenResponse);
-      if (onLoginSuccess) {
-        onLoginSuccess(user);
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  };
-
-  const handleError = () => {
-    console.error('Google login failed');
+const GoogleLoginButton = () => {
+  const handleGoogleLogin = () => {
+    authService.initiateGoogleLogin();
   };
 
   return (
-    <div className="google-login-container">
-      <GoogleLogin
-        onSuccess={handleSuccess}
-        onError={handleError}
-        useOneTap
-      />
-    </div>
+    <button 
+      onClick={handleGoogleLogin}
+      className="google-btn"
+    >
+      Sign in with Google
+    </button>
   );
 };
 
 export default GoogleLoginButton;
+
+// src/pages/LoginPage.jsx
+

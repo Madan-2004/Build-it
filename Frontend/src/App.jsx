@@ -1,6 +1,10 @@
-﻿import React, { useState, useEffect, Profiler } from 'react';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { GoogleOAuthProvider } from '@react-oauth/google';
+﻿import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import CallbackPage from './pages/CallbackPage';
+import Dashboard from './pages/Dashboard1';
+import { authService } from './services/auth';
+import AuthSuccess from './pages/AuthSuccess';
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import Home from './pages/home/Home';
@@ -12,51 +16,19 @@ import Council from './pages/Council';
 import CouncilDetails from './pages/CouncilDetails';
 import ClubProfile from './pages/ClubProfile';
 import Profile from './pages/Profile';
-import GoogleLoginButton from './components/GoogleLoginButton';
-import { authService } from './services/auth';
 import './Styles/index.css';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Protected route component
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkLoggedInStatus = async () => {
-      if (authService.isLoggedIn()) {
-        try {
-          const userProfile = await authService.getUserProfile();
-          setUser(userProfile);
-        } catch (error) {
-          authService.logout();
-        }
-      }
-      setLoading(false);
-    };
-
-    checkLoggedInStatus();
-  }, []);
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    authService.logout();
-    setUser(null);
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <GoogleOAuthProvider clientId="343307486631-rgmf2b0f05h1jaij0ebbmip2jculivqo.apps.googleusercontent.com">
-      <BrowserRouter>
-        <Navbar />
+ 
   
-
-        <Routes>
-          <Route path="/" element={<Home />} />
+  return (
+    <Router>
+       <Navbar />
+      <Routes>
+      <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:eventTitle" element={<EventDetails />} />
@@ -64,14 +36,33 @@ function App() {
           <Route path="/council" element={<Council />} />
           <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
           <Route path="/clubs/:clubName" element={<ClubProfile />} />
-          <Route 
-            path="/profile" 
-            element={<Profile user={user} onLogout={handleLogout} onLoginSuccess={handleLoginSuccess} />} 
-          />
-        </Routes>
-        <Footer />
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<CallbackPage />} />
+        <Route path="/auth/success" element={<AuthSuccess />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Redirect to dashboard if logged in, otherwise to login */}
+        <Route 
+          path="/" 
+          element={<Navigate to="/dashboard" replace />} 
+        />
+        
+        {/* Catch all other routes and redirect to dashboard or login */}
+        <Route 
+          path="*" 
+          element={<Navigate to="/dashboard" replace />} 
+        />
+        {/* <Route path="/" element={<Navigate to="/dashboard" />} /> */}
+      </Routes>
+       <Footer />
+    </Router>
   );
 }
 

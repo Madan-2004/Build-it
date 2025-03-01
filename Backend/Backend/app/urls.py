@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import google_login
+# from .views import google_login
 from rest_framework_simplejwt.views import TokenRefreshView,TokenVerifyView
 from .views import (
     get_councils,
@@ -12,6 +12,8 @@ from .views import (
     get_club_by_name
     , AddMemberView, RemoveMemberView, EditMemberView,get_user_profile
 )
+from .views import google_auth_url, google_callback, get_user_profile,check_auth,logout
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     # Councils
@@ -30,8 +32,14 @@ urlpatterns = [
     path("api/clubs/<int:club_id>/remove-member/<int:user_id>/", RemoveMemberView.as_view(), name="remove-member"),
 
     #google
-    path('api/auth/google/', google_login, name='google_login'),
+    # path('api/auth/google/', google_login, name='google_login'),
+    # path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    # path('api/auth/profile/', get_user_profile, name='user_profile'),
+    path('api/auth/google/url/', google_auth_url, name='google_auth_url'),
+    path('api/auth/google/callback/', google_callback, name='google_callback'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/auth/profile/', get_user_profile, name='user_profile'),
+    path('api/auth/check/', check_auth, name='auth_check'),
+    path('api/auth/logout/', logout, name='logout'),
 ]

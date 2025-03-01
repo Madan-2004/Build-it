@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from .models import Council, Club, User, ClubMembership
 from .serializers import CouncilSerializer, ClubSerializer, UserSerializer
 from django.db import transaction
+from rest_framework.permissions import IsAuthenticated
 
 # Get all councils
 @api_view(['GET'])
@@ -305,40 +306,169 @@ class RemoveMemberView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
+# import requests
+# from django.contrib.auth import get_user_model
+# from rest_framework.response import Response
+# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.permissions import AllowAny
+# from rest_framework_simplejwt.tokens import RefreshToken
+# from django.conf import settings
+# import uuid
+
+# User = get_user_model()
+
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def google_login(request):
+#     token = request.data.get("token")
+#     if not token:
+#         return Response({"error": "Token is required"}, status=400)
+    
+#     google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
+#     response = requests.get(google_url)
+    
+#     if response.status_code != 200:
+#         return Response({"error": "Invalid Google token"}, status=400)
+    
+#     user_info = response.json()
+#     email = user_info.get("email")
+    
+#     if not email:
+#         return Response({"error": "Email not provided by Google"}, status=400)
+    
+#     # Extract name or use email prefix as username
+#     name = user_info.get("name", email.split('@')[0])
+    
+#     # Check if user exists
+#     try:
+#         user = User.objects.get(email=email)
+#         # Update user info if needed
+#         if user.username != name:
+#             user.username = name
+#             user.save()
+#     except User.DoesNotExist:
+#         # Create new user
+#         # Generate unique username if necessary
+#         username = name
+#         if User.objects.filter(username=username).exists():
+#             username = f"{name}_{uuid.uuid4().hex[:8]}"
+        
+#         user = User.objects.create_user(
+#             username=username,
+#             email=email,
+#             first_name=user_info.get('given_name', ''),
+#             last_name=user_info.get('family_name', '')
+#         )
+    
+#     # Generate JWT tokens
+#     refresh = RefreshToken.for_user(user)
+    
+#     return Response({
+#         "refresh": str(refresh),
+#         "access": str(refresh.access_token),
+#         "user": {
+#             "id": user.id,
+#             "email": user.email,
+#             "name": user.username,
+#             "first_name": user.first_name,
+#             "last_name": user.last_name,
+#         },
+#     })
+
+# @api_view(['GET'])
+# def get_user_profile(request):
+#     user = request.user
+#     return Response({
+#         "id": user.id,
+#         "email": user.email,
+#         "name": user.username,
+#         "first_name": user.first_name,
+#         "last_name": user.last_name,
+#     })
+
 import requests
+import json
+from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
-from rest_framework.response import Response
+from django.conf import settings
+from django.urls import reverse
+from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.conf import settings
 import uuid
 
 User = get_user_model()
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([AllowAny])
-def google_login(request):
-    token = request.data.get("token")
-    if not token:
-        return Response({"error": "Token is required"}, status=400)
+def google_auth_url(request):
+    """Generate the Google OAuth2 authorization URL"""
+    google_auth_url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    params = {
+        'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+        'redirect_uri': settings.GOOGLE_OAUTH2_REDIRECT_URI,
+        'response_type': 'code',
+        'scope': 'email profile',
+        'access_type': 'offline',
+        'prompt': 'consent',
+        'state': str(uuid.uuid4())  # To prevent CSRF
+    }
     
-    google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
-    response = requests.get(google_url)
+    # Build query string
+    import urllib.parse
+    query_string = urllib.parse.urlencode(params)
+    auth_url = f"{google_auth_url}?{query_string}"
     
-    if response.status_code != 200:
-        return Response({"error": "Invalid Google token"}, status=400)
+    return Response({'auth_url': auth_url})
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def google_callback(request):
+    """Handle the Google OAuth2 callback"""
+    # Extract code from GET parameters if it's a GET request, or from POST data if it's a POST request
+    if request.method == 'GET':
+        code = request.GET.get('code')
+    else:  # POST
+        code = request.data.get('code')
     
-    user_info = response.json()
-    email = user_info.get("email")
+    if not code:
+        return Response({'error': 'Authorization code is required'}, status=400)
     
+    # Exchange code for tokens
+    token_url = 'https://oauth2.googleapis.com/token'
+    token_payload = {
+        'code': code,
+        'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+        'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+        'redirect_uri': settings.GOOGLE_OAUTH2_REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    }
+    
+    token_response = requests.post(token_url, data=token_payload)
+    if token_response.status_code != 200:
+        return Response({
+            'error': 'Failed to exchange authorization code for tokens',
+            'details': token_response.text
+        }, status=400)
+    
+    token_data = token_response.json()
+    id_token = token_data.get('id_token')
+    
+    # Verify the ID token
+    google_verify_url = f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}'
+    verify_response = requests.get(google_verify_url)
+    if verify_response.status_code != 200:
+        return Response({'error': 'Invalid ID token'}, status=400)
+    
+    user_info = verify_response.json()
+    email = user_info.get('email')
     if not email:
-        return Response({"error": "Email not provided by Google"}, status=400)
+        return Response({'error': 'Email not provided by Google'}, status=400)
     
-    # Extract name or use email prefix as username
-    name = user_info.get("name", email.split('@')[0])
-    
-    # Check if user exists
+    # Get or create user
+    name = user_info.get('name', email.split('@')[0])
     try:
         user = User.objects.get(email=email)
         # Update user info if needed
@@ -347,7 +477,6 @@ def google_login(request):
             user.save()
     except User.DoesNotExist:
         # Create new user
-        # Generate unique username if necessary
         username = name
         if User.objects.filter(username=username).exists():
             username = f"{name}_{uuid.uuid4().hex[:8]}"
@@ -362,25 +491,122 @@ def google_login(request):
     # Generate JWT tokens
     refresh = RefreshToken.for_user(user)
     
+    # For GET requests, set cookies and redirect to frontend
+    if request.method == 'GET':
+        frontend_url = 'http://localhost:5173/auth/success'
+        response = redirect(frontend_url)
+        
+        # Set secure httpOnly cookie for access token
+        response.set_cookie(
+            'access_token',
+            str(refresh.access_token),
+            max_age=60 * 60,  # 1 hour (adjust as needed)
+            httponly=True,
+            secure=settings.DEBUG is False,  # True in production
+            samesite='Lax'
+        )
+        
+        # Set secure httpOnly cookie for refresh token
+        response.set_cookie(
+            'refresh_token',
+            str(refresh),
+            max_age=60 * 60 * 24 * 7,  # 7 days
+            httponly=True,
+            secure=settings.DEBUG is False,  # True in production
+            samesite='Lax'
+        )
+        
+        # Set a non-httpOnly cookie just to signal auth state to frontend
+        response.set_cookie(
+            'is_authenticated',
+            'true',
+            max_age=60 * 60 * 24 * 7,  # 7 days
+            httponly=False,
+            secure=settings.DEBUG is False,
+            samesite='Lax'
+        )
+        
+        # Set a user info cookie (non-httpOnly so JavaScript can read it)
+        import json
+        from urllib.parse import quote
+        user_data = {
+            
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+        # Convert the dictionary to a JSON string
+        user_data_json = json.dumps(user_data)
+
+        # URL-encode the JSON string before setting the cookie
+        encoded_user_data = quote(user_data_json)
+
+        # Set the user_info cookie with the encoded JSON
+        response.set_cookie(
+            'user_info',
+            encoded_user_data,
+            max_age=60 * 60 * 24 * 7,  # 7 days
+            httponly=False,
+            secure=settings.DEBUG is False,
+            samesite='Lax'
+        )
+        
+        return response
+    
+    # For POST requests or API usage
     return Response({
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "name": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-        },
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+        'user': {
+            
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
     })
 
 @api_view(['GET'])
+def check_auth(request):
+    """Check if the user is authenticated"""
+    if request.user.is_authenticated:
+        return Response({
+            'isAuthenticated': True,
+            'user': {
+                'id': request.user.id,
+                'email': request.user.email,
+                'username': request.user.username,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name
+            }
+        })
+    return Response({'isAuthenticated': False})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_user_profile(request):
+    """Return the authenticated user's profile"""
     user = request.user
     return Response({
-        "id": user.id,
-        "email": user.email,
-        "name": user.username,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
+        'id': user.id,
+        'email': user.email,
+        'username': user.username,
+        'first_name': user.first_name,
+        'last_name': user.last_name
     })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    """Logout and clear cookies"""
+    # Create a response
+    response = Response({'detail': 'Successfully logged out.'})
+    
+    # Clear the cookies
+    response.delete_cookie('access_token')
+    response.delete_cookie('refresh_token')
+    response.delete_cookie('is_authenticated')
+    response.delete_cookie('user_info')
+    
+    return response
