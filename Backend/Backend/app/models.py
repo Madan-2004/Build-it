@@ -9,7 +9,7 @@ class Council(models.Model):
     def __str__(self):
         return self.name
 
-# class User(models.Model):
+# class Users(models.Model):
 #     STATUS_CHOICES = [
 #         ("head", "Head"),
 #         ("member", "Member"),
@@ -27,10 +27,10 @@ class Council(models.Model):
     
 # class Club(models.Model):
 #     name = models.CharField(max_length=255)  # Mandatory
-#     head = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs")  # Optional
+#     head = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs")  # Optional
 #     description = models.TextField(blank=True, null=True)  # Optional
 #     upcoming_events = models.TextField(blank=True, null=True)  # Optional
-#     members = models.ManyToManyField(User, related_name="member_clubs", blank=True)  # Optional
+#     members = models.ManyToManyField(Users, related_name="member_clubs", blank=True)  # Optional
 #     projects = models.TextField(blank=True, null=True)  # Optional
 #     council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
 
@@ -40,7 +40,7 @@ class Council(models.Model):
 #     def __str__(self):
 #         return self.name
     
-class User(models.Model):
+class Users(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     image = models.ImageField(upload_to="user_images/", blank=True, null=True)  # Optional profile picture
@@ -54,7 +54,7 @@ class User(models.Model):
 class Club(models.Model):
     name = models.CharField(max_length=255)  # Mandatory
     head = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs"
+        Users, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs"
     )  # Optional
     description = models.TextField(blank=True, null=True)  # Optional
     upcoming_events = models.TextField(blank=True, null=True)  # Optional
@@ -63,7 +63,7 @@ class Club(models.Model):
     image = models.ImageField(upload_to="club_images/", blank=True, null=True)
 
     # Many-to-Many relationship with users via an intermediate model
-    members = models.ManyToManyField(User, through="ClubMembership", related_name="member_clubs", blank=True)
+    members = models.ManyToManyField(Users, through="ClubMembership", related_name="member_clubs", blank=True)
 
     def __str__(self):
         return self.name
@@ -75,7 +75,7 @@ class ClubMembership(models.Model):
         ("member", "Member"),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="member")
 

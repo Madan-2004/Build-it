@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Club, User, Council, ClubMembership
+from .models import Club, Users, Council, ClubMembership
 
 
 class CouncilSerializer(serializers.ModelSerializer):
@@ -8,14 +8,14 @@ class CouncilSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UsersSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = Users
         fields = ["id", "name", "email", "image"]
 
 
 class ClubMembershipSerializer(serializers.ModelSerializer):
-    user = UserSerializer()  # Show full user details
+    user = UsersSerializer()  # Show full user details
     status = serializers.CharField()  # Show membership status (head/member)
 
     class Meta:
@@ -24,7 +24,7 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
 
 
 class ClubSerializer(serializers.ModelSerializer):
-    head = UserSerializer()  # Show full head details
+    head = UsersSerializer()  # Show full head details
     members = serializers.SerializerMethodField()  # Get members' details
     council = CouncilSerializer()  # Show full council details
 

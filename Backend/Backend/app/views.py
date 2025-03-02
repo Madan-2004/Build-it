@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Council, Club, User, ClubMembership
-from .serializers import CouncilSerializer, ClubSerializer, UserSerializer
+from .models import Council, Club, Users, ClubMembership
+from .serializers import CouncilSerializer, ClubSerializer, UsersSerializer
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
 
@@ -83,7 +83,7 @@ def clubs_by_council_crud(request, council_name):
                     head_id = request.data.get("head")
                     head = None
                     if head_id:
-                        head = get_object_or_404(User, id=head_id)
+                        head = get_object_or_404(Users, id=head_id)
                     
                     # Create club data with council reference
                     club_data = {
@@ -99,7 +99,7 @@ def clubs_by_council_crud(request, council_name):
                         # Add members if provided
                         member_ids = request.data.get("members", [])
                         for member_id in member_ids:
-                            member = get_object_or_404(User, id=member_id)
+                            member = get_object_or_404(Users, id=member_id)
                             ClubMembership.objects.create(user=member, club=club, status="member")
                         
                         # Return updated club data
@@ -138,7 +138,7 @@ def club_crud(request, council_name, club_id):
                     head_id = request.data.get("head")
                     head = None
                     if head_id:
-                        head = get_object_or_404(User, id=head_id)
+                        head = get_object_or_404(Users, id=head_id)
 
                     # Update club details
                     club_data = {
@@ -157,7 +157,7 @@ def club_crud(request, council_name, club_id):
                             # Clear existing members and add new ones
                             ClubMembership.objects.filter(club=club).delete()
                             for member_id in member_ids:
-                                member = get_object_or_404(User, id=member_id)
+                                member = get_object_or_404(Users, id=member_id)
                                 ClubMembership.objects.create(user=member, club=club, status="member")
 
                         return Response(ClubSerializer(club).data)
@@ -193,13 +193,15 @@ class AddMemberView(APIView):
             name = request.data.get("name")
             email = request.data.get("email")
             role = request.data.get("role", "member")
-
+            print("came till here")
             if not name or not email:
                 return Response({"error": "Name and email are required."}, status=status.HTTP_400_BAD_REQUEST)
 
             with transaction.atomic():
                 # Check if user already exists or create a new one
-                user, created = User.objects.get_or_create(email=email, defaults={"name": name})
+                print("came till here also")
+                user, created = Users.objects.get_or_create(email=email, defaults={"name": name})
+                print("Using Users model:", user.__class__)
                 name_updated = False
                 
                 # If user exists but with different name, update the name
@@ -221,7 +223,7 @@ class AddMemberView(APIView):
                         membership.status = role.lower()
                         membership.save()
                     else:
-                        return Response({"error": "User is already a member with the same role."}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({"error": "Users is already a member with the same role."}, status=status.HTTP_400_BAD_REQUEST)
 
                 # If role is head, update the club head
                 if role.lower() == "head":
@@ -231,6 +233,7 @@ class AddMemberView(APIView):
                 return Response(ClubSerializer(club).data, status=status.HTTP_201_CREATED)
         
         except Exception as e:
+            print("came till here also eoor")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -252,7 +255,7 @@ class EditMemberView(APIView):
             with transaction.atomic():
                 # Check if email is being changed and if it conflicts with another user
                 if email != membership.user.email:
-                    if User.objects.filter(email=email).exclude(id=user_id).exists():
+                    if Users.objects.filter(email=email).exclude(id=user_id).exists():
                         return Response({"error": "Email is already in use by another user."}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Update user details
@@ -289,7 +292,7 @@ class RemoveMemberView(APIView):
             membership = ClubMembership.objects.filter(club=club, user_id=user_id).first()
 
             if not membership:
-                return Response({"error": "User is not a member of this club."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Users is not a member of this club."}, status=status.HTTP_404_NOT_FOUND)
 
             with transaction.atomic():
                 # If removing the head, update club head to null
@@ -315,7 +318,7 @@ class RemoveMemberView(APIView):
 # from django.conf import settings
 # import uuid
 
-# User = get_user_model()
+# Users = get_user_model()
 
 # @api_view(['POST'])
 # @permission_classes([AllowAny])
@@ -341,19 +344,19 @@ class RemoveMemberView(APIView):
     
 #     # Check if user exists
 #     try:
-#         user = User.objects.get(email=email)
+#         user = Users.objects.get(email=email)
 #         # Update user info if needed
 #         if user.username != name:
 #             user.username = name
 #             user.save()
-#     except User.DoesNotExist:
+#     except Users.DoesNotExist:
 #         # Create new user
 #         # Generate unique username if necessary
 #         username = name
-#         if User.objects.filter(username=username).exists():
+#         if Users.objects.filter(username=username).exists():
 #             username = f"{name}_{uuid.uuid4().hex[:8]}"
         
-#         user = User.objects.create_user(
+#         user = Users.objects.create_user(
 #             username=username,
 #             email=email,
 #             first_name=user_info.get('given_name', ''),
@@ -610,3 +613,31 @@ def logout(request):
     response.delete_cookie('user_info')
     
     return response
+
+@api_view(['GET'])
+def user_head_clubs(request, email):
+    """
+    Get all clubs where the user is the head, either directly or through membership, using email as a filter.
+    """
+    try:
+        # Get the user by email
+        user = get_object_or_404(Users, email=email)
+
+        # Get clubs where the user is set as head directly
+        direct_head_clubs = Club.objects.filter(head=user)
+
+        # Get clubs where the user is set as head through membership
+        membership_head_clubs = Club.objects.filter(
+            clubmembership__user=user,
+            clubmembership__status='head'
+        )
+
+        # Combine both querysets and remove duplicates
+        all_head_clubs = direct_head_clubs.union(membership_head_clubs)
+
+        # serializer = ClubSerializer(all_head_clubs, many=True)
+        # return Response(serializer.data)
+        club_data = [{"id": club.id, "name": club.name} for club in all_head_clubs]
+        return Response(club_data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
