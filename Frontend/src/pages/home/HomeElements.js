@@ -3,8 +3,8 @@ import styled from "styled-components";
 
 export const CarouselContainer = styled.div`
   width: 100%;
-  height: 80vh; // Using viewport height for responsiveness
-  max-height: 800px;
+  height: 100vh; // Changed from 80vh to 100vh
+  max-height: none; // Removed max-height constraint
   overflow: hidden;
   position: relative;
 
@@ -16,8 +16,8 @@ export const CarouselContainer = styled.div`
 
 export const ImageWrapper = styled.div`
   position: relative;
-  height: 80vh;
-  max-height: 800px;
+  height: 100vh; // Changed from 80vh to 100vh
+  max-height: none; // Removed max-height constraint
 `;
 
 export const TextOverlay = styled.div`
@@ -62,13 +62,16 @@ export const TextOverlay = styled.div`
 
 export const CarouselImage = styled.img`
   width: 100%;
-  height: 500px;
+  height: 100vh; // Changed from fixed height to 100vh
   object-fit: cover;
   object-position: center center;
-  image-rendering: crisp-edges; /* Forces sharp rendering */
+  image-rendering: crisp-edges;
+  
+  /* Add an overlay for darker contrast */
+  filter: brightness(0.7); // Makes the image darker
 
   @media (max-width: 768px) {
-    height: 400px;
+    height: 100vh; // Adjusted for mobile too
     image-rendering: -webkit-optimize-contrast;
   }
 `;
