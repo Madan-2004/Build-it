@@ -22,7 +22,7 @@
 
   // Protected route component
   const PageWrapper = styled.div`
-    padding-top: ${({ isHomepage }) => (isHomepage ? "0" : "120px")};
+    padding-top: ${({ isHomepage }) => (isHomepage ? "0" : "90px")};
    
   `;
 

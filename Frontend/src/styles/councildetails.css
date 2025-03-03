@@ -1,9 +1,9 @@
 /* General Page Styling */
 .council-details-container {
     padding: 20px;
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .council-header {
@@ -14,78 +14,124 @@
 }
 
 .council-title {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
 }
 
 .council-subtitle {
-    font-size: 16px;
+    font-size: 18px;
     color: #555;
 }
 
 .btn-add {
     background-color: #007bff;
     color: white;
-    padding: 10px 15px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
+    font-size: 16px;
     cursor: pointer;
-    transition: background 0.3s ease-in-out;
+    transition: background 0.3s ease-in-out, transform 0.2s;
 }
 
 .btn-add:hover {
     background-color: #0056b3;
+    transform: scale(1.05);
 }
 
 /* Clubs Grid */
 .clubs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
 }
 
 .club-card {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+    text-align: left;
+    position: relative;
+}
+
+.club-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .club-card h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
 }
 
 .club-card p {
-    color: #555;
-    font-size: 14px;
+    color: #222;
+    font-size: 15px;
+    margin-top: 8px;
+    line-height: 1.6;
 }
 
-.club-card button {
-    margin-top: 10px;
-    margin-right: 5px;
-    padding: 8px 12px;
+.club-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    margin-right: 12px;
+}
+
+.club-card .club-head {
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 12px;
+}
+
+.club-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit, .btn-delete {
+    padding: 8px 14px;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: background 0.3s ease-in-out, transform 0.2s;
 }
 
-.club-card button:first-of-type {
-    background-color: #ffc107;
-    color: black;
-}
-
-.club-card button:first-of-type:hover {
-    background-color: #e0a800;
-}
-
-.club-card button:last-of-type {
-    background-color: #dc3545;
+.btn-edit {
+    background-color: #f39c12;
     color: white;
 }
 
-.club-card button:last-of-type:hover {
-    background-color: #c82333;
+.btn-edit:hover {
+    background-color: #e67e22;
+    transform: scale(1.05);
+}
+
+.btn-delete {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
 }
 
 /* Modal Styling */
@@ -104,31 +150,35 @@
 
 .modal-content {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 400px;
+    padding: 25px;
+    border-radius: 12px;
+    width: 450px;
     max-width: 90%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content h2 {
-    margin-top: 0;
-    font-size: 20px;
+    font-size: 22px;
     text-align: center;
+    font-weight: bold;
+    color: #2c3e50;
 }
 
 .modal-content label {
     display: block;
-    margin-top: 10px;
+    margin-top: 12px;
     font-weight: bold;
+    font-size: 14px;
+    color: #333;
 }
 
 .modal-content input {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     margin-top: 5px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 6px;
+    font-size: 14px;
 }
 
 .modal-actions {
@@ -138,10 +188,11 @@
 }
 
 .modal-actions button {
-    padding: 8px 12px;
+    padding: 10px 14px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .modal-actions button:first-of-type {
@@ -160,113 +211,4 @@
 
 .modal-actions button:last-of-type:hover {
     background-color: #218838;
-}
-
-/* Loading and Error States */
-.loading-state {
-    text-align: center;
-    padding: 20px;
-}
-
-.loading-spinner {
-    width: 30px;
-    height: 30px;
-    border: 4px solid #ccc;
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: auto;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.error-state {
-    color: red;
-    text-align: center;
-    padding: 10px;
-}
-
-.council-details-container {
-    padding: 20px;
-    text-align: center;
-}
-
-.council-header {
-    margin-bottom: 20px;
-}
-
-.council-title {
-    font-size: 2rem;
-    font-weight: bold;
-}
-
-.btn-add {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.clubs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.club-card {
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: left;
-}
-
-.club-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.club-description {
-    font-size: 1rem;
-    margin-bottom: 5px;
-}
-
-.club-head {
-    color: #2c3e50;
-}
-
-.club-events, .club-members, .club-projects {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.club-actions {
-    margin-top: 10px;
-}
-
-.btn-edit, .btn-delete {
-    padding: 5px 10px;
-    margin-right: 5px;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-edit {
-    background-color: #f39c12;
-    color: white;
-}
-
-.btn-delete {
-    background-color: #e74c3c;
-    color: white;
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { Link } from "react-router-dom";
 import {
   CarouselContainer,
   TextOverlay,
@@ -15,6 +16,13 @@ import {
   MissionHeading,
   MissionText,
   MissionImage,
+  CouncilSection,
+  CouncilHeading,
+  CouncilGrid,
+  CouncilCard,
+  CouncilTitle,
+  CouncilDescription,
+  CouncilIcon,
 } from "./HomeElements";
 import img1 from "../../images/home/img1.jpg";
 import img2 from "../../images/home/img2.jpg";
@@ -40,6 +48,36 @@ const slides = [
     subtitle: "Welcome to",
     alt: "Building a Better Campus Community",
   },
+];
+const councils = [
+  {
+    id: "science-technology",
+    title: "Science and Technology Council",
+    description: "The SnT Council of IIT Indore is a community of science and technology enthusiasts who love to explore the unthinkable.",
+    icon: "🔬", // You can replace with actual icon component
+    path: "/council/Science%20and%20Technology%20Council/clubs"
+  },
+  {
+    id: "cultural",
+    title: "Cultural Council",
+    description: "The Cultural Council of IIT Indore orchestrates a diverse array of cultural events throughout the year, fostering artistic expression and community engagement among students and faculty alike.",
+    icon: "🎭", // You can replace with actual icon component
+    path: "/council/Cultural%20Council/clubs"
+  },
+  {
+    id: "sports",
+    title: "Sports Council",
+    description: "The Sports Council is the voice and face of IIT Indore sports community, responsible for management and conduction of all sporting events in the campus.",
+    icon: "🏆", // You can replace with actual icon component
+    path: "/council/Cultural%20Council/clubs"
+  },
+  {
+    id: "academic",
+    title: "Academic Council",
+    description: "The Academics Council has been trusted with the responsibility of managing executive activities in two of the most crucial aspects of student life - Academics and Career.",
+    icon: "📚", // You can replace with actual icon component
+    path: "/council/Academic%20Council/clubs"
+  }
 ];
 
 const PrevArrow = ({ onClick }) => (
@@ -175,6 +213,20 @@ export default function Home() {
           alt="Student community at IIT Indore"
         />
       </MissionSection>
+      <CouncilSection>
+        <CouncilHeading>OUR COUNCILS</CouncilHeading>
+        <CouncilGrid>
+          {councils.map((council) => (
+            <Link to={council.path} key={council.id} style={{ textDecoration: 'none' }}>
+              <CouncilCard>
+                <CouncilIcon>{council.icon}</CouncilIcon>
+                <CouncilTitle>{council.title}</CouncilTitle>
+                <CouncilDescription>{council.description}</CouncilDescription>
+              </CouncilCard>
+            </Link>
+          ))}
+        </CouncilGrid>
+      </CouncilSection>
     </>
   );
 }
