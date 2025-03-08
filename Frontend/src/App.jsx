@@ -1,24 +1,42 @@
-﻿  import React, { useState, useEffect } from 'react';
-  import { BrowserRouter as Router, Routes, Route, Navigate ,useLocation} from 'react-router-dom';
-  import LoginPage from './pages/LoginPage';
-  import CallbackPage from './pages/CallbackPage';
-  import Dashboard from './pages/Dashboard1';
-  import { authService } from './services/auth';
-  import AuthSuccess from './pages/AuthSuccess';
-  import Navbar from "./components/Navbar/Navbar";
-  import Footer from "./components/Footer/Footer";
-  import Home from './pages/home/Home';
-  import About from './pages/aboutus/AboutUs';
-  import Events from './pages/Events/Events';
-  import EventDetails from './pages/Events/EventDetails';
-  import Contact from './pages/contact';
-  import Council from './pages/Council';
-  import CouncilDetails from './pages/CouncilDetails';
-  import ClubProfile from './pages/ClubProfile';
-  import Profile from './pages/Profile';
-  import './Styles/index.css';
-  import ProtectedRoute from './components/ProtectedRoute';
-  import styled from "styled-components";
+﻿import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+// Authentication-related imports
+import LoginPage from './pages/Auth/LoginPage';
+import CallbackPage from './pages/Auth/CallbackPage';
+import AuthSuccess from './pages/Auth/AuthSuccess';
+
+// Dashboard
+import Dashboard from './pages/Dashboard/Dashboard1';
+
+// Components
+import Navbar from "./components/Navbar/Navbar";
+import Footer from "./components/Footer/Footer";
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Home & General Pages
+import Home from './pages/home/Home';
+import About from './pages/aboutus/AboutUs';
+import Contact from './pages/contact/Contact';
+
+// Events Pages
+import Events from './pages/Events/Events';
+import EventDetails from './pages/Events/EventDetails';
+
+// Council Pages
+import Council from './pages/Council/Council';
+import CouncilDetails from './pages/Council/CouncilDetails';
+
+// Clubs Pages
+import ClubProfile from './pages/Clubs/ClubProfile';
+
+
+
+// Styles & Utilities
+import './styles/index.css';
+import styled from "styled-components";
+import FeedbackForm from './pages/Feedback/FeedbackForm';
+
 
   // Protected route component
   const PageWrapper = styled.div`
@@ -39,6 +57,7 @@
             <Route path="/events" element={<Events />} />
             <Route path="/events/:eventTitle" element={<EventDetails />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/feedback" element={<FeedbackForm />} />
             <Route path="/council" element={<Council />} />
             <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
             <Route path="/clubs/:clubName" element={<ClubProfile />} />

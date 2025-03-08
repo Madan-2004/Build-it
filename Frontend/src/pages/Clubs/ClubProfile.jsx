@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+
 const API_BASE_URL = "http://localhost:8000"; // Update API URL if needed
 
 const ClubProfile = () => {
@@ -11,7 +12,7 @@ const ClubProfile = () => {
   const [error, setError] = useState(null);
   const [newMember, setNewMember] = useState({ name: "", email: "", role: "member" });
   const [editMode, setEditMode] = useState(false);
-  const [editClub, setEditClub] = useState({ name: "", description: "" });
+  const [editClub, setEditClub] = useState({ name: "", description: "" , website: "", email: ""});
   const [memberEditMode, setMemberEditMode] = useState(null);
   const [editMemberData, setEditMemberData] = useState({ name: "", email: "", role: "" });
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
@@ -20,11 +21,13 @@ const ClubProfile = () => {
   useEffect(() => {
     fetchClubDetails();
   }, [clubName]);
-
+  
   const toggleTheme = () => {
     setDarkMode(!darkMode);
   };
-
+  const isValidIITIEmail = (email) => {
+    return /^[a-zA-Z0-9._%+-]+@iiti\.ac\.in$/.test(email);
+  };
   const fetchClubDetails = async () => {
     try {
       setLoading(true);
@@ -35,8 +38,10 @@ const ClubProfile = () => {
       }
 
       const data = await response.json();
+      console.log(data);
       setClub(data);
-      setEditClub({ name: data.name, description: data.description || "" });
+      
+      setEditClub({ name: data.name, description: data.description || "", website: data.website || "", email: data.email || "" });
     } catch (err) {
       console.error("Error fetching club details:", err);
       setError(err.message);
@@ -54,13 +59,15 @@ const ClubProfile = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/councils/${club.council}/clubs/${club.id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/clubs/${encodeURIComponent(clubName)}/update/`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editClub.name,
           description: editClub.description,
-          head: club.head?.id || null
+          website: editClub.website,
+          email: editClub.email,
+          head_id: club.head?.id || null
         }),
       });
 
@@ -89,6 +96,11 @@ const ClubProfile = () => {
       alert("Name and email are required");
       return;
     }
+    if (!isValidIITIEmail(newMember.email)) {
+      alert("Invalid email! Only @iiti.ac.in emails are allowed.");
+      return;
+    }
+  
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/clubs/${club.id}/add-member/`, {
@@ -126,6 +138,11 @@ const ClubProfile = () => {
       alert("Name and email are required");
       return;
     }
+    if (!isValidIITIEmail(editMemberData.email)) {
+      alert("Invalid email! Only @iiti.ac.in emails are allowed.");
+      return;
+    }
+  
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/clubs/${club.id}/edit-member/${userId}/`, {
@@ -175,6 +192,51 @@ const ClubProfile = () => {
   const handleCloseDialogBackdrop = () => {
     setAddMemberDialogOpen(false);
   };
+
+  const handleDeleteClub = async () => {
+    if (!window.confirm("Are you sure you want to delete this club?")) return;
+  
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/clubs/${encodeURIComponent(clubName)}/delete/`, {
+        method: "DELETE",
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete club");
+      }
+  
+      alert("Club deleted successfully");
+      navigate("/clubs");
+    } catch (err) {
+      console.error("Error deleting club:", err);
+      alert(`Error deleting club: ${err.message}`);
+    }
+  };
+  //for future purpose features
+  const renameClub = async (newName) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/clubs/${encodeURIComponent(clubName)}/rename/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_name: newName }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to rename club");
+      }
+  
+      const data = await response.json();
+      alert("Club renamed successfully!");
+      navigate(`/clubs/${encodeURIComponent(data.new_name)}`); // Redirect to new club URL
+    } catch (err) {
+      console.error("Error renaming club:", err);
+      alert(`Error renaming club: ${err.message}`);
+    }
+  };
+  
+  
 
 
   if (loading) return (
@@ -248,6 +310,7 @@ const ClubProfile = () => {
                     type="text"
                     className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
                     value={editClub.name}
+                    // readOnly
                     onChange={(e) => setEditClub({ ...editClub, name: e.target.value })}
                     required
                   />
@@ -262,6 +325,26 @@ const ClubProfile = () => {
                     onChange={(e) => setEditClub({ ...editClub, description: e.target.value })}
                   />
                 </div>
+                <div>
+              <label htmlFor="website" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Club Website</label>
+              <input
+                id="website"
+                type="url"
+                className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
+                value={editClub.website}
+                onChange={(e) => setEditClub({ ...editClub, website: e.target.value })}
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Club Email</label>
+              <input
+                id="email"
+                type="email"
+                className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
+                value={editClub.email}
+                onChange={(e) => setEditClub({ ...editClub, email: e.target.value })}
+              />
+            </div>
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -282,6 +365,10 @@ const ClubProfile = () => {
               <div>
                 <h1 className={`text-4xl md:text-5xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>{club.name}</h1>
                 <p className={`text-lg ${darkMode ? 'text-blue-300' : 'text-blue-600'} mb-6`}>{club.description || "No description available."}</p>
+                <div className="text-lg">
+              <p><strong>Club Website:</strong> <a href={club.website || "#"} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{club.website || "Not Available"}</a></p>
+              <p><strong>Club Email:</strong> <a href={`mailto:${club.email}`} className="text-blue-500 hover:underline">{club.email || "Not Available"}</a></p>
+            </div>
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                   <button
                     className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition duration-200 flex items-center"
@@ -387,7 +474,9 @@ const ClubProfile = () => {
 
               {club.members && club.members.length > 0 ? (
                 <div className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                  {club.members.map((member) => (
+                  {club.members
+                  .filter(member => member.status !== "head") // Exclude heads
+                  .map((member) => (
                     <div key={member.user.id} className={`p-5 ${darkMode ? 'hover:bg-gray-750' : 'hover:bg-gray-50'} transition duration-150`}>
                       {memberEditMode === member.user.id ? (
                         <div className="space-y-4">

@@ -64,7 +64,8 @@ class Club(models.Model):
 
     # Many-to-Many relationship with users via an intermediate model
     members = models.ManyToManyField(Users, through="ClubMembership", related_name="member_clubs", blank=True)
-
+    website = models.URLField(default="https://gymkhana.iiti.ac.in/", blank=True)  # Default club website URL
+    email = models.EmailField(default="contact@example.com", blank=True)  # Default email
     def __str__(self):
         return self.name
 

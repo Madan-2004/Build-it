@@ -25,9 +25,14 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
 
 class ClubSerializer(serializers.ModelSerializer):
     head = UsersSerializer()  # Show full head details
-    members = serializers.SerializerMethodField()  # Get members' details
-    council = CouncilSerializer()  # Show full council details
+    # members = serializers.SerializerMethodField()  # Get members' details
+    # council = CouncilSerializer()  # Show full council details
 
+    head_id = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), source="head", write_only=True, required=False
+    )
+    members = serializers.SerializerMethodField()
+    council = CouncilSerializer() 
     class Meta:
         model = Club
         fields = "__all__"

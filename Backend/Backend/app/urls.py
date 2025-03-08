@@ -11,7 +11,7 @@ from .views import (
     clubs_by_council_crud,
     club_crud,
     get_club_by_name
-    , AddMemberView, RemoveMemberView, EditMemberView,get_user_profile
+    , AddMemberView, RemoveMemberView, EditMemberView,get_user_profile,FeedbackView,update_club,delete_club
 )
 from .views import google_auth_url, google_callback, get_user_profile,check_auth,logout
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -26,6 +26,9 @@ urlpatterns = [
     # Clubs
     path("api/clubs/", get_clubs, name="get_clubs"),  # Get all clubs
     path("api/clubs/<str:club_name>/", get_club_by_name, name="club-detail"),
+    path("api/clubs/<str:club_name>/update/", update_club, name="update_club"),
+    path("api/clubs/<str:club_name>/delete/", delete_club, name="delete_club"),
+    path("api/clubs/<str:club_name>/rename/", delete_club, name="delete_club"),
     path("api/councils/<str:council_name>/clubs/", clubs_by_council_crud, name="clubs_by_council"),  # Clubs under a specific council
     path("api/councils/<str:council_name>/clubs/<int:club_id>/", club_crud, name="club_crud"),  # CRUD for individual clubs
     path("api/clubs/<int:club_id>/add-member/", AddMemberView.as_view(), name="add-member"),
@@ -43,4 +46,6 @@ urlpatterns = [
     path('api/auth/profile/', get_user_profile, name='user_profile'),
     path('api/auth/check/', check_auth, name='auth_check'),
     path('api/auth/logout/', logout, name='logout'),
+
+    path('api/feedback/', FeedbackView.as_view(), name='feedback'),
 ]

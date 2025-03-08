@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import "../styles/councildetails.css";
+import "../../styles/councildetails.css";
+
 
 const BASE_URL = "http://127.0.0.1:8000";
 
@@ -185,7 +186,7 @@ const CouncilDetails = () => {
                             {/* Council Image/Logo */}
                             {councilDetails && councilDetails.image ? (
                                 <img 
-                                    src={councilDetails.image} 
+                                    src={`${BASE_URL}${councilDetails.image}`}
                                     alt={councilName} 
                                     className="w-48 h-48 object-cover rounded-full border-4 border-blue-500 shadow-xl" 
                                 />

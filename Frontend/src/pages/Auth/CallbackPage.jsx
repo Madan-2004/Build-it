@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '../services/auth';
+import { authService } from '../../services/auth';
 
 const CallbackPage = () => {
   const [error, setError] = useState(null);

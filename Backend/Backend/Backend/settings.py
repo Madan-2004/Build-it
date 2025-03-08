@@ -191,3 +191,12 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'mvarshith12005@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'lfustdtlrxipppke'  # Replace with your password or app password
+DEFAULT_FROM_EMAIL = 'mvarshith12005@gmail.com'  # Replace with your email
+ADMIN_EMAIL = 'mvarshith2005@gmail.com'  # Replace with admin email

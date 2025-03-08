@@ -182,63 +182,109 @@ def get_club_by_name(request, club_name):
         return Response(serializer.data)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+@api_view(["PUT"])
+def update_club(request, club_name):
+    try:
+        club = get_object_or_404(Club, name=club_name)
+        print(request.data)
+        serializer = ClubSerializer(club, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# Delete a club
+@api_view(["DELETE"])
+def delete_club(request, club_name):
+    try:
+        club = get_object_or_404(Club, name=club_name)
+        club.delete()
+        return Response({"message": "Club deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+#renaming the club    
+@api_view(["PATCH"])
+def rename_club(request, club_name):
+    try:
+        club = get_object_or_404(Club, name=club_name)
+        new_name = request.data.get("new_name")
+
+        if not new_name:
+            return Response({"error": "New club name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Club.objects.filter(name=new_name).exists():
+            return Response({"error": "Club with this name already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        club.name = new_name
+        club.save()
+        
+        return Response({"message": "Club renamed successfully", "new_name": new_name})
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 
 class AddMemberView(APIView):
-    """Add a new member to a club."""
+    """Add a new member to a club, ensuring no duplicate emails and only one head per club."""
 
     def post(self, request, club_id):
         try:
             club = get_object_or_404(Club, id=club_id)
             name = request.data.get("name")
             email = request.data.get("email")
-            role = request.data.get("role", "member")
-            print("came till here")
+            role = request.data.get("role", "member").lower()
+
             if not name or not email:
                 return Response({"error": "Name and email are required."}, status=status.HTTP_400_BAD_REQUEST)
 
             with transaction.atomic():
-                # Check if user already exists or create a new one
-                print("came till here also")
-                user, created = Users.objects.get_or_create(email=email, defaults={"name": name})
-                print("Using Users model:", user.__class__)
-                name_updated = False
-                
-                # If user exists but with different name, update the name
-                if not created and user.name != name:
-                    user.name = name
-                    user.save()
-                    name_updated = True
+                # Check if a user with the same email already exists
+                existing_user = Users.objects.filter(email=email).first()
 
-                # Add user as a club member
+                if existing_user:
+                    # Prevent duplicate email registrations with different names
+                    if existing_user.name != name:
+                        return Response({"error": "A user with this email already exists with a different name."}, status=status.HTTP_400_BAD_REQUEST)
+                    user = existing_user
+                else:
+                    # Create new user
+                    user = Users.objects.create(name=name, email=email)
+
+                # Check if user is already a club member
                 membership, created = ClubMembership.objects.get_or_create(
-                    club=club, 
-                    user=user, 
-                    defaults={"status": role.lower()}
+                    club=club,
+                    user=user,
+                    defaults={"status": role}
                 )
 
                 if not created:
-                    # Update role if member already exists
-                    if membership.status != role.lower():
-                        membership.status = role.lower()
-                        membership.save()
-                    else:
-                        return Response({"error": "Users is already a member with the same role."}, status=status.HTTP_400_BAD_REQUEST)
+                    # Prevent assigning the same role again
+                    if membership.status == role:
+                        return Response({"error": "User is already a member with the same role."}, status=status.HTTP_400_BAD_REQUEST)
+                    # Update role if it changed
+                    membership.status = role
+                    membership.save()
 
-                # If role is head, update the club head
-                if role.lower() == "head":
+                # If assigning as head, ensure only one head exists
+                if role == "head":
+                    # Remove the previous head (if any)
+                    ClubMembership.objects.filter(club=club, status="head").exclude(user=user).delete()
+
+                    # Update the club's head field
                     club.head = user
                     club.save()
 
                 return Response(ClubSerializer(club).data, status=status.HTTP_201_CREATED)
-        
+
         except Exception as e:
-            print("came till here also eoor")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 class EditMemberView(APIView):
-    """Edit a club member's details (name, email, role)."""
+    """Edit a club member's details (name, email, role), ensuring no duplicate emails."""
 
     def put(self, request, club_id, user_id):
         try:
@@ -247,38 +293,42 @@ class EditMemberView(APIView):
 
             name = request.data.get("name")
             email = request.data.get("email")
-            role = request.data.get("role")
+            role = request.data.get("role", "member").lower()
 
             if not name or not email or not role:
                 return Response({"error": "Name, email, and role are required."}, status=status.HTTP_400_BAD_REQUEST)
 
             with transaction.atomic():
-                # Check if email is being changed and if it conflicts with another user
-                if email != membership.user.email:
-                    if Users.objects.filter(email=email).exclude(id=user_id).exists():
-                        return Response({"error": "Email is already in use by another user."}, status=status.HTTP_400_BAD_REQUEST)
-
-                # Update user details
                 user = membership.user
+
+                # Check if the email is being changed and if it conflicts with another user
+                if email != user.email:
+                    if Users.objects.filter(email=email).exclude(id=user_id).exists():
+                        return Response({"error": "This email is already in use by another user."}, status=status.HTTP_400_BAD_REQUEST)
+
+                    # Update the email only if it's unique
+                    user.email = email
+
+                # Update name
                 user.name = name
-                user.email = email
                 user.save()
 
-                # Update membership role
+                # Handle role updates
                 old_role = membership.status
-                membership.status = role.lower()
+                membership.status = role
                 membership.save()
 
-                # Handle head role changes
-                if role.lower() == "head" and old_role != "head":
+                # If user is assigned as head, update the club head
+                if role == "head" and old_role != "head":
+                    ClubMembership.objects.filter(club=club, status="head").exclude(user=user).delete()
                     club.head = user
                     club.save()
-                elif old_role == "head" and role.lower() != "head" and club.head and club.head.id == user_id:
+                elif old_role == "head" and role != "head" and club.head and club.head.id == user_id:
                     club.head = None
                     club.save()
 
                 return Response(ClubSerializer(club).data, status=status.HTTP_200_OK)
-        
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -622,6 +672,18 @@ def user_head_clubs(request, email):
     try:
         # Get the user by email
         user = get_object_or_404(Users, email=email)
+        memberships = ClubMembership.objects.filter(user=user).select_related("club")
+
+        # Serialize data
+        clubs_data = []
+        for membership in memberships:
+            clubs_data.append({
+                "id": membership.club.id,
+                "name": membership.club.name,
+                "status": membership.status  # This will be either "head" or "member"
+            })
+
+        return Response({"clubs": clubs_data})
 
         # Get clubs where the user is set as head directly
         direct_head_clubs = Club.objects.filter(head=user)
@@ -641,3 +703,58 @@ def user_head_clubs(request, email):
         return Response(club_data)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+    
+
+# views.py
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+class FeedbackView(APIView):
+    def post(self, request):
+        # Extract data from request
+        name = request.data.get('name', '')
+        email = request.data.get('email', '')
+        subject = request.data.get('subject', '')
+        message = request.data.get('message', '')
+        
+        # Validate required fields
+        if not all([name, email, subject, message]):
+            return Response(
+                {"error": "All fields are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Send email to admin
+        email_subject = f"New Feedback: {subject}"
+        email_message = f"""
+        New feedback received from {name} ({email})
+        
+        Subject: {subject}
+        
+        Message:
+        {message}
+        
+        Timestamp: {timezone.now()}
+        """
+        
+        try:
+            send_mail(
+                email_subject,
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.ADMIN_EMAIL],
+                fail_silently=False,
+            )
+            
+            return Response(
+                {"message": "Feedback sent successfully"}, 
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Failed to send feedback", "details": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )    

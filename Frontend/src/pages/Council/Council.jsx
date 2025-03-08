@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import "../styles/council.css"; // ✅ Ensure you have this CSS file
+import "../../styles/council.css"; // ✅ Ensure you have this CSS file
 
 function Council() {
   const [councils, setCouncils] = useState([]);
@@ -24,7 +24,7 @@ function Council() {
   }, []);
 
   return (
-    <div className="council-container">
+    <div className="council-container ">
       <h1 className="title">Council List</h1>
 
       {loading && <p>Loading councils...</p>}
