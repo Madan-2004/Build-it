@@ -259,8 +259,8 @@ const CouncilDetails = () => {
                                             <div className="flex justify-between items-end">
                                                 {club.head && (
                                                     <div className="text-white">
-                                                        <span className="text-sm text-white/90 block font-bold">Club Head</span>
-                                                        <span className="font-bold text-lg text-white drop-shadow-md">{typeof club.head === 'object' ? club.head.name : club.head}</span>
+                                                        <span className="text-sm text-black/90 block font-bold">Club Head</span>
+                                                        <span className="font-bold text-lg text-black drop-shadow-md">{typeof club.head === 'object' ? club.head.name : club.head}</span>
                                                     </div>
                                                 )}
                                                 {club.upcoming_events && (
