@@ -57,8 +57,7 @@ class Club(models.Model):
         Users, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs"
     )  # Optional
     description = models.TextField(blank=True, null=True)  # Optional
-    upcoming_events = models.TextField(blank=True, null=True)  # Optional
-    projects = models.TextField(blank=True, null=True)  # Optional
+   
     council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
     image = models.ImageField(upload_to="club_images/", blank=True, null=True)
 
@@ -85,3 +84,14 @@ class ClubMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.name} - {self.club.name} ({self.status})"    
+
+
+class Project(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="projects")
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    image = models.ImageField(upload_to="project_images/", blank=True, null=True)  # Image Field
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title        

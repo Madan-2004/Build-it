@@ -80,7 +80,9 @@ def clubs_by_council_crud(request, council_name):
             try:
                 with transaction.atomic():
                     # Handle head assignment
+                    print(request.data)
                     head_id = request.data.get("head")
+                    print(head_id)
                     head = None
                     if head_id:
                         head = get_object_or_404(Users, id=head_id)
@@ -91,8 +93,13 @@ def clubs_by_council_crud(request, council_name):
                         "council": council.id,
                         "head": head.id if head else None
                     }
+                    print(club_data)
                     
                     serializer = ClubSerializer(data=club_data)
+                    if not serializer.is_valid():
+                        print("Serializer errors:", serializer.errors)  # Debugging line
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
                     if serializer.is_valid():
                         club = serializer.save()
                         
@@ -228,9 +235,8 @@ def rename_club(request, club_name):
     
 
 
-
 class AddMemberView(APIView):
-    """Add a new member to a club, ensuring no duplicate emails and only one head per club."""
+    """Add a new member to a club, ensuring no duplicate emails within the same club and only one head per club."""
 
     def post(self, request, club_id):
         try:
@@ -243,39 +249,32 @@ class AddMemberView(APIView):
                 return Response({"error": "Name and email are required."}, status=status.HTTP_400_BAD_REQUEST)
 
             with transaction.atomic():
-                # Check if a user with the same email already exists
-                existing_user = Users.objects.filter(email=email).first()
+                # Check if a user with the same email exists
+                user, created = Users.objects.get_or_create(email=email, defaults={"name": name})
 
-                if existing_user:
-                    # Prevent duplicate email registrations with different names
-                    if existing_user.name != name:
-                        return Response({"error": "A user with this email already exists with a different name."}, status=status.HTTP_400_BAD_REQUEST)
-                    user = existing_user
-                else:
-                    # Create new user
-                    user = Users.objects.create(name=name, email=email)
+                # Ensure name consistency
+                if not created and user.name != name:
+                    return Response(
+                        {"error": "A user with this email exists with a different name."}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
-                # Check if user is already a club member
-                membership, created = ClubMembership.objects.get_or_create(
-                    club=club,
-                    user=user,
-                    defaults={"status": role}
-                )
-
-                if not created:
-                    # Prevent assigning the same role again
-                    if membership.status == role:
+                # ✅ Check if the user is already a member of THIS club
+                existing_membership = ClubMembership.objects.filter(club=club, user=user).first()
+                if existing_membership:
+                    if existing_membership.status == role:
                         return Response({"error": "User is already a member with the same role."}, status=status.HTTP_400_BAD_REQUEST)
-                    # Update role if it changed
-                    membership.status = role
-                    membership.save()
 
-                # If assigning as head, ensure only one head exists
+                    # Update role if different
+                    existing_membership.status = role
+                    existing_membership.save()
+                else:
+                    # Add new membership
+                    ClubMembership.objects.create(club=club, user=user, status=role)
+
+                # ✅ Handle head role (only one per club)
                 if role == "head":
-                    # Remove the previous head (if any)
                     ClubMembership.objects.filter(club=club, status="head").exclude(user=user).delete()
-
-                    # Update the club's head field
                     club.head = user
                     club.save()
 
@@ -283,6 +282,7 @@ class AddMemberView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class EditMemberView(APIView):
     """Edit a club member's details (name, email, role), ensuring no duplicate emails."""
 
@@ -758,3 +758,135 @@ class FeedbackView(APIView):
                 {"error": "Failed to send feedback", "details": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )    
+        
+
+# from rest_framework import generics, parsers
+# from rest_framework.permissions import IsAuthenticatedOrReadOnly
+# from .models import Project
+# from .serializers import ProjectSerializer
+# from rest_framework.response import Response
+# from rest_framework import status
+
+# class ProjectListCreateView(generics.ListCreateAPIView):
+#     queryset = Project.objects.all()
+#     serializer_class = ProjectSerializer
+#     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+    
+#     def get_queryset(self):
+#         club_id = self.kwargs.get("club_id")
+#         return Project.objects.filter(club_id=club_id)
+    
+#     def perform_create(self, serializer):
+#         club_id = self.kwargs.get("club_id")
+#         serializer.save(club_id=club_id)
+    
+#     def create(self, request, *args, **kwargs):
+#         print("Request data:", request.data)
+        
+#         serializer = self.get_serializer(data=request.data)
+#         if not serializer.is_valid():
+#             print("Validation errors:", serializer.errors)  # This will show exactly what's failing
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+#         self.perform_create(serializer)
+#         headers = self.get_success_headers(serializer.data)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+# # class ProjectListCreateView(generics.ListCreateAPIView):
+# #     queryset = Project.objects.all()
+# #     serializer_class = ProjectSerializer
+# #     # permission_classes = [IsAuthenticatedOrReadOnly]
+# #     parser_classes = [parsers.MultiPartParser, parsers.FormParser]  # Enable image upload
+
+# #     def get_queryset(self):
+# #         club_id = self.kwargs.get("club_id")
+# #         return Project.objects.filter(club_id=club_id)
+
+# #     def perform_create(self, serializer):
+# #         club_id = self.kwargs.get("club_id")
+# #         print("Received request data:", self.request.data)
+
+# #         if "title" not in self.request.data or "description" not in self.request.data:
+# #             return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+# #         serializer.save(club_id=club_id)
+
+# class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Project.objects.all()
+#     serializer_class = ProjectSerializer
+#     # permission_classes = [IsAuthenticatedOrReadOnly]
+#     parser_classes = [parsers.MultiPartParser, parsers.FormParser]  # Enable image upload
+# views.py
+from rest_framework import generics, parsers, status
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .models import Project
+from .serializers import ProjectSerializer
+from rest_framework.response import Response
+
+class ProjectListCreateView(generics.ListCreateAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+    
+    def get_queryset(self):
+        club_id = self.kwargs.get("club_id")
+        return Project.objects.filter(club_id=club_id)
+    
+    def perform_create(self, serializer):
+        club_id = self.kwargs.get("club_id")
+        serializer.save(club_id=club_id)
+    
+    def create(self, request, *args, **kwargs):
+        # Debug logging
+        print("Request data:", request.data)
+        
+        if "title" not in request.data or "description" not in request.data:
+            return Response(
+                {"error": "Missing title or description"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print("Error creating project:", str(e))
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ProjectSerializer
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+    
+    def get_queryset(self):
+        club_id = self.kwargs.get("club_id")
+        return Project.objects.filter(club_id=club_id)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        print("Update request data:", request.data)
+        
+        # If no new image is provided, we don't want to change the existing one
+        if not request.FILES.get('image') and partial:
+            # This prevents the image field from being set to None when not included in request
+            if 'image' in request.data and not request.data['image']:
+                request.data.pop('image')
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        if not serializer.is_valid():
+            print("Validation errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
+    
+    def perform_update(self, serializer):
+        serializer.save()
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
