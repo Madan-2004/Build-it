@@ -172,16 +172,18 @@ const CouncilDetails = () => {
             console.error(error);
         }
     }; // Function to get a random gradient background for each club
+    const gradients = [
+        "bg-gradient-to-br from-[#3498db] to-[#2ecc71]", // Blue to Green
+        "bg-gradient-to-br from-[#e74c3c] to-[#c0392b]", // Red to Deep Red
+        "bg-gradient-to-br from-[#9b59b6] to-[#8e44ad]", // Purple to Deep Purple
+        "bg-gradient-to-br from-[#1abc9c] to-[#16a085]", // Teal to Deep Teal
+        "bg-gradient-to-br from-[#f1c40f] to-[#e67e73]", // Yellow to Orange
+    ];
+    
     const getRandomGradient = (index) => {
-        const gradients = [
-            "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500",
-            "bg-gradient-to-r from-green-400 via-teal-500 to-cyan-500",
-            "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500",
-            "bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500",
-            "bg-gradient-to-r from-gray-700 via-gray-800 to-black"
-        ];
         return gradients[index % gradients.length];
     };
+    
 
     return (
         <div className="min-h-screen bg-gray-900 text-white">
@@ -287,73 +289,95 @@ const CouncilDetails = () => {
                 />
             )}... {/* Clubs Section */}
             {!loading && !error && (
-                <div className="max-w-7xl mx-auto px-4 py-12">
-                    <h2 className="text-4xl font-extrabold text-blue-500 mb-12 border-b-4 border-blue-600 pb-2 tracking-wide">Clubs and Organizations</h2>
-                    {clubs.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {clubs.map((club, index) => (
-                                <div
-                                    key={club.id}
-                                    className={`club-card ${getRandomGradient(index)} rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:shadow-blue-500/40 p-6 relative flex flex-col justify-between`}
-                                >
-                                    {/* Club Actions */}
-                                    <div className="absolute top-3 right-3 flex space-x-2">
-                                        <button
-                                            onClick={() => setEditingClub(club)}
-                                            className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-                                            title="Edit Club"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => setDeletingClub(club)}
-                                            className="p-2 bg-white/20 hover:bg-red-500/70 rounded-full transition-colors"
-                                            title="Delete Club"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
-                                        </button>
-                                    </div>
+             // Card component with improved dimensions and styling
+<div className="max-w-7xl mx-auto px-6 py-12 relative overflow-hidden">
+    {/* Background Effects */}
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 -z-10"></div>
 
-                                    <Link
-                                        to={`/clubs/${encodeURIComponent(club.name)}`}
-                                        className="flex flex-col justify-between flex-grow"
-                                    >
-                                        <div>
-                                            <div className="flex items-center mb-4">
-                                                {club.image ? (
-                                                    <img src={club.image} alt={club.name} className="w-16 h-16 object-cover rounded-full border-4 border-white shadow-lg" />
-                                                ) : (
-                                                    <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded-full border-4 border-gray-400 shadow-md">
-                                                        <span className="text-2xl font-extrabold text-gray-700">
-                                                            {club.name.split(' ').map(word => word[0]).join('')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <h3 className="text-2xl font-extrabold text-white ml-4 drop-shadow-md tracking-wide">{club.name}</h3>
-                                            </div>
-                                            <p className="text-white text-lg mb-6 line-clamp-3 font-semibold leading-relaxed drop-shadow-md">{club.description}</p>
-                                        </div>
-                                        {club.head && (
-                                            <div className="text-white">
-                                                <span className="text-sm text-black/90 block font-bold">Club Head</span>
-                                                <span className="font-bold text-lg text-black drop-shadow-md">{typeof club.head === 'object' ? club.head.name : club.head}</span>
-                                            </div>
-                                        )}
-                                    </Link>
-                                </div>
-                            ))}
+    {/* Section Title */}
+    <h2 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500 mb-12 text-center tracking-tight">
+        Clubs and Organizations
+    </h2>
+
+    {clubs.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clubs.map((club) => (
+                <div
+                    key={club.id}
+                    className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-[1.02] flex flex-col h-64 border border-gray-700/50"
+                >
+                    {/* Club Content */}
+                    <div className="p-5 flex flex-col h-full relative">
+                        {/* Club Badge & Name */}
+                        <div className="flex items-center mb-3">
+                            <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold shadow-md border border-blue-400/40">
+                                {club.name
+                                    .split(" ")
+                                    .map((word) => word[0])
+                                    .join("")
+                                    .toUpperCase()}
+                            </div>
+                            <h3 className="text-lg font-bold text-white ml-3 truncate">{club.name}</h3>
                         </div>
-                    ) : (
-                        <div className="bg-gray-800 p-12 rounded-2xl text-center shadow-lg">
-                            <p className="text-gray-300 text-lg font-semibold">No clubs found for this council.</p>
-                            <p className="mt-2 text-gray-400 text-sm">Click "Add New Club" to create the first one!</p>
-                        </div>
-                    )}
+
+                        {/* Club Description */}
+                        <p className="text-gray-400 text-sm h-16 overflow-hidden leading-relaxed">
+                            {club.description}
+                        </p>
+
+                     {/* Club Head Section */}
+{club.head && (
+    <div className="mt-auto bg-gray-800/50 p-3 rounded-lg text-sm border-l-4 border-blue-400/60 shadow-inner">
+        <span className="block text-blue-400 text-xs uppercase font-semibold mb-1 tracking-wider">
+            Club Head
+        </span>
+        <span className="font-bold text-white truncate">
+            {typeof club.head === "object" ? club.head.name : club.head}
+        </span>
+    </div>
+)}
+
+
+                   {/* View Details Button */}
+<div className="mt-3 flex justify-end">
+    <Link
+        to={`/clubs/${encodeURIComponent(club.name)}`}
+        className="text-blue-400 text-sm font-medium flex items-center group-hover:text-blue-300 transition-colors duration-300"
+    >
+        View Details
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-300"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+        >
+            <path
+                fillRule="evenodd"
+                d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                clipRule="evenodd"
+            />
+        </svg>
+    </Link>
+</div>
+
+                    </div>
                 </div>
+            ))}
+        </div>
+    ) : (
+        <div className="bg-white/10 p-8 rounded-xl text-center shadow-lg backdrop-blur-md">
+            <p className="text-white text-lg font-bold mb-3">No clubs found for this council.</p>
+            <p className="text-white/70 text-sm">Click "Add New Club" to create the first one!</p>
+            <button className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full text-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
+                Add New Club
+            </button>
+        </div>
+    )}
+</div>
+
+
+           
+           
             )}
         </div>
     );
