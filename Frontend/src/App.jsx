@@ -36,6 +36,8 @@ import ClubProfile from './pages/Clubs/ClubProfile';
 import './styles/index.css';
 import styled from "styled-components";
 import FeedbackForm from './pages/Feedback/FeedbackForm';
+import ElectionPage from './pages/elections/ElectionPage';
+import VotingPage from './pages/elections/votingpage';
 
 
   // Protected route component
@@ -64,6 +66,10 @@ import FeedbackForm from './pages/Feedback/FeedbackForm';
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<CallbackPage />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
+          <Route exact path="/elections" element={<ElectionPage/>} />
+
+         
+          <Route path="/vote/:electionId" element={<VotingPage/>} />
           <Route 
             path="/dashboard" 
             element={

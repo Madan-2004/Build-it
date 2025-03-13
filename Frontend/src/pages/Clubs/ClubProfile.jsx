@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ClubProjects from "./ClubProjects";
-
+import ClubHero from "./ClubHero";
+import HeroSection from "./HeroSection";
+import ClubHead from "./ClubHead";
+import ClubStats from "./ClubStats";
 
 
 
@@ -16,7 +19,7 @@ const ClubProfile = () => {
   const [error, setError] = useState(null);
   const [newMember, setNewMember] = useState({ name: "", email: "", role: "member" });
   const [editMode, setEditMode] = useState(false);
-  const [editClub, setEditClub] = useState({ name: "", description: "" , website: "", email: ""});
+  const [editClub, setEditClub] = useState({ name: "", description: "", website: "", email: "" });
   const [memberEditMode, setMemberEditMode] = useState(null);
   const [editMemberData, setEditMemberData] = useState({ name: "", email: "", role: "" });
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
@@ -25,7 +28,7 @@ const ClubProfile = () => {
   useEffect(() => {
     fetchClubDetails();
   }, [clubName]);
-  
+
   const toggleTheme = () => {
     setDarkMode(!darkMode);
   };
@@ -44,7 +47,7 @@ const ClubProfile = () => {
       const data = await response.json();
       console.log(data);
       setClub(data);
-      
+
       setEditClub({ name: data.name, description: data.description || "", website: data.website || "", email: data.email || "" });
     } catch (err) {
       console.error("Error fetching club details:", err);
@@ -104,7 +107,7 @@ const ClubProfile = () => {
       alert("Invalid email! Only @iiti.ac.in emails are allowed.");
       return;
     }
-  
+
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/clubs/${club.id}/add-member/`, {
@@ -129,6 +132,7 @@ const ClubProfile = () => {
   };
 
   const startEditMember = (member) => {
+    console.log(member);
     setMemberEditMode(member.user.id);
     setEditMemberData({
       name: member.user.name,
@@ -146,7 +150,7 @@ const ClubProfile = () => {
       alert("Invalid email! Only @iiti.ac.in emails are allowed.");
       return;
     }
-  
+
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/clubs/${club.id}/edit-member/${userId}/`, {
@@ -199,17 +203,17 @@ const ClubProfile = () => {
 
   const handleDeleteClub = async () => {
     if (!window.confirm("Are you sure you want to delete this club?")) return;
-  
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/clubs/${encodeURIComponent(clubName)}/delete/`, {
         method: "DELETE",
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to delete club");
       }
-  
+
       alert("Club deleted successfully");
       navigate("/clubs");
     } catch (err) {
@@ -225,12 +229,12 @@ const ClubProfile = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ new_name: newName }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to rename club");
       }
-  
+
       const data = await response.json();
       alert("Club renamed successfully!");
       navigate(`/clubs/${encodeURIComponent(data.new_name)}`); // Redirect to new club URL
@@ -239,8 +243,8 @@ const ClubProfile = () => {
       alert(`Error renaming club: ${err.message}`);
     }
   };
-  
-  
+
+
 
 
   if (loading) return (
@@ -292,197 +296,44 @@ const ClubProfile = () => {
         </button>
       </div>
 
-      {/* Hero Section */}
-      <div className={`w-full ${darkMode ? 'bg-gradient-to-r from-blue-900 via-gray-800 to-indigo-900' : 'bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-500'} py-16 px-4 md:px-8 shadow-2xl`}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8">
-          <div className="relative flex-shrink-0">
-            <div className={`absolute inset-0 ${darkMode ? 'bg-blue-600' : 'bg-blue-400'} rounded-full opacity-20 blur-lg transform -translate-x-2 translate-y-2`}></div>
-            <img
-              src={club.image || "/placeholder.svg"}
-              alt={club.name}
-              className={`w-40 h-40 object-cover rounded-full border-4 ${darkMode ? 'border-blue-500' : 'border-blue-600'} shadow-lg relative z-10`}
-            />
-          </div>
+      <HeroSection
+        club={club}
+        editMode={editMode}
+        setEditMode={setEditMode}
+        editClub={editClub}
+        setEditClub={setEditClub}
+        handleUpdateClub={handleUpdateClub}
+        darkMode={darkMode}
+        setAddMemberDialogOpen={setAddMemberDialogOpen}
+      />
 
-          <div className="flex-1 text-center md:text-left">
-            {editMode ? (
-              <form onSubmit={handleUpdateClub} className={`space-y-4 ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow-lg`}>
-                <div>
-                  <label htmlFor="clubName" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Club Name</label>
-                  <input
-                    id="clubName"
-                    type="text"
-                    className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                    value={editClub.name}
-                    // readOnly
-                    onChange={(e) => setEditClub({ ...editClub, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="description" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Description</label>
-                  <textarea
-                    id="description"
-                    rows="3"
-                    className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                    value={editClub.description}
-                    onChange={(e) => setEditClub({ ...editClub, description: e.target.value })}
-                  />
-                </div>
-                <div>
-              <label htmlFor="website" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Club Website</label>
-              <input
-                id="website"
-                type="url"
-                className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                value={editClub.website}
-                onChange={(e) => setEditClub({ ...editClub, website: e.target.value })}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Club Email</label>
-              <input
-                id="email"
-                type="email"
-                className={`mt-1 block w-full rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                value={editClub.email}
-                onChange={(e) => setEditClub({ ...editClub, email: e.target.value })}
-              />
-            </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className={`inline-flex justify-center rounded-md border ${darkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300 bg-white text-gray-700'} py-2 px-4 text-sm font-medium shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                    onClick={() => setEditMode(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div>
-                <h1 className={`text-4xl md:text-5xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>{club.name}</h1>
-                <p className={`text-lg ${darkMode ? 'text-blue-300' : 'text-blue-600'} mb-6`}>{club.description || "No description available."}</p>
-                <div className="text-lg">
-              <p><strong>Club Website:</strong> <a href={club.website || "#"} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{club.website || "Not Available"}</a></p>
-              <p><strong>Club Email:</strong> <a href={`mailto:${club.email}`} className="text-blue-500 hover:underline">{club.email || "Not Available"}</a></p>
-            </div>
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <button
-                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition duration-200 flex items-center"
-                    onClick={() => setEditMode(true)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                    Edit Club
-                  </button>
-                  <button
-                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition duration-200 flex items-center"
-                    onClick={() => setAddMemberDialogOpen(true)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-                    </svg>
-                    Add Member
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 mt-8">
-      <div className="mb-8">
-        <ClubProjects clubId={club.id} />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    {/* Left Column */}
-    <div className="lg:col-span-1">
-            {/* Club Head Section */}
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl overflow-hidden mb-8`}>
-              <div className={`px-6 py-4 ${darkMode ? 'bg-gradient-to-r from-blue-800 to-indigo-900' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}>
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Club Head
-                </h2>
-              </div>
-           
-              <div key={club.head?.id} className="p-4 bg-gray-900 rounded-lg shadow">
-  <div className="flex justify-between items-center">
-    <div>
-      <p className="font-semibold">{club.head?.name}</p>
-      <p className="text-sm text-gray-400">{club.head?.email}</p>
-    </div>
-    <div className="flex gap-2">
-      <button
-        className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-lg text-sm shadow transition duration-200"
-        onClick={() => startEditMember({
-          user: {
-            id: club.head?.id,
-            name: club.head?.name,
-            email: club.head?.email
-          },
-          status: "head"
-        })}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-        </svg>
-      </button>
-      <button
-        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm shadow transition duration-200"
-        onClick={() => handleRemoveMember(club.head?.id)}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-        </svg>
-      </button>
-    </div>
-  </div>
-</div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-1">
+          <div >
+            <ClubHead
+              club={club}
+              darkMode={darkMode}
+              memberEditMode={memberEditMode}
+              editMemberData={editMemberData}
+              setEditMemberData={setEditMemberData}
+              handleUpdateMember={handleUpdateMember}
+              setMemberEditMode={setMemberEditMode}
+              startEditMember={startEditMember}
+              handleRemoveMember={handleRemoveMember}
+            />
+          </div>
 
-            </div>
+          <ClubStats club={club} darkMode={darkMode} />
+          </div>
 
-      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl overflow-hidden`}>
-              <div className={`px-6 py-4 ${darkMode ? 'bg-gradient-to-r from-blue-800 to-indigo-900' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}>
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Club Stats
-                </h2>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-4 rounded-lg text-center`}>
-                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Members</p>
-                    <p className={`text-3xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{club.members?.length || 0}</p>
-                  </div>
-                  <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-4 rounded-lg text-center`}>
-                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Founded</p>
-                    <p className={`text-xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>2023</p>
-        </div>
-        </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Right Column - Members List */}
-    <div className="lg:col-span-2">
-    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl overflow-hidden`}>
+          {/* Right Column - Members List */}
+          <div className="lg:col-span-2">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl overflow-hidden`}>
               <div className={`px-6 py-4 ${darkMode ? 'bg-gradient-to-r from-blue-800 to-indigo-900' : 'bg-gradient-to-r from-blue-500 to-indigo-500'} flex justify-between items-center`}>
                 <h2 className="text-xl font-bold text-white flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,123 +353,120 @@ const ClubProfile = () => {
               </div>
 
               {club.members && club.members.length > 0 ? (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {club.members
-      .filter(member => member.status !== "head")
-      .map((member, index) => (
-        <div key={member.user.id} className={`p-4 ${darkMode ? 'hover:bg-gray-750' : 'hover:bg-gray-50'} transition duration-150`}>
-          {memberEditMode === member.user.id ? (
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Name</label>
-                  <input
-                    type="text"
-                    className={`w-full p-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                    value={editMemberData.name}
-                    onChange={(e) => setEditMemberData({ ...editMemberData, name: e.target.value })}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {club.members
+                    .filter(member => member.status !== "head")
+                    .map((member, index) => (
+                      <div key={member.user.id} className={`p-4 ${darkMode ? 'hover:bg-gray-750' : 'hover:bg-gray-50'} transition duration-150`}>
+                        {memberEditMode === member.user.id ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div>
+                                <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Name</label>
+                                <input
+                                  type="text"
+                                  className={`w-full p-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
+                                  value={editMemberData.name}
+                                  onChange={(e) => setEditMemberData({ ...editMemberData, name: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Email</label>
+                                <input
+                                  type="email"
+                                  className={`w-full p-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
+                                  value={editMemberData.email}
+                                  onChange={(e) => setEditMemberData({ ...editMemberData, email: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Role</label>
+                                <select
+                                  className={`w-full p-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
+                                  value={editMemberData.role}
+                                  onChange={(e) => setEditMemberData({ ...editMemberData, role: e.target.value })}
+                                >
+                                  <option value="member">Member</option>
+                                  <option value="head">Head</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <button
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-lg transition duration-200"
+                                onClick={() => handleUpdateMember(member.user.id)}
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-4 py-2 rounded-lg text-sm shadow-lg transition duration-200`}
+                                onClick={() => setMemberEditMode(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div>
+                                <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} text-lg`}>{member.user.name}</p>
+                                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{member.user.email}</p>
+
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-3 py-1.5 rounded-lg text-sm shadow transition duration-200`}
+                                onClick={() => startEditMember(member)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                              </button>
+                              <button
+                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm shadow transition duration-200"
+                                onClick={() => handleRemoveMember(member.user.id)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                 </div>
-                <div>
-                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Email</label>
-                  <input
-                    type="email"
-                    className={`w-full p-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                    value={editMemberData.email}
-                    onChange={(e) => setEditMemberData({ ...editMemberData, email: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>Role</label>
-                  <select
-                    className={`w-full p-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                    value={editMemberData.role}
-                    onChange={(e) => setEditMemberData({ ...editMemberData, role: e.target.value })}
-                  >
-                    <option value="member">Member</option>
-                    <option value="head">Head</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-lg transition duration-200"
-                  onClick={() => handleUpdateMember(member.user.id)}
-                >
-                  Save Changes
-                </button>
-                <button
-                  className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-4 py-2 rounded-lg text-sm shadow-lg transition duration-200`}
-                  onClick={() => setMemberEditMode(null)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} text-lg`}>{member.user.name}</p>
-                  <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{member.user.email}</p>
-                  <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${
-                    member.status === "head"
-                      ? darkMode ? "bg-blue-900 text-blue-100" : "bg-blue-100 text-blue-800"
-                      : darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-800"
-                  }`}>
-                    {member.status === "head" ? "Head" : "Member"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-3 py-1.5 rounded-lg text-sm shadow transition duration-200`}
-                  onClick={() => startEditMember(member)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                </button>
-                <button
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm shadow transition duration-200"
-                  onClick={() => handleRemoveMember(member.user.id)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-  </div>
 
 
-        ) : (
-          <div className="p-8 text-center text-gray-400">
-            <p className="text-xl">No members have been added yet.</p>
+              ) : (
+                <div className="p-8 text-center text-gray-400">
+                  <p className="text-xl">No members have been added yet.</p>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
+        <div className="mt-8">
+          <ClubProjects clubId={club.id} />
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
 
-     {/* Add Member Dialog */}
+      {/* Add Member Dialog */}
       {addMemberDialogOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             {/* Background overlay */}
-            <div 
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
               aria-hidden="true"
               onClick={handleCloseDialogBackdrop}
             ></div>
-            
+
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
+
             <div className={`inline-block align-bottom ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full`}>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} px-4 pt-5 pb-4 sm:p-6 sm:pb-4`}>
                 <div className="sm:flex sm:items-start">
@@ -676,15 +524,15 @@ const ClubProfile = () => {
                 </div>
               </div>
               <div className={`${darkMode ? 'bg-gray-900' : 'bg-gray-50'} px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                   onClick={handleAddMember}
                 >
                   Add Member
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className={`mt-3 w-full inline-flex justify-center rounded-md border ${darkMode ? 'border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'} shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm`}
                   onClick={() => setAddMemberDialogOpen(false)}
                 >
