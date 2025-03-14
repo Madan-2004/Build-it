@@ -107,14 +107,14 @@ export default function Navbar() {
             ELECTIONS
           </NavLink>
           <NavLink
-            to="/feedback"
+            to="/faqs"
             onClick={toggleMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
               color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
             })}
           >
-            FEEDBACK
+            FAQ's
           </NavLink>
           <NavLink
             to="/profile"

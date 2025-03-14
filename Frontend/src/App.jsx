@@ -38,6 +38,7 @@ import styled from "styled-components";
 import FeedbackForm from './pages/Feedback/FeedbackForm';
 import ElectionPage from './pages/elections/ElectionPage';
 import VotingPage from './pages/elections/votingpage';
+import FAQPage from './pages/FAQS/FAQPage';
 
 
   // Protected route component
@@ -66,6 +67,7 @@ import VotingPage from './pages/elections/votingpage';
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<CallbackPage />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
+          <Route path="/faqs" element={<FAQPage />} />
           <Route exact path="/elections" element={<ElectionPage/>} />
 
          
