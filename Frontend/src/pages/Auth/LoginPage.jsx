@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import authService from '../services/auth';
+import authService from '../../services/auth';
 
 const Login = () => {
   const navigate = useNavigate();

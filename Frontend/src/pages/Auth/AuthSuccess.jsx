@@ -1,7 +1,7 @@
 // src/pages/AuthSuccess.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import authService from '../services/auth';
+import authService from '../../services/auth';
 
 const AuthSuccess = () => {
   const navigate = useNavigate();

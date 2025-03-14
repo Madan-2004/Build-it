@@ -1,6 +1,7 @@
 import React from "react";
 import * as S from "./AboutUsElements";
 import { FaBalanceScale, FaHandsHelping, FaLock, FaVoteYea, FaBook, FaUserShield } from 'react-icons/fa'
+import { PageContainer } from "../../components/PageContainer";
 
 export default function AboutUs() {
   return (

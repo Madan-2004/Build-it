@@ -3,8 +3,8 @@ import styled from "styled-components";
 
 export const CarouselContainer = styled.div`
   width: 100%;
-  height: 80vh; // Using viewport height for responsiveness
-  max-height: 800px;
+  height: 100vh; // Changed from 80vh to 100vh
+  max-height: none; // Removed max-height constraint
   overflow: hidden;
   position: relative;
 
@@ -16,8 +16,8 @@ export const CarouselContainer = styled.div`
 
 export const ImageWrapper = styled.div`
   position: relative;
-  height: 80vh;
-  max-height: 800px;
+  height: 100vh; // Changed from 80vh to 100vh
+  max-height: none; // Removed max-height constraint
 `;
 
 export const TextOverlay = styled.div`
@@ -62,13 +62,16 @@ export const TextOverlay = styled.div`
 
 export const CarouselImage = styled.img`
   width: 100%;
-  height: 500px;
+  height: 100vh; // Changed from fixed height to 100vh
   object-fit: cover;
   object-position: center center;
-  image-rendering: crisp-edges; /* Forces sharp rendering */
+  image-rendering: crisp-edges;
+  
+  /* Add an overlay for darker contrast */
+  filter: brightness(0.7); // Makes the image darker
 
   @media (max-width: 768px) {
-    height: 400px;
+    height: 100vh; // Adjusted for mobile too
     image-rendering: -webkit-optimize-contrast;
   }
 `;
@@ -197,4 +200,85 @@ export const MissionImage = styled.img`
     width: 100%;
     max-width: 100%;
   }
+`;
+
+// Add these styled components to your existing HomeElements.js file
+
+export const CouncilSection = styled.section`
+  padding: 4rem 2rem;
+  background-color: #f9f9f9;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 3rem 1rem;
+  }
+`;
+
+export const CouncilHeading = styled.h2`
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #1a237e;
+  position: relative;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background-color: #ff5722;
+  }
+`;
+
+export const CouncilGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+`;
+
+export const CouncilCard = styled.div`
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+`;
+
+export const CouncilIcon = styled.div`
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: #1a237e;
+`;
+
+export const CouncilTitle = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1a237e;
+`;
+
+export const CouncilDescription = styled.p`
+  font-size: 1rem;
+  color: #455a64;
+  line-height: 1.6;
 `;

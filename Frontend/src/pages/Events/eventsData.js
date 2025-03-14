@@ -42,7 +42,7 @@ const eventsData = [
       contact: "tarang@iitindore.ac.in"
     },
     {
-      title: "IIT Indore Sports Fest - Aaveg 2024",
+      title: "IIT Sports Fest - Aaveg 2024",
       date: "5th April 2024 - 7th April 2024",
       poster: "/data/media/images/general/dummy.jpg",
       description: "Inter-college sports fest featuring cricket, football, basketball, athletics, and more.",
