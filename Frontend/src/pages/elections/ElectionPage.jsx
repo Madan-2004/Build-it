@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import ElectionTable from './ElectionTable'; // Adjusted to import from the correct path
+import axios from "axios";
+import { useEffect, useState } from "react";
+const API_URL = "http://localhost:8000/api/";
 
 const ElectionPage = () => {
   const [elections, setElections] = useState({
@@ -8,61 +9,129 @@ const ElectionPage = () => {
     past: [],
   });
 
-  // Example of fetching election data (this can be replaced with an actual API call)
   useEffect(() => {
-    setElections({
-      ongoing: [
-        { id: "001", name: "Student Body President", date: "2025-03-12", status: "ongoing" },
-        { id: "002", name: "Class Representative", date: "2025-03-15", status: "ongoing" },
-      ],
-      upcoming: [
-        { id: "003", name: "Sports Captain", date: "2025-03-20", status: "upcoming" },
-        { id: "004", name: "Cultural Secretary", date: "2025-03-25", status: "upcoming" },
-      ],
-      past: [
-        { id: "005", name: "Student Body Vice President", date: "2025-03-05", status: "past" },
-        { id: "006", name: "Secretary General", date: "2025-03-01", status: "past" },
-      ],
-    });
+    axios
+      .get(`${API_URL}elections/`)
+      .then((response) => {
+        const currentDate = new Date();
+        const categorizedElections = {
+          ongoing: [],
+          upcoming: [],
+          past: [],
+        };
+
+        response.data.forEach((election) => {
+          const startDate = new Date(election.start_date);
+          const endDate = new Date(election.end_date);
+          election.start_date = election.start_date.slice(0, -1);
+          election.end_date = election.end_date.slice(0, -1);
+
+          if (currentDate >= startDate && currentDate <= endDate) {
+            categorizedElections.ongoing.push(election);
+          } else if (currentDate < startDate) {
+            categorizedElections.upcoming.push(election);
+          } else {
+            categorizedElections.past.push(election);
+          }
+        });
+
+        setElections(categorizedElections);
+      })
+      .catch((error) => {
+        console.log("Error fetching elections: ", error);
+      });
   }, []);
-
-  const handleAction = (election) => {
-    if (election.status === 'ongoing') {
-      window.location.href = `/vote/${election.id}`;
-    } else if (election.status === 'past') {
-      window.location.href = `/results/${election.id}`;
-    }
-  };
-
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-center mb-8">Elections</h1>
+    <div className="bg-blue-200 p-10 min-h-screen">
+      <div className="max-w-6xl mx-auto bg-white p-8 shadow-lg rounded-lg">
+        <h1 className="text-3xl font-bold text-center mb-8">Elections</h1>
 
-      {/* Ongoing Elections */}
-      <div className="mb-6">
-        <ElectionTable
-          title="Ongoing Elections"
-          elections={elections.ongoing}
-          handleAction={handleAction}
-        />
-      </div>
+        {/* Ongoing Elections */}
+        <h2 className="text-xl font-semibold mb-4">Ongoing Elections</h2>
+        <table className="w-full text-left border-collapse mb-6">
+          <thead>
+            <tr className="bg-blue-200">
+              <th className="p-3 border">Election Name</th>
+              <th className="p-3 border">Start Date&Time</th>
+              <th className="p-3 border">End Date&Time</th>
+              <th className="p-3 border">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {elections.ongoing.map((election) => (
+              <tr
+                key={election.id}
+                className="hover:bg-blue-100 cursor-pointer"
+              >
+                <td className="p-3 border">{election.title}</td>
+                <td className="p-3 border">{election.start_date}</td>
+                <td className="p-3 border">{election.end_date}</td>
+                <td className="p-3 border text-center">
+                  <a
+                    href="/vote.html"
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Vote Now
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {/* Upcoming Elections */}
-      <div className="mb-6">
-        <ElectionTable
-          title="Upcoming Elections"
-          elections={elections.upcoming}
-          handleAction={handleAction}
-        />
-      </div>
+        {/* Upcoming Elections */}
+        <h2 className="text-xl font-semibold mb-4">Upcoming Elections</h2>
+        <table className="w-full text-left border-collapse mb-6">
+          <thead>
+            <tr className="bg-green-200">
+              <th className="p-3 border">Election Name</th>
+              <th className="p-3 border">Start Date&Time</th>
+              <th className="p-3 border">End Date&Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {elections.upcoming.map((election) => (
+              <tr
+                key={election.id}
+                className="hover:bg-green-100 cursor-pointer"
+              >
+                <td className="p-3 border">{election.title}</td>
+                <td className="p-3 border">{election.start_date}</td>
+                <td className="p-3 border">{election.end_date}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {/* Past Elections */}
-      <div className="mb-6">
-        <ElectionTable
-          title="Past Elections"
-          elections={elections.past}
-          handleAction={handleAction}
-        />
+        {/* Past Elections */}
+        <h2 className="text-xl font-semibold mb-4">Past Elections</h2>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-red-200">
+              <th className="p-3 border">Election Name</th>
+              <th className="p-3 border">Start Date&Time</th>
+              <th className="p-3 border">End Date&Time</th>
+              <th className="p-3 border">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {elections.past.map((election) => (
+              <tr key={election.id} className="hover:bg-red-100 cursor-pointer">
+                <td className="p-3 border">{election.title}</td>
+                <td className="p-3 border">{election.start_date}</td>
+                <td className="p-3 border">{election.end_date}</td>
+                <td className="p-3 border text-center">
+                  <a
+                    href="/electionresult.html"
+                    className="bg-red-400 text-white px-4 py-2 rounded hover:bg-red-700"
+                  >
+                    See Results
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

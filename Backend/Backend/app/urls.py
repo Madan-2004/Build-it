@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include,path
 from .import views
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from .views import (
@@ -47,4 +47,5 @@ urlpatterns = [
 
     # Feedback
     path('api/feedback/', FeedbackView.as_view(), name='feedback'),
+    path('api/', include('election.urls')),
 ]
