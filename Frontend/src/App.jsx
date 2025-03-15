@@ -1,103 +1,181 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
-// Authentication-related imports
+// ✅ Authentication
 import LoginPage from './pages/Auth/LoginPage';
 import CallbackPage from './pages/Auth/CallbackPage';
 import AuthSuccess from './pages/Auth/AuthSuccess';
 
-// Dashboard
+// ✅ Dashboard
 import Dashboard from './pages/Dashboard/Dashboard1';
 
-// Components
-import Navbar from "./components/Navbar/Navbar";
-import Footer from "./components/Footer/Footer";
-import ProtectedRoute from './components/ProtectedRoute';
-
-// Home & General Pages
+// ✅ General Pages
 import Home from './pages/home/Home';
 import About from './pages/aboutus/AboutUs';
 import Contact from './pages/contact/Contact';
+import FeedbackForm from './pages/Feedback/FeedbackForm';
 
-// Events Pages
+// ✅ Events
 import Events from './pages/Events/Events';
 import EventDetails from './pages/Events/EventDetails';
 
-// Council Pages
+// ✅ Councils & Clubs
 import Council from './pages/Council/Council';
 import CouncilDetails from './pages/Council/CouncilDetails';
-
-// Clubs Pages
 import ClubProfile from './pages/Clubs/ClubProfile';
 
+// ✅ Elections - Voting
+// import ElectionPage from './pages/elections/voting/ElectionPage';
+import ElectionPage from './pages/elections/voting/ElectionPage';
+import VotePage from './pages/elections/voting/VotePage';
+import ElectionResultPage from './pages/elections/voting/ElectionResultPage';
+import DetailedResultsView from './pages/elections/voting/DetailedResultsView';
+import VotingConfirmationPage from './pages/elections/voting/VotingConfirmationPage';
 
+// ✅ Elections - Admin
+import AdminDashboard from './pages/elections/admin/AdminDashboard';
+import AdminElectionsList from './pages/elections/admin/AdminElectionsList';
+import CreateElectionForm from './pages/elections/admin/CreateElectionForm';
+import EditElectionForm from './pages/elections/admin/EditElectionForm';
+import AdminPositionList from './pages/elections/admin/AdminPositionList';
+import AddPositionForm from './pages/elections/admin/AddPositionForm';
+import CandidateForm from './pages/elections/admin/CandidateForm';
+import CandidateList from './pages/elections/admin/CandidateList';
 
-// Styles & Utilities
+// ✅ Utilities & Components
+import Navbar from './components/Navbar/Navbar';
+import Footer from './components/Footer/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
+import RouteProtection from './pages/elections/utils/RouteProtection';
+import EligibilityCheck from './pages/elections/utils/EligibilityCheck';
+
 import './styles/index.css';
-import styled from "styled-components";
-import FeedbackForm from './pages/Feedback/FeedbackForm';
-import ElectionPage from './pages/elections/ElectionPage';
-import VotingPage from './pages/elections/votingpage';
+import styled from 'styled-components';
+import axios from "axios";
 
+// Add this to your main app file (e.g., index.js or App.js)
+axios.defaults.withCredentials = true;
 
-  // Protected route component
-  const PageWrapper = styled.div`
-    padding-top: ${({ isHomepage }) => (isHomepage ? "0" : "90px")};
-   
-  `;
+// ✅ Conditional Wrapper for Page Layout
+const PageWrapper = styled.div`
+  padding-top: ${({ isHomepage }) => (isHomepage ? "0" : "90px")};
+`;
 
-  function App() {
-  
-    
-    return (
-      <Router>
-        <Navbar />
-        <ConditionalWrapper>
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <ConditionalWrapper>
         <Routes>
-        <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/events/:eventTitle" element={<EventDetails />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/feedback" element={<FeedbackForm />} />
-            <Route path="/council" element={<Council />} />
-            <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
-            <Route path="/clubs/:clubName" element={<ClubProfile />} />
+          {/* ✅ Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/:eventTitle" element={<EventDetails />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/feedback" element={<FeedbackForm />} />
+          <Route path="/council" element={<Council />} />
+          <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
+          <Route path="/clubs/:clubName" element={<ClubProfile />} />
+
+          {/* ✅ Authentication */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<CallbackPage />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
-          <Route exact path="/elections" element={<ElectionPage/>} />
 
-         
-          <Route path="/vote/:electionId" element={<VotingPage/>} />
+          {/* ✅ Elections - Voting */}
+          <Route path="/elections" element={<ElectionPage />} />
+          <Route path="/vote/:electionId" element={<VotePage />} />
+          <Route path="/elections/:electionId/results" element={<ElectionResultPage />} />
+          <Route path="/elections/:electionId/detailed-results" element={<DetailedResultsView />} />
+          <Route path="/vote-confirmation" element={<VotingConfirmationPage />} />
+
+          {/* ✅ Admin Election Management (Protected) */}
           <Route 
-            path="/dashboard" 
+            path="/admin/elections" 
+            element={
+              <ProtectedRoute role="admin">
+                <AdminElectionsList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/elections/create" 
+            element={
+              <ProtectedRoute role="admin">
+                <CreateElectionForm />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/elections/:electionId/edit" 
+            element={
+              <ProtectedRoute role="admin">
+                <EditElectionForm />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/elections/:electionId/positions" 
+            element={
+              <ProtectedRoute role="admin">
+                <AdminPositionList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/elections/:electionId/positions/add" 
+            element={
+              <ProtectedRoute role="admin">
+                <AddPositionForm />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/elections/:electionId/positions/:positionId/candidates" 
+            element={
+              <ProtectedRoute role="admin">
+                <CandidateList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/elections/:electionId/positions/:positionId/candidates/add" 
+            element={
+              <ProtectedRoute role="admin">
+                <CandidateForm />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute role="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* ✅ Dashboard (Protected) */}
+          <Route 
+            path="/profile" 
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
             } 
           />
-          
-          {/* Redirect to dashboard if logged in, otherwise to login */}
-          <Route 
-            path="/" 
-            element={<Navigate to="/dashboard" replace />} 
-          />
-          
-          {/* Catch all other routes and redirect to dashboard or login */}
-          <Route 
-            path="*" 
-            element={<Navigate to="/dashboard" replace />} 
-          />
-          {/* <Route path="/" element={<Navigate to="/dashboard" />} /> */}
+
+          {/* ✅ Redirect Logic */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        </ConditionalWrapper>
-        <Footer />
-      </Router>
-    );
-  }
-  // Component to conditionally wrap pages
+      </ConditionalWrapper>
+      <Footer />
+    </Router>
+  );
+}
+
+// ✅ Wrapper Component for Homepage Layout Adjustments
 const ConditionalWrapper = ({ children }) => {
   const location = useLocation();
   const isHomepage = location.pathname === "/";
@@ -105,5 +183,4 @@ const ConditionalWrapper = ({ children }) => {
   return <PageWrapper isHomepage={isHomepage}>{children}</PageWrapper>;
 };
 
-
-  export default App;
+export default App;

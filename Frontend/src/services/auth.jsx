@@ -10,11 +10,33 @@ axios.defaults.withCredentials = true;
 const checkAuth = async () => {
   try {
     const response = await axios.get(`${API_URL}auth/check/`);
+    console.log('User authenticated:', response.data);
     return response.data;
   } catch (error) {
     return { isAuthenticated: false };
   }
 };
+// const checkAuth = async () => {
+//   try {
+//     const token = localStorage.getItem('access_token');  // Retrieve token from storage
+//     if (!token) {
+//       return { isAuthenticated: false };
+//     }
+
+//     const response = await axios.get(`${API_URL}auth/check/`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`  // Send token in Authorization header
+//       }
+//     });
+
+//     console.log('User authenticated:', response.data);
+//     return response.data;
+//   } catch (error) {
+//     console.error('Authentication check failed:', error.response?.data || error.message);
+//     return { isAuthenticated: false };
+//   }
+// };
+
 
 // Start Google OAuth flow
 const initiateGoogleLogin = () => {

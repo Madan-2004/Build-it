@@ -47,5 +47,8 @@ urlpatterns = [
 
     # Feedback
     path('api/feedback/', FeedbackView.as_view(), name='feedback'),
-    path('api/', include('election.urls')),
+    # path('api/', include('election.urls')),
+
+    #testing
+    path('auth/check/', views.check_auth_status, name="check-auth"),
 ]
