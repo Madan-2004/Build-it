@@ -1,0 +1,61 @@
+[
+   
+    {
+        "model": "election.election",
+        "pk": 1,
+        "fields": {
+            "title": "2024 Student Council Election",
+            "start_date": "2024-03-01T00:00:00Z",
+            "end_date": "2024-03-10T23:59:59Z"
+        }
+    },
+    {
+        "model": "election.election",
+        "pk": 2,
+        "fields": {
+            "title": "2024 College President Election",
+            "start_date": "2024-04-01T00:00:00Z",
+            "end_date": "2024-04-10T23:59:59Z"
+        }
+    },
+
+ 
+    {
+        "model": "election.election",
+        "pk": 3,
+        "fields": {
+            "title": "2025 Gymkhana Election",
+            "start_date": "2025-03-10T00:00:00Z",
+            "end_date": "2025-03-20T23:59:59Z"
+        }
+    },
+    {
+        "model": "election.election",
+        "pk": 4,
+        "fields": {
+            "title": "2025 Department Representative Election",
+            "start_date": "2025-03-15T00:00:00Z",
+            "end_date": "2025-03-25T23:59:59Z"
+        }
+    },
+
+
+    {
+        "model": "election.election",
+        "pk": 5,
+        "fields": {
+            "title": "2025 Hostel Election",
+            "start_date": "2025-05-01T00:00:00Z",
+            "end_date": "2025-05-10T23:59:59Z"
+        }
+    },
+    {
+        "model": "election.election",
+        "pk": 6,
+        "fields": {
+            "title": "2025 Sports Secretary Election",
+            "start_date": "2025-06-01T00:00:00Z",
+            "end_date": "2025-06-10T23:59:59Z"
+        }
+    }
+]

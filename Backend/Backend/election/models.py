@@ -18,7 +18,6 @@ class Candidate(models.Model):
     election = models.ForeignKey(Election, on_delete=models.CASCADE)
     eligible_batches = models.JSONField(default=list)
     eligible_branches = models.JSONField(default=list)
-    eligible_courses = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.name} - {self.position}"
