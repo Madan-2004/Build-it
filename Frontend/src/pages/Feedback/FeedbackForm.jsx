@@ -1,5 +1,7 @@
+// FeedbackForm.js
 import React, { useState } from 'react';
 import axios from 'axios';
+import './FeedbackForm.css';
 
 const FeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -17,7 +19,10 @@ const FeedbackForm = () => {
 
   const handleChange = e => {
     const { name, value } = e.target;
-    setFormData(prevState => ({ ...prevState, [name]: value }));
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async e => {
@@ -25,7 +30,7 @@ const FeedbackForm = () => {
     setStatus(prevStatus => ({ ...prevStatus, submitting: true }));
     
     try {
-      await axios.post('http://127.0.0.1:8000/api/feedback/', formData);
+      const response = await axios.post('http://127.0.0.1:8000/api/feedback/', formData);
       
       setStatus({
         submitted: true,
@@ -33,10 +38,21 @@ const FeedbackForm = () => {
         info: { error: false, msg: 'Feedback submitted successfully!' }
       });
       
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      // Reset form after successful submission
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
       
+      // Reset form status after 5 seconds
       setTimeout(() => {
-        setStatus({ submitted: false, submitting: false, info: { error: false, msg: null } });
+        setStatus({
+          submitted: false,
+          submitting: false,
+          info: { error: false, msg: null }
+        });
       }, 5000);
       
     } catch (error) {
@@ -49,64 +65,78 @@ const FeedbackForm = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full p-6 bg-gray-100 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2">We Value Your Feedback</h2>
-      <p className="text-gray-600 mb-4">Your feedback helps us improve our services.</p>
+    <div className="feedback-container">
+      <h2>We Value Your Feedback</h2>
+      <p className="feedback-intro">
+        Your feedback helps us improve our services. Please let us know your thoughts, suggestions, or concerns.
+      </p>
       
       {status.info.msg && (
-        <div className={`text-white p-2 mb-4 rounded ${status.info.error ? 'bg-red-500' : 'bg-green-500'}`}>
+        <div className={`feedback-alert ${status.info.error ? 'error' : 'success'}`}>
           {status.info.msg}
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row w-full gap-4">
-        <div className="flex flex-col gap-4 w-full lg:w-1/3">
+      <form onSubmit={handleSubmit} className="feedback-form">
+        <div className="form-group">
+          <label htmlFor="name">Name</label>
           <input
             type="text"
+            id="name"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Your Name"
             required
-            className="p-2 border rounded-lg w-full"
+            placeholder="Your name"
           />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
           <input
             type="email"
+            id="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Your Email"
             required
-            className="p-2 border rounded-lg w-full"
+            placeholder="Your email address"
           />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="subject">Subject</label>
           <input
             type="text"
+            id="subject"
             name="subject"
             value={formData.subject}
             onChange={handleChange}
-            placeholder="Feedback Subject"
             required
-            className="p-2 border rounded-lg w-full"
+            placeholder="Feedback subject"
           />
         </div>
-        <div className="flex flex-col w-full lg:w-2/3">
+        
+        <div className="form-group">
+          <label htmlFor="message">Message</label>
           <textarea
+            id="message"
             name="message"
             value={formData.message}
             onChange={handleChange}
-            placeholder="Your Feedback Message"
-            rows="4"
             required
-            className="p-2 border rounded-lg w-full"
+            placeholder="Your feedback message"
+            rows="6"
           ></textarea>
-          <button 
-            type="submit" 
-            className="mt-4 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-800 transition"
-            disabled={status.submitting}
-          >
-            {status.submitting ? 'Submitting...' : 'Submit Feedback'}
-          </button>
         </div>
+        
+        <button 
+          type="submit" 
+          className="submit-button"
+          disabled={status.submitting}
+        >
+          {status.submitting ? 'Submitting...' : 'Submit Feedback'}
+        </button>
       </form>
     </div>
   );
