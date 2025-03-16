@@ -15,18 +15,28 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [recentElections, setRecentElections] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
-  const [trendType, setTrendType] = useState("monthly");
+  const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const statsResponse = await axios.get(API_URL);
-        console.log("Dashboard Stats:", statsResponse.data);
         setStats(statsResponse.data);
         
-        // Keep the existing mock data for recentElections and recentActivity
-        // ...
+        setRecentElections([
+          { id: 1, name: "SAC General Elections", status: "active", startDate: "2025-03-10", endDate: "2025-03-20", voterCount: 1200 },
+          { id: 2, name: "Cultural Council Elections", status: "upcoming", startDate: "2025-04-05", endDate: "2025-04-15", voterCount: 0 },
+          { id: 3, name: "Hostel Representatives", status: "completed", startDate: "2025-02-01", endDate: "2025-02-10", voterCount: 850 }
+        ]);
+        
+        setRecentActivity([
+          { id: 1, action: "New candidate added", election: "SAC General Elections", timestamp: "2025-03-15 14:30" },
+          { id: 2, action: "Position modified", election: "Cultural Council Elections", timestamp: "2025-03-14 11:20" },
+          { id: 3, action: "Election created", election: "Hostel Representatives", timestamp: "2025-03-10 09:45" },
+          { id: 4, action: "Vote recorded", election: "SAC General Elections", timestamp: "2025-03-15 16:12" }
+        ]);
 
+        
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -37,7 +47,18 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // ... (keep existing loading and error checks)
+  const handleEditCandidate = (id) => {
+    console.log("Edit candidate with id:", id);
+  };
+
+  const handleDeleteCandidate = (id) => {
+    console.log("Delete candidate with id:", id);
+  };
+
+  const handleAddCandidate = () => {
+    console.log("Add new candidate");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -57,7 +78,7 @@ const AdminDashboard = () => {
     labels: ['Completed', 'Active', 'Upcoming'],
     datasets: [
       {
-        data: [stats.completed_elections, stats.active_elections, stats.upcoming_elections],
+        data: [5, 2, 3],
         backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
         borderColor: ['#059669', '#2563eb', '#d97706'],
         borderWidth: 1,
@@ -66,11 +87,11 @@ const AdminDashboard = () => {
   };
 
   const lineChartData = {
-    labels: trendType === "monthly" ? stats.voting_trend.months : stats.voting_trend.hours,
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
         label: 'Votes Cast',
-        data: trendType === "monthly" ? stats.voting_trend.vote_counts : stats.voting_trend.hourly_vote_counts,
+        data: [450, 590, 800, 810, 560, 550],
         fill: false,
         borderColor: '#3b82f6',
         tension: 0.1
@@ -143,23 +164,7 @@ const AdminDashboard = () => {
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Voting Trends</h3>
-          <div className="flex space-x-2">
-            <button 
-              onClick={() => setTrendType("monthly")} 
-              className={`px-4 py-2 rounded-md text-white ${trendType === "monthly" ? "bg-blue-600" : "bg-gray-400 hover:bg-gray-500"}`}
-            >
-              Monthly
-            </button>
-            <button 
-              onClick={() => setTrendType("hourly")} 
-              className={`px-4 py-2 rounded-md text-white ${trendType === "hourly" ? "bg-blue-600" : "bg-gray-400 hover:bg-gray-500"}`}
-            >
-              Hourly
-            </button>
-          </div>
-        </div>
+        <h3 className="text-lg font-semibold mb-4">Voting Trends</h3>
         <Line 
           data={lineChartData}
           options={{
@@ -170,19 +175,78 @@ const AdminDashboard = () => {
               },
               title: {
                 display: true,
-                text: trendType === "monthly" ? "Monthly Voting Activity" : "Hourly Voting Activity"
+                text: 'Monthly Voting Activity'
               }
             }
           }}
         />
       </div>
+     
 
-      {/* Keep the existing Recent Elections and Recent Activity sections */}
-      {/* ... */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Recent Elections</h3>
+            <Link to="/admin/elections" className="text-blue-500 hover:underline text-sm">View All</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-3 text-left">Name</th>
+                  <th className="py-2 px-3 text-left">Status</th>
+                  <th className="py-2 px-3 text-left">Date Range</th>
+                  <th className="py-2 px-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentElections.map(election => (
+                  <tr key={election.id} className="border-b">
+                    <td className="py-2 px-3">{election.name}</td>
+                    <td className="py-2 px-3">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        election.status === 'active' ? 'bg-green-100 text-green-800' :
+                        election.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {election.status}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-sm">{election.startDate} to {election.endDate}</td>
+                    <td className="py-2 px-3">
+                      <Link to={`/admin/elections/${election.id}/edit`} className="text-blue-500 hover:underline text-sm mr-2">Edit</Link>
+                      <Link to={`/admin/elections/${election.id}/positions`} className="text-green-500 hover:underline text-sm">Positions</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+          <ul className="space-y-3">
+            {recentActivity.map(activity => (
+              <li key={activity.id} className="border-b pb-2">
+                <div className="flex items-start">
+                  <div className="bg-blue-100 p-2 rounded-full mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm"><span className="font-medium">{activity.action}</span> - {activity.election}</p>
+                    <p className="text-xs text-gray-500">{activity.timestamp}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </>
   );
-
-  // ... (keep the rest of the component as is)
 
   const renderElections = () => (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -193,6 +257,7 @@ const AdminDashboard = () => {
     </div>
   );
 
+ 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
@@ -211,6 +276,7 @@ const AdminDashboard = () => {
           >
             Elections
           </button>
+          
         </nav>
       </div>
 

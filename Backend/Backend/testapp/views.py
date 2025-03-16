@@ -82,15 +82,29 @@ class CandidateViewSet(viewsets.ModelViewSet):
         position_id = self.kwargs.get('position_pk')
         position = get_object_or_404(Position, pk=position_id)
 
-        user = self.request.data.get('user', None)
         name = self.request.data.get('name', None)
-
-        if user:
-            serializer.save(position=position, user_id=user)
-        elif name:
+        if name:
             serializer.save(position=position, name=name)
         else:
             raise ValidationError("Candidate must have either a user or a name.")
+
+    def perform_update(self, serializer):
+            """Ensure candidate updates maintain the correct position"""
+            candidate = self.get_object()
+            position_id = self.kwargs.get('position_pk')
+
+            # Ensure the position of the candidate is not being changed
+            if position_id and candidate.position.id != int(position_id):
+                raise ValidationError("Position cannot be changed for a candidate.")
+
+            serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a candidate"""
+        candidate = self.get_object()
+        self.perform_destroy(candidate)
+        return Response({"message": "Candidate deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+      
 
     @action(detail=True, methods=['get'])
     def list_candidates(self, request, election_pk, position_pk):
@@ -155,12 +169,13 @@ class VoteViewSet(viewsets.ModelViewSet):
             candidate_id = vote_data.get("candidate")
             candidate = get_object_or_404(Candidate, id=candidate_id)
 
-            # ✅ Determine election from candidate
-            election = candidate.position.election  
+            # ✅ Determine position and election
+            position = candidate.position
+            election = position.election  
 
-            # ✅ Prevent duplicate votes for this election
-            if Vote.objects.filter(voter=voter, candidate__position__election=election).exists():
-                return Response({"error": "You have already voted in this election."}, status=status.HTTP_400_BAD_REQUEST)
+            # ✅ Prevent duplicate votes for the same position
+            if Vote.objects.filter(voter=voter, candidate__position=position).exists():
+                return Response({"error": f"You have already voted for {position.title}."}, status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Create the vote
             vote = Vote.objects.create(voter=voter, candidate=candidate)
@@ -168,23 +183,63 @@ class VoteViewSet(viewsets.ModelViewSet):
 
         return Response(created_votes, status=status.HTTP_201_CREATED)
 
-# ✅ **Fetch Election Stats (Admin Dashboard)**
+from django.utils import timezone
+from django.db.models.functions import TruncMonth
+from django.db.models import Count
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.utils import timezone
+
+from .models import Election, Position, Candidate, Vote
+from datetime import timedelta
 class AdminDashboardViewSet(viewsets.ViewSet):
     permission_classes = []  # 🔥 Removed authentication
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
-        """Get overall election statistics"""
+        """Get overall election statistics including hourly and monthly vote trends"""
+
+        now = timezone.now()
+
+        # ✅ Get overall statistics
         total_elections = Election.objects.count()
-        active_elections = Election.objects.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now()).count()
+        active_elections = Election.objects.filter(start_date__lte=now, end_date__gte=now).count()
+        completed_elections = Election.objects.filter(end_date__lt=now).count()
+        upcoming_elections = Election.objects.filter(start_date__gt=now).count()
         total_positions = Position.objects.count()
         total_candidates = Candidate.objects.count()
         total_votes = Vote.objects.count()
 
+        # ✅ Generate Monthly Voting Trend
+        monthly_votes = {}
+        for i in range(6):  # Last 6 months
+            month = now - timedelta(days=30 * i)
+            month_label = month.strftime('%b %Y')
+            vote_count = Vote.objects.filter(timestamp__year=month.year, timestamp__month=month.month).count()
+            monthly_votes[month_label] = vote_count
+
+        # ✅ Generate Hourly Voting Trend for the Last 24 Hours
+        hourly_votes = {}
+        last_24_hours = now - timedelta(hours=24)
+        for i in range(24):  # Last 24 hours
+            hour = last_24_hours + timedelta(hours=i)
+            hour_label = hour.strftime('%I %p')  # e.g., "10 AM"
+            vote_count = Vote.objects.filter(timestamp__hour=hour.hour, timestamp__date=hour.date()).count()
+            hourly_votes[hour_label] = vote_count
+
         return Response({
             "total_elections": total_elections,
             "active_elections": active_elections,
+            "completed_elections": completed_elections,
+            "upcoming_elections": upcoming_elections,
             "total_positions": total_positions,
             "total_candidates": total_candidates,
-            "total_votes": total_votes
+            "total_votes": total_votes,
+            "voting_trend": {
+                "months": list(monthly_votes.keys())[::-1],  # Reverse order for correct display
+                "vote_counts": list(monthly_votes.values())[::-1],
+                "hours": list(hourly_votes.keys()),
+                "hourly_vote_counts": list(hourly_votes.values())
+            }
         })

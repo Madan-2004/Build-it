@@ -54,61 +54,106 @@ const VotePage = () => {
         });
     }, []);
 
+    // const handleVote = () => {
+    //     if (!user) {
+    //         setMessage("❌ You must be logged in to vote.");
+    //         return;
+    //     }
+
+    //     // Count required positions vs selected positions
+    //     const requiredPositions = positions.length;
+    //     const selectedPositions = Object.keys(selectedCandidates).length;
+
+    //     if (selectedPositions === 0) {
+    //         setMessage("❌ Please select at least one candidate before voting.");
+    //         return;
+    //     }
+
+    //     if (selectedPositions < requiredPositions) {
+    //         if (!window.confirm(`You've only voted for ${selectedPositions} out of ${requiredPositions} positions. Continue anyway?`)) {
+    //             return;
+    //         }
+    //     }
+
+    //     const votes = Object.entries(selectedCandidates).map(([positionId, candidateId]) => ({
+    //         position: positionId,
+    //         candidate: candidateId,
+    //         election: electionId
+    //     }));
+
+    //     console.log("Submitting Votes:", votes);
+    //     setSubmitting(true);
+
+    //     axios.post(`${API_URL}api/votes/`, votes, {
+    //         withCredentials: true
+    //     })
+    //     .then((response) => {
+    //         setMessage("✅ Vote submitted successfully!");
+    //         // Redirect to confirmation page after short delay
+    //         setTimeout(() => {
+    //             navigate('/vote-confirmation', { 
+    //                 state: { 
+    //                     electionName: election?.title,
+    //                     positions: positions.filter(p => 
+    //                         Object.keys(selectedCandidates).includes(p.id.toString())
+    //                     )
+    //                 } 
+    //             });
+    //         }, 1500);
+    //     })
+    //     .catch((error) => {
+    //         const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message;
+    //         setMessage(`❌ ${errorMessage}`);
+    //     })
+    //     .finally(() => {
+    //         setSubmitting(false);
+    //     });
+    // };
     const handleVote = () => {
         if (!user) {
             setMessage("❌ You must be logged in to vote.");
             return;
         }
-
-        // Count required positions vs selected positions
+    
+        // Ensure at least one position is voted for
         const requiredPositions = positions.length;
         const selectedPositions = Object.keys(selectedCandidates).length;
-
+    
         if (selectedPositions === 0) {
             setMessage("❌ Please select at least one candidate before voting.");
             return;
         }
-
+    
         if (selectedPositions < requiredPositions) {
             if (!window.confirm(`You've only voted for ${selectedPositions} out of ${requiredPositions} positions. Continue anyway?`)) {
                 return;
             }
         }
-
-        const votes = Object.entries(selectedCandidates).map(([positionId, candidateId]) => ({
-            position: positionId,
-            candidate: candidateId,
-            election: electionId
-        }));
-
-        console.log("Submitting Votes:", votes);
-        setSubmitting(true);
-
-        axios.post(`${API_URL}api/votes/`, votes, {
-            withCredentials: true
-        })
-        .then((response) => {
-            setMessage("✅ Vote submitted successfully!");
-            // Redirect to confirmation page after short delay
-            setTimeout(() => {
-                navigate('/vote-confirmation', { 
-                    state: { 
-                        electionName: election?.title,
-                        positions: positions.filter(p => 
-                            Object.keys(selectedCandidates).includes(p.id.toString())
-                        )
-                    } 
-                });
-            }, 1500);
-        })
-        .catch((error) => {
-            const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message;
-            setMessage(`❌ ${errorMessage}`);
-        })
-        .finally(() => {
-            setSubmitting(false);
+    
+        // Convert selected candidates into vote objects
+        const selectedVotes = Object.entries(selectedCandidates).map(([positionId, candidateId]) => {
+            const position = positions.find(pos => pos.id.toString() === positionId);
+            const candidate = position?.candidates.find(c => c.id === candidateId);
+    
+            return {
+                positionId,
+                positionTitle: position?.title || "Unknown",
+                candidateId,
+                candidateName: candidate?.name || "Unnamed Candidate",
+                degree: candidate?.degree || "N/A",
+                rollNumber: candidate?.roll_no || "Unknown",
+                department: candidate?.branch || "Unknown"
+            };
+        });
+    
+        console.log("Navigating to Confirmation Page with Votes:", selectedVotes);
+    
+        // Navigate to confirmation page with selected votes
+        navigate('/vote-confirmation', {
+            state: { selectedVotes, electionName: election?.title }
         });
     };
+    
 
     if (loading) {
         return (

@@ -51,7 +51,7 @@ const CandidateForm = () => {
       await axios.post(`${API_URL}elections/${electionId}/positions/${positionId}/candidates/`, candidateData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      navigate(`${API_URL}elections/${electionId}/positions/${positionId}/candidates/`);
+      navigate(`/admin/elections/${electionId}/positions/${positionId}/candidates/`);
     } catch (error) {
       console.error("Error adding candidate:", error);
       setError("Failed to add candidate.");

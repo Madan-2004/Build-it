@@ -86,7 +86,8 @@ class ElectionSerializer(serializers.ModelSerializer):
 
 
     def get_candidates_count(self, obj):
-        return Candidate.objects.filter(position__election=obj).count()
+        return sum(position.candidates.filter(approved=True).count() for position in obj.positions.all())
+
 
     def get_votes_count(self, obj):
         return Vote.objects.filter(candidate__position__election=obj).count()
@@ -149,7 +150,7 @@ class ElectionResultSerializer(serializers.ModelSerializer):
 
             for candidate in candidates:
                 votes_count = candidate.votes.count()
-                candidate_name = candidate.user.get_full_name() if candidate.user else candidate.name
+                candidate_name = candidate.name
                 candidates_data.append({
                     'id': candidate.id,
                     'name': candidate_name,

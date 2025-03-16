@@ -47,7 +47,7 @@ const DetailedResultsView = () => {
                   <th className="p-3 border">Candidate Name</th>
                   <th className="p-3 border">Degree</th>
                   <th className="p-3 border">Roll No</th>
-                  <th className="p-3 border">Department</th>
+                  <th className="p-3 border">branch</th>
                   <th className="p-3 border">Votes</th>
                 </tr>
               </thead>
@@ -56,8 +56,8 @@ const DetailedResultsView = () => {
                   <tr key={candidate.id} className="hover:bg-blue-100">
                     <td className="p-3 border">{candidate.name}</td>
                     <td className="p-3 border">{candidate.degree}</td>
-                    <td className="p-3 border">{candidate.rollNumber}</td>
-                    <td className="p-3 border">{candidate.department}</td>
+                    <td className="p-3 border">{candidate.roll_no}</td>
+                    <td className="p-3 border">{candidate.branch}</td>
                     <td className="p-3 border text-center">
                       {candidate.votes_count}
                     </td>

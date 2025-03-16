@@ -2,10 +2,16 @@
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {  useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+
 
 const API_URL = "http://localhost:8000/api/";
 
-const AddPositionForm = ({ electionId, onPositionAdded }) => {
+const AddPositionForm = () => {
+  const { electionId } = useParams(); 
+  console.log("Election ID:", electionId);
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [maxCandidates, setMaxCandidates] = useState(1);
@@ -53,7 +59,8 @@ const AddPositionForm = ({ electionId, onPositionAdded }) => {
       );
       toast.success("Position added successfully!");
       resetForm();
-      onPositionAdded();
+      navigate(`/admin/elections/${electionId}/positions`)
+      // onPositionAdded();
     } catch (error) {
       console.error("Error adding position:", error);
       toast.error(error.response?.data?.detail || "Error adding position");

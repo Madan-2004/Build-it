@@ -4,6 +4,17 @@ from .views import (
     ElectionViewSet, PositionViewSet, CandidateViewSet,
     VoteViewSet, AdminDashboardViewSet
 )
+candidate_list = CandidateViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+
+candidate_detail = CandidateViewSet.as_view({
+    'get': 'retrieve',   # 🔹 Fetch a single candidate
+    'put': 'update',     # 🔹 Update a candidate
+    'patch': 'partial_update',  # 🔹 Partial update (optional fields)
+    'delete': 'destroy'  # 🔹 Delete a candidate
+})
 
 # Create router for standard ViewSets
 router = DefaultRouter()
@@ -19,5 +30,9 @@ urlpatterns = [
     path('elections/<int:election_pk>/positions/', PositionViewSet.as_view({'get': 'list', 'post': 'create'}), name="position-list"),
     path('elections/<int:election_pk>/positions/<int:pk>/', PositionViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name="position-detail"),
 
-    path('elections/<int:election_pk>/positions/<int:position_pk>/candidates/', CandidateViewSet.as_view({'get': 'list', 'post': 'create'}), name="candidate-list"),
+     # 🔹 List & Create Candidates (for a specific position in an election)
+    path('elections/<int:election_pk>/positions/<int:position_pk>/candidates/', candidate_list, name="candidate-list"),
+
+    # 🔹 Retrieve, Update, Delete Candidate (by ID)
+    path('elections/<int:election_pk>/positions/<int:position_pk>/candidates/<int:pk>/', candidate_detail, name="candidate-detail"),
 ]
