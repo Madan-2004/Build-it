@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ThemeProvider, createGlobalStyle } from "styled-components";
 import * as S from "./EventDetailsElements";
-import eventsData from "./eventsData";
 
 // Global Styles for Theming
 const GlobalStyle = createGlobalStyle`
@@ -34,16 +33,46 @@ const darkTheme = {
 export default function EventDetails() {
   const { eventTitle } = useParams();
   const navigate = useNavigate();
-  const event = eventsData.find((e) => e.title === decodeURIComponent(eventTitle));
-
-  // Dark mode state (persistent)
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
   useEffect(() => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
+  
+  const { eventId } = useParams();
+
+  useEffect(() => {
+    const fetchEventDetails = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/events/${eventId}/`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+  
+        const data = await response.json();
+        console.log("Fetched event details:", data);
+        setEvent(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchEventDetails();
+  }, [eventId]);
+  
 
   const toggleDarkMode = () => setDarkMode((prevMode) => !prevMode);
+
+  if (loading) {
+    return <p>Loading event details...</p>;
+  }
+
+  if (error) {
+    return <p style={{ color: "red" }}>Error: {error}</p>;
+  }
 
   if (!event) {
     return (
@@ -69,22 +98,26 @@ export default function EventDetails() {
           <S.EventDateVenue>{event.date} | 📍 {event.venue}</S.EventDateVenue>
         </S.EventHeader>
 
-        <S.EventImage src={event.poster} alt={event.title} />
+        {event.poster && <S.EventImage src={event.poster} alt={event.title} />}
         <S.EventDescription>{event.description}</S.EventDescription>
 
-        <S.Section>
-          <S.SectionTitle>Agenda</S.SectionTitle>
-          <S.AgendaList>
-            {event.agenda.map((item, index) => (
-              <S.AgendaItem key={index}>
-                <span>{item.time} - {item.topic}</span>
-                {item.speaker && <span>🎤 {item.speaker}</span>}
-              </S.AgendaItem>
-            ))}
-          </S.AgendaList>
-        </S.Section>
+        {/* Agenda */}
+        {event.agenda && event.agenda.length > 0 && (
+          <S.Section>
+            <S.SectionTitle>Agenda</S.SectionTitle>
+            <S.AgendaList>
+              {event.agenda.map((item, index) => (
+                <S.AgendaItem key={index}>
+                  <span>{item.time} - {item.topic}</span>
+                  {item.speaker && <span>🎤 {item.speaker}</span>}
+                </S.AgendaItem>
+              ))}
+            </S.AgendaList>
+          </S.Section>
+        )}
 
-        {event.speakers.length > 0 && (
+        {/* Speakers */}
+        {event.speakers && event.speakers.length > 0 && (
           <S.Section>
             <S.SectionTitle>Speakers</S.SectionTitle>
             <S.SpeakerList>
@@ -97,11 +130,12 @@ export default function EventDetails() {
           </S.Section>
         )}
 
+        {/* Additional Information */}
         <S.Section>
           <S.SectionTitle>Additional Information</S.SectionTitle>
-          <p><strong>Schedule:</strong> {event.schedule}</p>
-          <p><strong>Fees:</strong> {event.fees}</p>
-          <p><strong>Contact:</strong> {event.contact}</p>
+          <p><strong>Schedule:</strong> {event.schedule || "N/A"}</p>
+          <p><strong>Fees:</strong> {event.fees || "Free"}</p>
+          <p><strong>Contact:</strong> {event.contact || "Not Available"}</p>
         </S.Section>
 
         <S.RegisterButton href={event.registerLink}>Register Now</S.RegisterButton>
