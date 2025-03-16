@@ -6,8 +6,11 @@ from django.utils.timezone import localtime
 from datetime import timedelta
 
 
+from rest_framework import serializers
+from .models import Candidate
+
 class CandidateSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False)  # Allow storing name directly
+    name = serializers.CharField(required=True)  # Ensure name is always provided
     votes_count = serializers.SerializerMethodField()  # ✅ Compute votes dynamically
     roll_no = serializers.CharField(default="Unknown Roll No")  # ✅ Default roll number
     branch = serializers.CharField(default="CSE")  # ✅ Default branch
@@ -15,17 +18,16 @@ class CandidateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Candidate
-        fields = ['id', 'position', 'user', 'name', 'roll_no', 'branch', 'degree', 'photo', 'approved', 'votes_count']
+        fields = ['id', 'position', 'name', 'roll_no', 'branch', 'degree', 'photo', 'approved', 'votes_count']
         read_only_fields = ['votes_count']
 
     def get_votes_count(self, obj):
         return obj.votes.count()
 
     def validate(self, data):
-        if not data.get('user') and not data.get('name'):
-            raise serializers.ValidationError("Candidate must have either a user or a name.")
+        if not data.get('name'):
+            raise serializers.ValidationError("Candidate must have a name.")
         return data
-
 
 
 class PositionSerializer(serializers.ModelSerializer):
@@ -91,22 +93,42 @@ class ElectionSerializer(serializers.ModelSerializer):
 
 
 
+# class VoteSerializer(serializers.ModelSerializer):
+#     voter_id = serializers.IntegerField(source='voter.id', read_only=True)
+#     voter_email = serializers.EmailField(source='voter.email', read_only=True)  # ✅ Fetch voter's email
+#     candidate_name = serializers.SerializerMethodField()  # ✅ Fetch candidate's name
+#     election_id = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = Vote
+#         fields = ['id','voter_id','voter_email', 'candidate', 'candidate_name','election_id', 'timestamp']  # ✅ Add candidate_name
+#         read_only_fields = ['voter_email', 'candidate_name', 'election_id']
+
+#     def get_candidate_name(self, obj):
+#         """Returns the candidate's name directly since user is removed."""
+#         return obj.candidate.name  # ✅ Use name directly
+#     def get_election_id(self, obj):
+#         """Returns the election ID of the vote"""
+#         return obj.candidate.position.election.id
 class VoteSerializer(serializers.ModelSerializer):
     voter_id = serializers.IntegerField(source='voter.id', read_only=True)
-    voter_email = serializers.EmailField(source='voter.email', read_only=True)  # ✅ Fetch voter's email
-    candidate_name = serializers.SerializerMethodField()  # ✅ Fetch candidate's name
+    voter_email = serializers.EmailField(source='voter.email', read_only=True)
+    candidate_name = serializers.CharField(source='candidate.name', read_only=True)
+    election_id = serializers.SerializerMethodField()  # ✅ Fetch election ID
+    election_name = serializers.SerializerMethodField()  # ✅ Fetch election name
 
     class Meta:
         model = Vote
-        fields = ['id','voter_id','voter_email', 'candidate', 'candidate_name', 'timestamp']  # ✅ Add candidate_name
-        read_only_fields = ['voter_email', 'candidate_name']
+        fields = ['id', 'voter_id', 'voter_email', 'candidate', 'candidate_name', 'election_id', 'election_name', 'timestamp']
+        read_only_fields = ['voter_email', 'candidate_name', 'election_id', 'election_name']
 
-    def get_candidate_name(self, obj):
-        """Returns candidate's full name or the name field if no user is assigned."""
-        if obj.candidate.user:
-            return obj.candidate.user.get_full_name()  # ✅ Get name from user model
-        return obj.candidate.name  # ✅ Use manual name field if no user is linked
-       
+    def get_election_id(self, obj):
+        """Returns the election ID of the vote"""
+        return obj.candidate.position.election.id  # ✅ Fetch election ID
+
+    def get_election_name(self, obj):
+        """Returns the election name of the vote"""
+        return obj.candidate.position.election.title  # ✅ Fetch election name
 
 
 

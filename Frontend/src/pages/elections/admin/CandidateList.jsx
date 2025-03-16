@@ -12,7 +12,7 @@ const CandidateList = () => {
   // Fetch candidates for this position
   useEffect(() => {
     axios
-      .get(`${API_URL}positions/${positionId}/candidates/`)
+      .get(`${API_URL}elections/${electionId}/positions/${positionId}/candidates/`)
       .then((response) => {
         setCandidates(response.data);
         setLoading(false);

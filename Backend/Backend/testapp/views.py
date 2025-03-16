@@ -104,7 +104,42 @@ class VoteViewSet(viewsets.ModelViewSet):
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
     permission_classes = [IsAuthenticated]  # ✅ Require login
+    def get_queryset(self):
+        """
+        Returns votes, optionally filtered by election.
+        Example: /api/votes/?election_id=3
+        """
+        queryset = Vote.objects.select_related('candidate__position__election').all()  # ✅ Optimize queries
+        election_id = self.request.query_params.get('election_id')
 
+        if election_id:
+            queryset = queryset.filter(candidate__position__election__id=election_id)  # ✅ Filter votes by election
+
+        return queryset
+    # def create(self, request, *args, **kwargs):
+    #     """
+    #     Custom vote submission logic
+    #     """
+    #     votes_data = request.data
+    #     if not isinstance(votes_data, list):
+    #         return Response({"error": "Expected a list of votes"}, status=status.HTTP_400_BAD_REQUEST)
+
+    #     voter = request.user  # ✅ Ensure voter is logged in
+
+    #     created_votes = []
+    #     for vote_data in votes_data:
+    #         candidate_id = vote_data.get("candidate")
+    #         candidate = get_object_or_404(Candidate, id=candidate_id)
+
+    #         # ✅ Prevent duplicate votes
+    #         if Vote.objects.filter(voter=voter, candidate=candidate).exists():
+    #             return Response({"error": "You have already voted for this candidate."}, status=status.HTTP_400_BAD_REQUEST)
+
+    #         # ✅ Create the vote
+    #         vote = Vote.objects.create(voter=voter, candidate=candidate)
+    #         created_votes.append(VoteSerializer(vote).data)
+
+    #     return Response(created_votes, status=status.HTTP_201_CREATED)
     def create(self, request, *args, **kwargs):
         """
         Custom vote submission logic
@@ -114,15 +149,18 @@ class VoteViewSet(viewsets.ModelViewSet):
             return Response({"error": "Expected a list of votes"}, status=status.HTTP_400_BAD_REQUEST)
 
         voter = request.user  # ✅ Ensure voter is logged in
-
         created_votes = []
+
         for vote_data in votes_data:
             candidate_id = vote_data.get("candidate")
             candidate = get_object_or_404(Candidate, id=candidate_id)
 
-            # ✅ Prevent duplicate votes
-            if Vote.objects.filter(voter=voter, candidate=candidate).exists():
-                return Response({"error": "You have already voted for this candidate."}, status=status.HTTP_400_BAD_REQUEST)
+            # ✅ Determine election from candidate
+            election = candidate.position.election  
+
+            # ✅ Prevent duplicate votes for this election
+            if Vote.objects.filter(voter=voter, candidate__position__election=election).exists():
+                return Response({"error": "You have already voted in this election."}, status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Create the vote
             vote = Vote.objects.create(voter=voter, candidate=candidate)

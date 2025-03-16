@@ -43,7 +43,6 @@ class Position(models.Model):
 
 class Candidate(models.Model):
     position = models.ForeignKey(Position, on_delete=models.CASCADE, related_name='candidates')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='candidacies', null=True, blank=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     roll_no = models.CharField(max_length=50, default="Unknown Roll No")  # ✅ Default roll number
     degree = models.CharField(
@@ -60,7 +59,7 @@ class Candidate(models.Model):
         ordering = ['position', 'name']
 
     def __str__(self):
-        return f"{self.name or self.user.get_full_name()} - {self.position.title}"
+        return f"{self.name } - {self.position.title}"
 
 
 
@@ -74,4 +73,9 @@ class Vote(models.Model):
         unique_together = ['voter', 'candidate']
 
     def __str__(self):
-        return f"{self.voter.username} voted for {self.candidate}"
+        """Return a string with the voter's username, candidate name, and election title."""
+        election_name = self.candidate.position.election.title  # ✅ Get election name
+        return f"{self.voter.username} voted for {self.candidate.name} in {election_name}"
+    def get_election(self):
+        """Fetch the election for this vote via Candidate -> Position -> Election."""
+        return self.candidate.position.election
