@@ -12,7 +12,7 @@ import Dashboard from './pages/Dashboard/Dashboard1';
 // ✅ General Pages
 import Home from './pages/home/Home';
 import About from './pages/aboutus/AboutUs';
-import Contact from './pages/contact/Contact';
+import Contact from './pages/Contact/Contact';
 import FeedbackForm from './pages/Feedback/FeedbackForm';
 
 // ✅ Events
@@ -52,6 +52,7 @@ import EligibilityCheck from './pages/elections/utils/EligibilityCheck';
 import './styles/index.css';
 import styled from 'styled-components';
 import axios from "axios";
+import FAQPage from './pages/FAQS/FAQPage';
 
 // Add this to your main app file (e.g., index.js or App.js)
 axios.defaults.withCredentials = true;
@@ -74,6 +75,7 @@ function App() {
           <Route path="/events/:eventId" element={<EventDetails />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/feedback" element={<FeedbackForm />} />
+          <Route path="/faqs" element={<FAQPage />} />
           <Route path="/council" element={<Council />} />
           <Route path="/council/:councilName/clubs" element={<CouncilDetails />} />
           <Route path="/clubs/:clubName" element={<ClubProfile />} />
