@@ -43,20 +43,48 @@ class ClubSerializer(serializers.ModelSerializer):
         return ClubMembershipSerializer(members, many=True).data
 from .models import Project
 
+from rest_framework import serializers
+from .models import Project, ProjectImage
+
+class ProjectImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectImage
+        fields = ['id', 'image']
+
 class ProjectSerializer(serializers.ModelSerializer):
+    images = ProjectImageSerializer(many=True, read_only=True)  # Retrieve images
+    image_uploads = serializers.ListField(
+        child=serializers.ImageField(), write_only=True, required=False
+    )  # Accept multiple images
+
     class Meta:
         model = Project
-        fields = ['id', 'club', 'title', 'description', 'image', 'created_at']
-        read_only_fields = ['club']  # Make club read-only
-        # Or use extra_kwargs = {'club': {'required': False}} to make it optional
+        fields = ['id', 'club', 'title', 'description', 'images', 'image_uploads', 'created_at']
+        read_only_fields = ['club']  # Prevent changing club
+
     def create(self, validated_data):
-        # Add any special processing for creation here if needed
-        return super().create(validated_data)
-    
+        image_uploads = validated_data.pop("image_uploads", [])
+        project = Project.objects.create(**validated_data)
+
+        if len(image_uploads) > 5:
+            raise serializers.ValidationError("A project can have a maximum of 5 images.")
+
+        for image in image_uploads:
+            ProjectImage.objects.create(project=project, image=image)
+
+        return project
+
     def update(self, instance, validated_data):
-        # Special handling for image field - don't overwrite with None
-        if 'image' not in validated_data:
-            # If image isn't provided, keep the existing one
-            validated_data.pop('image', None)
-        
-        return super().update(instance, validated_data)
+        image_uploads = validated_data.pop("image_uploads", [])
+
+        if len(image_uploads) > 5:
+            raise serializers.ValidationError("A project can have a maximum of 5 images.")
+
+        project = super().update(instance, validated_data)
+
+        if image_uploads:
+            ProjectImage.objects.filter(project=project).delete()  # Remove old images
+            for image in image_uploads:
+                ProjectImage.objects.create(project=project, image=image)
+
+        return project

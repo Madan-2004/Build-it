@@ -32,11 +32,11 @@ const ClubProjects = ({ clubId }) => {
       if (!response.ok) throw new Error("Failed to fetch projects");
 
       const data = await response.json();
-      const projectsWithImages = data.map(project => ({
+      // setProjects(data); // No need to transform, use the data as is
+      setProjects(data.map(project => ({
         ...project,
-        images: project.image ? [project.image] : []
-      }));
-      setProjects(projectsWithImages);
+        images: project.images || []  // Always ensure images are an array
+    })));
     } catch (error) {
       console.error("Error fetching projects:", error);
       setError("Failed to load projects. Please try again later.");
@@ -44,11 +44,20 @@ const ClubProjects = ({ clubId }) => {
       setIsLoading(false);
     }
   };
-
   const handleImageChange = (e) => {
-    setCurrentProject({ ...currentProject, image: e.target.files[0] });
-  };
+    const files = Array.from(e.target.files);
+    setCurrentProject(prev => ({
+        ...prev,
+        images: [...(prev.images || []), ...files.slice(0, 5 - (prev.images?.length || 0))]
+    }));
+};
 
+  const removeImage = (index) => {
+    setCurrentProject(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentProject({ ...currentProject, [name]: value });
@@ -60,13 +69,14 @@ const ClubProjects = ({ clubId }) => {
     setDialogOpen(true);
   };
 
+  // When opening edit dialog, use the images array
   const openEditDialog = (project, e) => {
     e.stopPropagation();
     setCurrentProject({
       id: project.id,
       title: project.title,
       description: project.description,
-      image: null,
+      images: project.images || [],
     });
     setDialogMode("edit");
     setDialogOpen(true);
@@ -77,9 +87,13 @@ const ClubProjects = ({ clubId }) => {
     const formData = new FormData();
     formData.append("title", currentProject.title);
     formData.append("description", currentProject.description);
-    if (currentProject.image) {
-      formData.append("image", currentProject.image);
-    }
+
+    // Add new images to image_uploads[]
+    currentProject.images.forEach((image, index) => {
+      if (image instanceof File) {
+        formData.append(`image_uploads`, image);
+      }
+    });
 
     try {
       let response;
@@ -107,7 +121,6 @@ const ClubProjects = ({ clubId }) => {
       setError(`Failed to ${dialogMode === "add" ? "add" : "update"} project. ${error.message}`);
     }
   };
-
   const handleDelete = async (projectId, e) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this project?")) {
@@ -132,7 +145,10 @@ const ClubProjects = ({ clubId }) => {
   };
 
   const openProjectDetails = (project) => {
-    setSelectedProject(project);
+    setSelectedProject({
+      ...project,
+      images: project.images || []  // Ensure images exist
+  });
     setCurrentImageIndex(0);
   };
 
@@ -142,14 +158,14 @@ const ClubProjects = ({ clubId }) => {
 
   const nextImage = (e) => {
     e.stopPropagation();
-    if (!selectedProject || selectedProject.images.length <= 1) return;
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % selectedProject.images.length);
+    if (!selectedProject || selectedProject?.images?.length <= 1) return;
+    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % selectedProject?.images?.length);
   };
 
   const prevImage = (e) => {
     e.stopPropagation();
-    if (!selectedProject || selectedProject.images.length <= 1) return;
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + selectedProject.images.length) % selectedProject.images.length);
+    if (!selectedProject || selectedProject?.images?.length <= 1) return;
+    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + selectedProject?.images?.length) % selectedProject?.images?.length);
   };
 
   return (
@@ -188,7 +204,7 @@ const ClubProjects = ({ clubId }) => {
             >
               <div className="h-48 overflow-hidden">
                 <img
-                  src={project.image || "https://via.placeholder.com/600x400?text=No+Image"}
+                  src={project.images && project.images.length > 0 ? project.images[0].image : "https://via.placeholder.com/600x400?text=No+Image"}
                   alt={project.title}
                   className="w-full h-full object-cover"
                 />
@@ -224,167 +240,171 @@ const ClubProjects = ({ clubId }) => {
       )}
 
 
-{selectedProject && (
-  <div 
-    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 md:p-6" 
-    onClick={closeProjectDetails}
-  >
-    <div 
-      className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]" 
-      onClick={(e) => e.stopPropagation()}
-    >
-     {/* Header with title and actions - Fixed close button symmetry */}
-<div className="p-4 bg-gray-900 flex justify-between items-center border-b border-gray-700">
-  <h2 className="text-xl md:text-2xl font-bold text-white truncate pr-2">
-    {selectedProject.title}
-  </h2>
-  <div className="flex items-center space-x-2">
-    <IconButton
-      size="small"
-      onClick={(e) => openEditDialog(selectedProject, e)}
-      className="text-blue-400 hover:text-blue-300"
-      aria-label="Edit project"
-    >
-      <EditIcon fontSize="small" />
-    </IconButton>
-    <IconButton
-      size="small"
-      onClick={(e) => handleDelete(selectedProject.id, e)}
-      className="text-red-400 hover:text-red-300"
-      aria-label="Delete project"
-    >
-      <DeleteIcon fontSize="small" />
-    </IconButton>
-    <IconButton
-      size="medium"
-      onClick={closeProjectDetails}
-      className="text-gray-400 hover:text-gray-300"
-      aria-label="Close modal"
-    >
-      <span className="text-3xl font-bold">×</span>
-    </IconButton>
-  </div>
-</div>
+      {selectedProject && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 md:p-6"
+          onClick={closeProjectDetails}
+        >
+          <div
+            className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with title and actions - Fixed close button symmetry */}
+            <div className="p-4 bg-gray-900 flex justify-between items-center border-b border-gray-700">
+              <h2 className="text-xl md:text-2xl font-bold text-white truncate pr-2">
+                {selectedProject.title}
+              </h2>
+              <div className="flex items-center space-x-2">
+                <IconButton
+                  size="small"
+                  onClick={(e) => openEditDialog(selectedProject, e)}
+                  className="text-blue-400 hover:text-blue-300"
+                  aria-label="Edit project"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleDelete(selectedProject.id, e)}
+                  className="text-red-400 hover:text-red-300"
+                  aria-label="Delete project"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="medium"
+                  onClick={closeProjectDetails}
+                  className="text-gray-400 hover:text-gray-300"
+                  aria-label="Close modal"
+                >
+                  <span className="text-3xl font-bold">×</span>
+                </IconButton>
+              </div>
+            </div>
 
-      {/* Content area with responsive layout */}
-      <div className="flex flex-col md:flex-row flex-grow overflow-hidden">
-        {/* Image container */}
-        <div className="md:w-1/2 p-4 flex items-center justify-center bg-gray-900">
-          <div className="relative w-full h-64 md:h-80 flex items-center justify-center">
+            {/* Content area with responsive layout */}
+            <div className="flex flex-col md:flex-row flex-grow overflow-hidden">
+              {/* Image container */}
+              <div className="md:w-1/2 p-4 flex items-center justify-center bg-gray-900">
+                <div className="relative w-full h-64 md:h-80 flex items-center justify-center">
+                  <img
+                    src={selectedProject.images && selectedProject.images.length > 0
+                      ? selectedProject.images[currentImageIndex].image
+                      : "https://via.placeholder.com/600x400?text=No+Image"}
+                    alt={selectedProject.title}
+                    className="max-w-full max-h-full object-contain rounded cursor-pointer transition-transform hover:scale-[1.02]"
+                    onClick={() => {
+                      document.getElementById('fullScreenCarousel').classList.remove('hidden');
+                    }}
+                  />
+
+                  {selectedProject?.images?.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          prevImage(e);
+                        }}
+                        className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1 md:p-2 rounded-r-lg z-10"
+                        aria-label="Previous image"
+                      >
+                        <ArrowBackIosIcon fontSize="small" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          nextImage(e);
+                        }}
+                        className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1 md:p-2 rounded-l-lg z-10"
+                        aria-label="Next image"
+                      >
+                        <ArrowForwardIosIcon fontSize="small" />
+                      </button>
+                    </>
+                  )}
+
+                  {selectedProject?.images?.length > 1 && (
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center">
+                      <div className="bg-black bg-opacity-50 rounded-full px-3 py-1 text-xs text-white">
+                        {currentImageIndex + 1} / {selectedProject?.images?.length}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Description container */}
+              <div className="md:w-1/2 p-4 bg-gray-800">
+                <div className="bg-gray-700 rounded-lg p-4 shadow-inner h-full overflow-y-auto max-h-[50vh] md:max-h-[60vh]">
+                  <h3 className="text-lg font-semibold text-gray-200 mb-2 md:hidden">Description</h3>
+                  <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                    {selectedProject.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full screen image carousel */}
+      {selectedProject && (
+        <div
+          id="fullScreenCarousel"
+          className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-[60] hidden"
+          onClick={() => document.getElementById('fullScreenCarousel').classList.add('hidden')}
+        >
+          <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <img
-              src={selectedProject.images[currentImageIndex] || "https://via.placeholder.com/600x400?text=No+Image"}
+              src={selectedProject.images && selectedProject.images.length > 0 
+                ? selectedProject.images[currentImageIndex].image 
+                : "https://via.placeholder.com/600x400?text=No+Image"}
               alt={selectedProject.title}
-              className="max-w-full max-h-full object-contain rounded cursor-pointer transition-transform hover:scale-[1.02]"
-              onClick={() => {
-                document.getElementById('fullScreenCarousel').classList.remove('hidden');
-              }}
+              className="max-w-[90%] max-h-[90%] object-contain"
             />
-            
-            {selectedProject.images.length > 1 && (
+
+            {selectedProject?.images?.length > 1 && (
               <>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     prevImage(e);
                   }}
-                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1 md:p-2 rounded-r-lg z-10"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center"
                   aria-label="Previous image"
                 >
-                  <ArrowBackIosIcon fontSize="small" />
+                  <ArrowBackIosIcon />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     nextImage(e);
                   }}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1 md:p-2 rounded-l-lg z-10"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center"
                   aria-label="Next image"
                 >
-                  <ArrowForwardIosIcon fontSize="small" />
+                  <ArrowForwardIosIcon />
                 </button>
               </>
             )}
-            
-            {selectedProject.images.length > 1 && (
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-                <div className="bg-black bg-opacity-50 rounded-full px-3 py-1 text-xs text-white">
-                  {currentImageIndex + 1} / {selectedProject.images.length}
+
+            <button
+              className="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full"
+              onClick={() => document.getElementById('fullScreenCarousel').classList.add('hidden')}
+            >
+              <span className="text-xl">×</span>
+            </button>
+
+            {selectedProject?.images?.length > 1 && (
+              <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+                <div className="bg-black bg-opacity-70 rounded-full px-4 py-2 text-sm text-white">
+                  {currentImageIndex + 1} / {selectedProject?.images?.length}
                 </div>
               </div>
             )}
           </div>
         </div>
-        
-        {/* Description container */}
-        <div className="md:w-1/2 p-4 bg-gray-800">
-  <div className="bg-gray-700 rounded-lg p-4 shadow-inner h-full overflow-y-auto max-h-[50vh] md:max-h-[60vh]">
-    <h3 className="text-lg font-semibold text-gray-200 mb-2 md:hidden">Description</h3>
-    <p className="text-gray-300 leading-relaxed whitespace-pre-line">
-      {selectedProject.description}
-    </p>
-  </div>
-</div>
-      </div>
-    </div>
-  </div>
-)}
-
-{/* Full screen image carousel */}
-{selectedProject && (
-  <div
-    id="fullScreenCarousel"
-    className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-[60] hidden"
-    onClick={() => document.getElementById('fullScreenCarousel').classList.add('hidden')}
-  >
-    <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-      <img
-        src={selectedProject.images[currentImageIndex] || "https://via.placeholder.com/600x400?text=No+Image"}
-        alt={selectedProject.title}
-        className="max-w-[90%] max-h-[90%] object-contain"
-      />
-      
-      {selectedProject.images.length > 1 && (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              prevImage(e);
-            }}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center"
-            aria-label="Previous image"
-          >
-            <ArrowBackIosIcon />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              nextImage(e);
-            }}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center"
-            aria-label="Next image"
-          >
-            <ArrowForwardIosIcon />
-          </button>
-        </>
       )}
-      
-      <button
-        className="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-3 rounded-full"
-        onClick={() => document.getElementById('fullScreenCarousel').classList.add('hidden')}
-      >
-        <span className="text-xl">×</span>
-      </button>
-      
-      {selectedProject.images.length > 1 && (
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-          <div className="bg-black bg-opacity-70 rounded-full px-4 py-2 text-sm text-white">
-            {currentImageIndex + 1} / {selectedProject.images.length}
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
 
       <Dialog
         open={dialogOpen}
@@ -419,18 +439,32 @@ const ClubProjects = ({ clubId }) => {
             required
           />
           <div className="mt-4">
-            <p className="mb-2 text-gray-700">Project Image</p>
+            <p className="mb-2 text-gray-700">Project Images (up to 5)</p>
             <input
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageChange}
               className="w-full border p-2 rounded"
+              disabled={currentProject?.images?.length >= 5}
             />
-            {dialogMode === "edit" && !currentProject.image && (
-              <p className="text-sm text-gray-500 mt-1">
-                Leave empty to keep the existing image
-              </p>
-            )}
+            <div className="flex flex-wrap mt-2">
+            {currentProject?.images?.map((image, index) => (
+  <div key={index} className="relative m-1">
+    <img
+      src={image instanceof File ? URL.createObjectURL(image) : (image.image || image)}
+      alt={`Project image ${index + 1}`}
+      className="w-20 h-20 object-cover"
+    />
+    <button
+      onClick={() => removeImage(index)}
+      className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
+    >
+      ×
+    </button>
+  </div>
+))}
+            </div>
           </div>
         </DialogContent>
         <DialogActions>
