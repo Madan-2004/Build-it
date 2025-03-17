@@ -32,14 +32,38 @@ class CandidateSerializer(serializers.ModelSerializer):
 
 class PositionSerializer(serializers.ModelSerializer):
     candidates = serializers.SerializerMethodField()  # ✅ Retrieve candidates manually
+    batch_restriction = serializers.ListField(
+        child=serializers.CharField(), required=False  # ✅ Store as a list
+    )
+    branch_restriction = serializers.ListField(
+        child=serializers.CharField(), required=False  # ✅ Store as a list
+    )
 
     class Meta:
         model = Position
-        fields = ['id', 'election', 'title', 'description', 'max_candidates', 'max_votes_per_voter', 'candidates']
+        fields = [
+            'id', 'election', 'title', 'description', 'max_candidates', 
+            'max_votes_per_voter', 'batch_restriction', 'branch_restriction', 'candidates'
+        ]
 
     def get_candidates(self, obj):
         candidates = obj.candidates.filter(approved=True)
         return CandidateSerializer(candidates, many=True).data
+
+    def validate_batch_restriction(self, value):
+        """Ensure batch restriction is a list and contains valid choices"""
+        valid_choices = ["All Batches", "1st Year", "2nd Year", "3rd Year", "4th Year"]
+        if not all(batch in valid_choices for batch in value):
+            raise serializers.ValidationError("Invalid batch selection.")
+        return value
+
+    def validate_branch_restriction(self, value):
+        """Ensure branch restriction is a list and contains valid choices"""
+        valid_choices = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MNC", "MSC", "PHD"]
+        if not all(branch in valid_choices for branch in value):
+            raise serializers.ValidationError("Invalid branch selection.")
+        return value
+
 
 
 class ElectionSerializer(serializers.ModelSerializer):
@@ -124,11 +148,12 @@ class VoteSerializer(serializers.ModelSerializer):
     candidate_name = serializers.CharField(source='candidate.name', read_only=True)
     election_id = serializers.SerializerMethodField()  # ✅ Fetch election ID
     election_name = serializers.SerializerMethodField()  # ✅ Fetch election name
+    position_title = serializers.CharField(source='candidate.position.title', read_only=True)
 
     class Meta:
         model = Vote
-        fields = ['id', 'voter_id', 'voter_email', 'candidate', 'candidate_name', 'election_id', 'election_name', 'timestamp']
-        read_only_fields = ['voter_email', 'candidate_name', 'election_id', 'election_name']
+        fields = ['id', 'voter_id', 'voter_email', 'candidate', 'candidate_name', 'position_title', 'election_id', 'election_name', 'timestamp']
+        read_only_fields = ['voter_email', 'candidate_name', 'election_id', 'election_name', 'position_title']
 
     def get_election_id(self, obj):
         """Returns the election ID of the vote"""
@@ -137,7 +162,6 @@ class VoteSerializer(serializers.ModelSerializer):
     def get_election_name(self, obj):
         """Returns the election name of the vote"""
         return obj.candidate.position.election.title  # ✅ Fetch election name
-
 
 
 class ElectionResultSerializer(serializers.ModelSerializer):

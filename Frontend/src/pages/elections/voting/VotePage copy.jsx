@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import axios from 'axios';
 import authService from '../../../services/auth';
-import { decodeVoterEmail } from "../utils/decodeVoter";
 
 const API_URL = "http://localhost:8000/";
 
@@ -13,12 +12,10 @@ const VotePage = () => {
 
     const [election, setElection] = useState(null);
     const [positions, setPositions] = useState([]);
-    const [eligiblePositions, setEligiblePositions] = useState([]);
     const [selectedCandidates, setSelectedCandidates] = useState({});
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [voterInfo, setVoterInfo] = useState(null);
 
     // Get user from authService
     const user = authService.getUserFromCookie();
@@ -28,13 +25,6 @@ const VotePage = () => {
             console.error("User not authenticated");
             navigate('/login', { state: { from: `/vote/${electionId}` } });
             return;
-        }
-
-        // Get and decode voter information
-        if (user && user.email) {
-            const decodedVoterInfo = decodeVoterEmail(user.email);
-            console.log("Decoded Voter Info:", decodedVoterInfo);
-            setVoterInfo(decodedVoterInfo);
         }
         
         // Fetch election details
@@ -65,34 +55,69 @@ const VotePage = () => {
         });
     }, []);
 
-    // Filter positions based on user eligibility once we have both positions and voter info
-    useEffect(() => {
-        if (positions.length > 0 && voterInfo) {
-            const eligible = positions.filter(position => {
-                // If the position allows "All Batches" or "All Branches", allow all users
-                const batchEligible = position.batch_restriction.includes("All Batches") || 
-                    position.batch_restriction.includes(voterInfo.status);
-            
-                const branchEligible = position.branch_restriction.includes("All Branches") || 
-                    position.branch_restriction.includes(voterInfo.branch);
-            
-                return batchEligible && branchEligible;
-            });
-            
-            
-            console.log("Eligible Positions:", eligible);
-            setEligiblePositions(eligible);
-        }
-    }, [positions, voterInfo]);
+    // const handleVote = () => {
+    //     if (!user) {
+    //         setMessage("❌ You must be logged in to vote.");
+    //         return;
+    //     }
 
+    //     // Count required positions vs selected positions
+    //     const requiredPositions = positions.length;
+    //     const selectedPositions = Object.keys(selectedCandidates).length;
+
+    //     if (selectedPositions === 0) {
+    //         setMessage("❌ Please select at least one candidate before voting.");
+    //         return;
+    //     }
+
+    //     if (selectedPositions < requiredPositions) {
+    //         if (!window.confirm(`You've only voted for ${selectedPositions} out of ${requiredPositions} positions. Continue anyway?`)) {
+    //             return;
+    //         }
+    //     }
+
+    //     const votes = Object.entries(selectedCandidates).map(([positionId, candidateId]) => ({
+    //         position: positionId,
+    //         candidate: candidateId,
+    //         election: electionId
+    //     }));
+
+    //     console.log("Submitting Votes:", votes);
+    //     setSubmitting(true);
+
+    //     axios.post(`${API_URL}api/votes/`, votes, {
+    //         withCredentials: true
+    //     })
+    //     .then((response) => {
+    //         setMessage("✅ Vote submitted successfully!");
+    //         // Redirect to confirmation page after short delay
+    //         setTimeout(() => {
+    //             navigate('/vote-confirmation', { 
+    //                 state: { 
+    //                     electionName: election?.title,
+    //                     positions: positions.filter(p => 
+    //                         Object.keys(selectedCandidates).includes(p.id.toString())
+    //                     )
+    //                 } 
+    //             });
+    //         }, 1500);
+    //     })
+    //     .catch((error) => {
+    //         const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message;
+    //         setMessage(`❌ ${errorMessage}`);
+    //     })
+    //     .finally(() => {
+    //         setSubmitting(false);
+    //     });
+    // };
     const handleVote = () => {
         if (!user) {
             setMessage("❌ You must be logged in to vote.");
             return;
         }
     
-        // Ensure all eligible positions are voted for
-        const requiredPositions = eligiblePositions.length;
+        // Ensure all positions are voted for
+        const requiredPositions = positions.length;
         const selectedPositions = Object.keys(selectedCandidates).length;
     
         if (selectedPositions === 0) {
@@ -107,7 +132,7 @@ const VotePage = () => {
     
         // Convert selected candidates into vote objects
         const selectedVotes = Object.entries(selectedCandidates).map(([positionId, candidateId]) => {
-            const position = eligiblePositions.find(pos => pos.id.toString() === positionId);
+            const position = positions.find(pos => pos.id.toString() === positionId);
             const candidate = position?.candidates.find(c => c.id === candidateId);
     
             return {
@@ -128,42 +153,12 @@ const VotePage = () => {
             state: { selectedVotes, electionName: election?.title }
         });
     };
+    
 
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-        );
-    }
-
-    // Show message if user is not eligible for any positions
-    if (eligiblePositions.length === 0 && voterInfo) {
-        return (
-            <div className="container mx-auto p-4 md:p-6 max-w-4xl">
-                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                    <h1 className="text-3xl font-bold text-center mb-2">{election?.title || 'Vote for Candidates'}</h1>
-                    <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 my-6 rounded">
-                        <p className="font-medium">You are not eligible to vote in this election.</p>
-                        <p className="mt-2">You don't meet the eligibility criteria for any positions in this election.</p>
-                        <div className="mt-4 text-sm">
-                            <p>Your details:</p>
-                            <ul className="list-disc list-inside mt-2">
-                                <li>Degree: {voterInfo.degree}</li>
-                                <li>Branch: {voterInfo.branch}</li>
-                                <li>Year: {voterInfo.status}</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="mt-6 text-center">
-                        <button 
-                            onClick={() => navigate(-1)} 
-                            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                            Go Back
-                        </button>
-                    </div>
-                </div>
             </div>
         );
     }
@@ -184,30 +179,12 @@ const VotePage = () => {
                     </div>
                 )}
 
-                {voterInfo && positions.length !== eligiblePositions.length && (
-                    <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 text-sm">
-                        <p className="font-medium">Note: Some positions are not displayed because you don't meet their eligibility criteria.</p>
-                        <p className="mt-1">You are only shown positions you are eligible to vote for.</p>
-                    </div>
-                )}
-
                 <div className="space-y-6">
-                    {eligiblePositions.map((position) => (
+                    {positions.map((position) => (
                         <div key={position.id} className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                             <div className="bg-gray-50 p-4 border-b">
                                 <h2 className="text-xl font-semibold">{position.title}</h2>
                                 <p className="text-sm text-gray-600">Select one candidate for this position</p>
-                                {(position.batch_restriction.length > 0 || position.branch_restriction.length > 0) && (
-                                    <div className="mt-2 text-xs text-gray-500">
-                                        <span className="font-medium">Eligibility: </span>
-                                        {position.batch_restriction.length > 0 && (
-                                            <span className="mr-2">Year: {position.batch_restriction.join(', ')}</span>
-                                        )}
-                                        {position.branch_restriction.length > 0 && (
-                                            <span>Branch: {position.branch_restriction.join(', ')}</span>
-                                        )}
-                                    </div>
-                                )}
                             </div>
                             
                             <div className="p-4">
@@ -295,14 +272,13 @@ const VotePage = () => {
                     
                     <button 
                         onClick={handleVote}
-                        disabled={submitting || Object.keys(selectedCandidates).length === 0 || Object.keys(selectedCandidates).length < eligiblePositions.length}
+                        disabled={submitting || Object.keys(selectedCandidates).length === 0}
                         className={`px-6 py-3 rounded-md text-white transition-colors ${
                             submitting ? 'bg-blue-400 cursor-not-allowed' : 
-                            Object.keys(selectedCandidates).length === 0 || Object.keys(selectedCandidates).length < eligiblePositions.length ? 'bg-blue-300 cursor-not-allowed' : 
+                            Object.keys(selectedCandidates).length === 0 ? 'bg-blue-300 cursor-not-allowed' : 
                             'bg-blue-600 hover:bg-blue-700'
                         }`}
                     >
-                      
                         {submitting ? (
                             <span className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

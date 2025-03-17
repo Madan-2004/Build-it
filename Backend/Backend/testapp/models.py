@@ -29,12 +29,44 @@ class Election(models.Model):
 
 
 class Position(models.Model):
+    BATCH_SELECTION_CHOICES = [
+        ('All Batches', 'All Batches'),
+        ('1st Year', '1st Year'),
+        ('2nd Year', '2nd Year'),
+        ('3rd Year', '3rd Year'),
+        ('4th Year', '4th Year'),
+    ]
+
+    BRANCH_SELECTION_CHOICES = [
+        ('All Branches', 'All Branches'),
+        ('CSE', 'CSE'),
+        ('MECH', 'MECH'),
+        ('CIVIL', 'CIVIL'),
+        ('EE', 'EE'),
+        ('EP', 'EP'),
+        ('SSE', 'SSE'),
+        ('MEMS', 'MEMS'),
+        ('MNC', 'MNC'),
+        ('MSC', 'MSC'),
+        ('PHD', 'PHD'),
+    ]
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     max_candidates = models.PositiveIntegerField(default=1)
     max_votes_per_voter = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+      # ✅ Store multiple batch restrictions as JSON or ArrayField
+    batch_restriction = models.JSONField(
+        default=list,  # Defaults to allowing all
+        help_text="List of eligible batches that can vote."
+    )
+
+    # ✅ Store multiple branch restrictions as JSON or ArrayField
+    branch_restriction = models.JSONField(
+        default=list,  # Defaults to allowing all
+        help_text="List of eligible branches that can vote."
+    )
 
     class Meta:
         ordering = ['title']
