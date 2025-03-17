@@ -41,6 +41,7 @@ class PositionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         election_id = self.kwargs.get('election_pk')
+        print("1", election_id)  # Print election_id from URL
         if election_id:
             return Position.objects.filter(election_id=election_id)
         return super().get_queryset()
@@ -50,34 +51,25 @@ class PositionViewSet(viewsets.ModelViewSet):
         position_id = self.kwargs.get('pk')
         if not election_id or not position_id:
             raise serializers.ValidationError("Both Election ID and Position ID are required to update a position.")
-
+        
         position = self.get_object()
         if position.election.id != int(election_id) or position.id != int(position_id):
             raise serializers.ValidationError("Election ID or Position ID mismatch.")
-
+        
         serializer.save()
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-
-        # ✅ Ensure lists are received correctly for batch and branch restrictions
-        batch_restriction = request.data.get('batch_restriction', [])
-        branch_restriction = request.data.get('branch_restriction', [])
-
-        if not isinstance(batch_restriction, list) or not isinstance(branch_restriction, list):
-            return Response({"error": "Batch and Branch restrictions must be lists."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # ✅ Serialize and update
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        serializer.save(batch_restriction=batch_restriction, branch_restriction=branch_restriction)
+        self.perform_update(serializer)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         position = self.get_object()
         self.perform_destroy(position)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)   
 
 # ✅ **Candidate Management**
 class CandidateViewSet(viewsets.ModelViewSet):
@@ -167,8 +159,11 @@ class VoteViewSet(viewsets.ModelViewSet):
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
     permission_classes = [IsAuthenticated]  # ✅ Require login
-
     def get_queryset(self):
+        """
+        Returns votes, optionally filtered by election.
+        Example: /api/votes/?election_id=3
+        """
         queryset = Vote.objects.select_related('candidate__position__election').all()  # ✅ Optimize queries
         election_id = self.request.query_params.get('election_id')
 
@@ -176,10 +171,33 @@ class VoteViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(candidate__position__election__id=election_id)  # ✅ Filter votes by election
 
         return queryset
+    # def create(self, request, *args, **kwargs):
+    #     """
+    #     Custom vote submission logic
+    #     """
+    #     votes_data = request.data
+    #     if not isinstance(votes_data, list):
+    #         return Response({"error": "Expected a list of votes"}, status=status.HTTP_400_BAD_REQUEST)
 
+    #     voter = request.user  # ✅ Ensure voter is logged in
+
+    #     created_votes = []
+    #     for vote_data in votes_data:
+    #         candidate_id = vote_data.get("candidate")
+    #         candidate = get_object_or_404(Candidate, id=candidate_id)
+
+    #         # ✅ Prevent duplicate votes
+    #         if Vote.objects.filter(voter=voter, candidate=candidate).exists():
+    #             return Response({"error": "You have already voted for this candidate."}, status=status.HTTP_400_BAD_REQUEST)
+
+    #         # ✅ Create the vote
+    #         vote = Vote.objects.create(voter=voter, candidate=candidate)
+    #         created_votes.append(VoteSerializer(vote).data)
+
+    #     return Response(created_votes, status=status.HTTP_201_CREATED)
     def create(self, request, *args, **kwargs):
         """
-        Custom vote submission logic with batch & branch restrictions.
+        Custom vote submission logic
         """
         votes_data = request.data
         if not isinstance(votes_data, list):
@@ -195,29 +213,44 @@ class VoteViewSet(viewsets.ModelViewSet):
             # ✅ Determine position and election
             position = candidate.position
             election = position.election  
-
             # ✅ Ensure the election is active
-            now = timezone.now() + timedelta(hours=5, minutes=30)  # Adjusting to IST
+            now = timezone.now()+ timedelta(hours=5, minutes=30)# Adjusting to IST
+            # print("active elction", election.start_date, election.end_date, now)
             if not (election.start_date <= now <= election.end_date):
                 return Response({"error": f"Election '{election.title}' is not active."}, 
+                               status=status.HTTP_400_BAD_REQUEST)
+             # ✅ Check batch restriction
+            if position.batch_restriction != "All Batches" and voter.batch not in position.batch_restriction:
+                return Response({"error": f"Only {position.batch_restriction} can vote for {position.title}."}, 
                                 status=status.HTTP_400_BAD_REQUEST)
-            
-            #decode and do it in future
-            # # ✅ Check batch restriction (supports multiple selections)
-            # if position.batch_restriction and "All Batches" not in position.batch_restriction:
-            #     if voter.batch not in position.batch_restriction:
-            #         return Response({"error": f"Only {', '.join(position.batch_restriction)} batches can vote for {position.title}."}, 
-            #                         status=status.HTTP_400_BAD_REQUEST)
 
-            # # ✅ Check branch restriction (supports multiple selections)
-            # if position.branch_restriction and "All Branches" not in position.branch_restriction:
-            #     if voter.branch not in position.branch_restriction:
-            #         return Response({"error": f"Only {', '.join(position.branch_restriction)} branches can vote for {position.title}."}, 
-            #                         status=status.HTTP_400_BAD_REQUEST)
+            # ✅ Check branch restriction
+            if position.branch_restriction != "All Branches" and voter.branch not in position.branch_restriction:
+                return Response({"error": f"Only {position.branch_restriction} can vote for {position.title}."}, 
+                                status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Prevent duplicate votes for the same position
             if Vote.objects.filter(voter=voter, candidate__position=position).exists():
                 return Response({"error": f"You have already voted for {position.title}."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # # Group votes by election to enforce election-level constraints for future use
+            # election_votes = {}
+            # # ✅ Track votes by election to enforce maximum votes per election
+            # if election.id not in election_votes:
+            #     election_votes[election.id] = []
+            # election_votes[election.id].append(candidate)
+            
+            # # ✅ Check if voter has exceeded maximum votes for this position
+            # position_votes = Vote.objects.filter(
+            #     voter=voter, 
+            #     candidate__position=position
+            # ).count()
+            
+            # if position_votes >= position.max_votes_per_voter:
+            #     return Response(
+            #         {"error": f"You have already cast the maximum number of votes ({position.max_votes_per_voter}) for {position.title}."},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
 
             # ✅ Create the vote
             vote = Vote.objects.create(voter=voter, candidate=candidate)

@@ -10,7 +10,7 @@ class Event(models.Model):
 
     title = models.CharField(max_length=255)
     date = models.DateField()
-    poster = models.URLField(default="/data/media/images/general/dummy.jpg")
+    poster = models.ImageField(upload_to="event_posters/", default="event_posters/default.jpg")
     description = models.TextField()
     venue = models.CharField(max_length=255)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
@@ -22,8 +22,9 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+
 class Agenda(models.Model):
-    event = models.ForeignKey(Event, related_name="agenda", on_delete=models.CASCADE)
+    event = models.OneToOneField(Event, related_name="agenda", on_delete=models.CASCADE)
     time = models.CharField(max_length=50)
     topic = models.CharField(max_length=255)
 
@@ -31,7 +32,7 @@ class Agenda(models.Model):
         return f"{self.event.title} - {self.topic}"
 
 class Speaker(models.Model):
-    event = models.ForeignKey(Event, related_name="speakers", on_delete=models.CASCADE)
+    event = models.OneToOneField(Event, related_name="speaker", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     bio = models.TextField()
 

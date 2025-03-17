@@ -144,6 +144,10 @@ export default function Events() {
               )
             )}
           </S.CategoryFilter>
+           {/* Admin Button */}
+          <S.AdminButton onClick={() => navigate("/events/events-admin")}>
+            Go to Admin Page
+          </S.AdminButton>
         </S.FilterSection>
 
         {/* Events List */}
