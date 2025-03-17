@@ -18,6 +18,8 @@ class Election(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_elections')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    display_results = models.BooleanField(default=False)  # Can hide results if needed
+    display_election = models.BooleanField(default=True) # Can hide election if too old
 
     class Meta:
         ordering = ['-start_date']

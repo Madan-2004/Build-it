@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:8000/api/";
 
@@ -36,12 +37,13 @@ const VotingConfirmationPage = () => {
   
           console.log("✅ Vote Submission Response:", response.data);
   
-          alert("✅ Your vote has been successfully submitted!");
+          toast.success("✅ Your vote has been successfully submitted!", { autoClose: 5000 });
+
           navigate("/elections"); // Redirect to elections page
       } catch (error) {
           console.error("❌ Error submitting vote:", error);
           const message = error.response?.data?.error || error.response?.data?.detail || "Failed to submit vote.";
-          setErrorMessage(`❌ ${message}`);
+          toast.error(`❌ ${message}`, { autoClose: 5000 });
       }
   
       setLoading(false);

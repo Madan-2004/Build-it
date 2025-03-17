@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -44,17 +45,30 @@ const CandidateForm = () => {
     candidateData.append("approved", formData.approved);
 
     try {
+      // ✅ Log form data before sending
       for (let [key, value] of candidateData.entries()) {
         console.log(`${key}:`, value);
       }
       
-      await axios.post(`${API_URL}elections/${electionId}/positions/${positionId}/candidates/`, candidateData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await axios.post(
+        `${API_URL}elections/${electionId}/positions/${positionId}/candidates/`,
+        candidateData,
+        { withCredentials: true }
+      );
+  
+      // ✅ Show success notification
+      toast.success("Candidate added successfully!", { position: "top-right", autoClose: 5000 });
+  
+      // ✅ Navigate to candidates list
       navigate(`/admin/elections/${electionId}/positions/${positionId}/candidates/`);
     } catch (error) {
       console.error("Error adding candidate:", error);
-      setError("Failed to add candidate.");
+  
+      // ✅ Extract backend error message
+      const errorMessage = error.response?.data?.[0] || "Failed to add candidate.";
+  
+      // ✅ Show error notification
+      toast.error(errorMessage, { position: "top-right", autoClose: 5000 });
     }
   };
 

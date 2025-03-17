@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Election Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function toggleAddParticipants() {
+            const addParticipantsForm = document.getElementById('add-participants-form');
+            addParticipantsForm.classList.toggle('hidden');
+        }
+    </script>
+</head>
+<body class="bg-blue-200 p-10">
+    <div class="max-w-6xl mx-auto bg-white p-8 shadow-lg rounded-lg">
+        <h1 class="text-3xl font-bold text-center mb-8"> Manage Elections</h1>
+
+        <!-- Ongoing Elections -->
+        <h2 class="text-xl font-semibold mb-4">Ongoing Elections</h2>
+        <table class="w-full text-left border-collapse mb-6">
+            <thead>
+                <tr class="bg-blue-200">
+                    <th class="p-3 border">Election ID</th>
+                    <th class="p-3 border">Election Name</th>
+                    <th class="p-3 border">Date</th>
+                    <th class="p-3 border">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="hover:bg-blue-100 cursor-pointer">
+                    <td class="p-3 border">001</td>
+                    <td class="p-3 border">Student Council 2025</td>
+                    <td class="p-3 border">March 20, 2025</td>
+                    <td class="p-3 border text-center">
+                        <a href="/vote.html" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Vote Now</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        
+        <!-- Upcoming Elections -->
+        <h2 class="text-xl font-semibold mb-4">Upcoming Elections</h2>
+        <table class="w-full text-left border-collapse mb-6">
+            <thead>
+                <tr class="bg-green-200">
+                    <th class="p-3 border">Election ID</th>
+                    <th class="p-3 border">Election Name</th>
+                    <th class="p-3 border">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="hover:bg-green-100 cursor-pointer">
+                    <td class="p-3 border">002</td>
+                    <td class="p-3 border">Cultural Secretary 2025</td>
+                    <td class="p-3 border">April 15, 2025</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Past Elections -->
+        <h2 class="text-xl font-semibold mb-4">Past Elections</h2>
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-red-200">
+                    <th class="p-3 border">Election ID</th>
+                    <th class="p-3 border">Election Name</th>
+                    <th class="p-3 border">Date</th>
+                    <th class="p-3 border">Action</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="hover:bg-red-100 cursor-pointer">
+                    <td class="p-3 border">003</td>
+                    <td class="p-3 border">Treasurer Election 2024</td>
+                    <td class="p-3 border">December 10, 2024</td>
+                    <td class="p-3 border text-center">
+                        <a href="/electionresult.html" class="bg-red-400 text-white px-4 py-2 rounded hover:bg-red-700">See Results</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

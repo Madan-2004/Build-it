@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { ToastContainer } from "react-toastify";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // ✅ Authentication
@@ -172,6 +173,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ConditionalWrapper>
+      <ToastContainer position="top-right" autoClose={5000} />
       <Footer />
     </Router>
   );

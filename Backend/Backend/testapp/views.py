@@ -27,6 +27,11 @@ class ElectionViewSet(viewsets.ModelViewSet):
         election = self.get_object()
         serializer = ElectionResultSerializer(election)
         return Response(serializer.data)
+    def get_serializer_context(self):
+        """Pass request to serializer to check if the user has voted."""
+        context = super().get_serializer_context()
+        context["request"] = self.request  # ✅ Pass request
+        return context
 
 # ✅ **Position Management**
 class PositionViewSet(viewsets.ModelViewSet):
@@ -70,50 +75,86 @@ class PositionViewSet(viewsets.ModelViewSet):
 class CandidateViewSet(viewsets.ModelViewSet):
     queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer
-    permission_classes = []  # 🔥 Removed authentication
-
+    permission_classes = [IsAuthenticated]  # 🔥 Removed authentication
+    
     def get_queryset(self):
         position_id = self.kwargs.get('position_pk')
         if position_id:
             return Candidate.objects.filter(position_id=position_id)
         return super().get_queryset()
-
+    
     def perform_create(self, serializer):
         position_id = self.kwargs.get('position_pk')
         position = get_object_or_404(Position, pk=position_id)
-
+        
         name = self.request.data.get('name', None)
-        if name:
-            serializer.save(position=position, name=name)
-        else:
-            raise ValidationError("Candidate must have either a user or a name.")
+        roll_no = self.request.data.get('roll_no')
+        # email = self.request.data.get('email')
+        if not name or not roll_no:
+            raise ValidationError("Candidate name and roll number are required.")
+            
+        # ✅ Check if the candidate is already registered for the same position in the same election
+        if Candidate.objects.filter(
+            roll_no=roll_no,
+            position=position
+        ).exists():
+            raise ValidationError("This candidate is already registered for this position in this election.")
+            
+        # ✅ Check if the candidate is already registered for another position in the same election
+        existing_candidate = Candidate.objects.filter(
+        roll_no=roll_no,
+        position__election=position.election
+        ).exclude(position=position).first()  # ✅ Correct
+
+            
+        if existing_candidate:
+            raise ValidationError(f"This candidate is already registered for {existing_candidate.position.title} in this election.")
+            
+        # Save the candidate
+        serializer.save(position=position)
 
     def perform_update(self, serializer):
-            """Ensure candidate updates maintain the correct position"""
-            candidate = self.get_object()
-            position_id = self.kwargs.get('position_pk')
+        """Ensure candidate updates maintain the correct position"""
+        candidate = self.get_object()
+        position_id = self.kwargs.get('position_pk')
+        roll_no = self.request.data.get('roll_no')
+        # email = self.request.data.get('email')
+        
+        # Ensure the position of the candidate is not being changed
+        if position_id and candidate.position.id != int(position_id):
+            raise ValidationError("Position cannot be changed for a candidate.")
+            
+        if roll_no and roll_no != candidate.roll_no:
+            # Check if the roll number is already used by another candidate for the same position
+            if Candidate.objects.filter(
+                roll_no=roll_no, 
+                position=candidate.position
+            ).exclude(pk=candidate.pk).exists():
+                raise ValidationError("A candidate with this roll number already exists for this position.")
+                
+            # Check if the roll number is already used by another candidate for a different position in the same election
+            if Candidate.objects.filter(
+                roll_no=roll_no,
+                position__election=candidate.position.election
+            ).exclude(position=candidate.position).exclude(pk=candidate.pk).exists():
+                raise ValidationError("This candidate is already registered for another position in this election.")
 
-            # Ensure the position of the candidate is not being changed
-            if position_id and candidate.position.id != int(position_id):
-                raise ValidationError("Position cannot be changed for a candidate.")
-
-            serializer.save()
-
+        
+        serializer.save()
+    
     def destroy(self, request, *args, **kwargs):
         """Delete a candidate"""
         candidate = self.get_object()
         self.perform_destroy(candidate)
         return Response({"message": "Candidate deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-      
-
+        
     @action(detail=True, methods=['get'])
     def list_candidates(self, request, election_pk, position_pk):
         candidates = self.get_queryset()
         serializer = self.get_serializer(candidates, many=True)
         return Response(serializer.data)
-# ✅ **Vote Handling**
 
-
+#✅ **Vote Handling**
 class VoteViewSet(viewsets.ModelViewSet):
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
@@ -172,10 +213,34 @@ class VoteViewSet(viewsets.ModelViewSet):
             # ✅ Determine position and election
             position = candidate.position
             election = position.election  
+            # ✅ Ensure the election is active
+            now = timezone.now()+ timedelta(hours=5, minutes=30)# Adjusting to IST
+            # print("active elction", election.start_date, election.end_date, now)
+            if not (election.start_date <= now <= election.end_date):
+                return Response({"error": f"Election '{election.title}' is not active."}, 
+                               status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Prevent duplicate votes for the same position
             if Vote.objects.filter(voter=voter, candidate__position=position).exists():
                 return Response({"error": f"You have already voted for {position.title}."}, status=status.HTTP_400_BAD_REQUEST)
+            # # Group votes by election to enforce election-level constraints for future use
+            # election_votes = {}
+            # # ✅ Track votes by election to enforce maximum votes per election
+            # if election.id not in election_votes:
+            #     election_votes[election.id] = []
+            # election_votes[election.id].append(candidate)
+            
+            # # ✅ Check if voter has exceeded maximum votes for this position
+            # position_votes = Vote.objects.filter(
+            #     voter=voter, 
+            #     candidate__position=position
+            # ).count()
+            
+            # if position_votes >= position.max_votes_per_voter:
+            #     return Response(
+            #         {"error": f"You have already cast the maximum number of votes ({position.max_votes_per_voter}) for {position.title}."},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
 
             # ✅ Create the vote
             vote = Vote.objects.create(voter=voter, candidate=candidate)
@@ -194,11 +259,15 @@ from django.utils import timezone
 from .models import Election, Position, Candidate, Vote
 from datetime import timedelta
 class AdminDashboardViewSet(viewsets.ViewSet):
-    permission_classes = []  # 🔥 Removed authentication
+    permission_classes = [IsAuthenticated]  # 🔥authentication
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Get overall election statistics including hourly and monthly vote trends"""
+        #change this to env file not isstaff
+        if not request.user.is_staff and not Election.objects.filter(created_by=request.user).exists():
+            return Response({"error": "You do not have permission to view dashboard statistics."}, 
+                           status=status.HTTP_403_FORBIDDEN)
 
         now = timezone.now()
 
@@ -208,7 +277,7 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         completed_elections = Election.objects.filter(end_date__lt=now).count()
         upcoming_elections = Election.objects.filter(start_date__gt=now).count()
         total_positions = Position.objects.count()
-        total_candidates = Candidate.objects.count()
+        total_candidates = Candidate.objects.filter(approved=True).count()
         total_votes = Vote.objects.count()
 
         # ✅ Generate Monthly Voting Trend
@@ -221,9 +290,9 @@ class AdminDashboardViewSet(viewsets.ViewSet):
 
         # ✅ Generate Hourly Voting Trend for the Last 24 Hours
         hourly_votes = {}
-        last_24_hours = now - timedelta(hours=24)
+        last_24_hours = now - timezone.timedelta(hours=24)
         for i in range(24):  # Last 24 hours
-            hour = last_24_hours + timedelta(hours=i)
+            hour = last_24_hours + timezone.timedelta(hours=i)
             hour_label = hour.strftime('%I %p')  # e.g., "10 AM"
             vote_count = Vote.objects.filter(timestamp__hour=hour.hour, timestamp__date=hour.date()).count()
             hourly_votes[hour_label] = vote_count
@@ -242,4 +311,26 @@ class AdminDashboardViewSet(viewsets.ViewSet):
                 "hours": list(hourly_votes.keys()),
                 "hourly_vote_counts": list(hourly_votes.values())
             }
+        })
+    #for future use
+    @action(detail=False, methods=['get'])
+    def fraud_detection(self, request):
+        """Detect potential voting fraud patterns"""
+        # ✅ Only allow admin access
+        if not request.user.is_staff:
+            return Response({"error": "You do not have permission to access fraud detection."}, 
+                           status=status.HTTP_403_FORBIDDEN)
+            
+        # Find rapid voting patterns (multiple votes in short time)
+        rapid_voters = Vote.objects.values('voter__username').annotate(
+            vote_count=Count('id')
+        ).filter(vote_count__gt=5)  # Users who voted more than 5 times
+        
+        # Find any unusual voting patterns
+        unusual_patterns = []
+        
+        return Response({
+            "rapid_voters": list(rapid_voters),
+            "unusual_patterns": unusual_patterns,
+            "status": "Fraud detection complete"
         })

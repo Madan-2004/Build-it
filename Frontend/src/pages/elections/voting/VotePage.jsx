@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
 import axios from 'axios';
 import authService from '../../../services/auth';
 
@@ -115,19 +116,18 @@ const VotePage = () => {
             return;
         }
     
-        // Ensure at least one position is voted for
+        // Ensure all positions are voted for
         const requiredPositions = positions.length;
         const selectedPositions = Object.keys(selectedCandidates).length;
     
         if (selectedPositions === 0) {
-            setMessage("❌ Please select at least one candidate before voting.");
+            toast.error("❌ Please select at least one candidate before voting.");
             return;
         }
     
         if (selectedPositions < requiredPositions) {
-            if (!window.confirm(`You've only voted for ${selectedPositions} out of ${requiredPositions} positions. Continue anyway?`)) {
-                return;
-            }
+            toast.error(`❌ You must vote for all ${requiredPositions} positions before submitting.`);
+            return;
         }
     
         // Convert selected candidates into vote objects

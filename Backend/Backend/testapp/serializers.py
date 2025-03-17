@@ -49,13 +49,20 @@ class ElectionSerializer(serializers.ModelSerializer):
     is_completed = serializers.SerializerMethodField()
     candidates_count = serializers.SerializerMethodField()
     votes_count = serializers.SerializerMethodField()
+    has_voted = serializers.SerializerMethodField() 
 
     class Meta:
         model = Election
         fields = ['id', 'title', 'description', 'start_date', 'end_date', 'created_by',
-                  'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'positions']
-        read_only_fields = ['created_by', 'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count']
-
+                  'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'positions', 'has_voted', 'display_results', 'display_election']
+        read_only_fields = ['created_by', 'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'has_voted']
+    
+    def get_has_voted(self, obj):
+        """Check if the current user has voted in this election."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Vote.objects.filter(voter=request.user, candidate__position__election=obj).exists()
+        return False  # If not authenticated, assume they haven't voted
     
 
     def get_is_active(self, obj):

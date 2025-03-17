@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Election Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-100 p-20">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold text-center text-blue-700 mb-6">Admin Elections Page</h1>
+
+        <div id="adminPage">
+            <h2 class="text-xl font-semibold text-blue-600 mb-4">Previous Elections</h2>
+            <table class="table-auto w-full border-collapse border border-blue-400">
+                <thead>
+                    <tr class="bg-blue-300">
+                        <th class="border border-blue-400 px-4 py-2">Election Name</th>
+                        <th class="border border-blue-400 px-4 py-2">Election ID</th>
+                        <th class="border border-blue-400 px-4 py-2">Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="border border-blue-400 px-4 py-2">Sample Election 1</td>
+                        <td class="border border-blue-400 px-4 py-2">E001</td>
+                        <td class="border border-blue-400 px-4 py-2">1st March 2025, 10:00 AM</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-blue-400 px-4 py-2">Sample Election 2</td>
+                        <td class="border border-blue-400 px-4 py-2">E002</td>
+                        <td class="border border-blue-400 px-4 py-2">5th March 2025, 2:00 PM</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button id="createElectionButton" class="w-full bg-blue-500 text-white p-2 rounded-md mt-6 hover:bg-blue-600">Create New Election</button>
+        </div>
+    <div id="createElection" class="hidden mt-6 max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold text-center mb-6">Create Election</h1>
+        
+        <div id="electionForm">
+            <label class="block text-lg font-medium">Election Name:</label>
+            <input type="text" id="electionName" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+
+            <label class="block text-lg font-medium">Start Time:</label>
+            <input type="datetime-local" id="startTime" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+
+            <label class="block text-lg font-medium">End Time:</label>
+            <input type="datetime-local" id="endTime" class="w-full p-2 border border-gray-300 rounded-md mb-6">
+
+            <button onclick="nextPage()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Next</button>
+        </div>
+
+        <div id="rolePage" class="hidden">
+            <label class="block text-lg font-medium">Role:</label>
+            <input type="text" id="branch" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+           
+            <label class="font-bold">Branch</label>
+            <div id="branchSelection"></div>
+
+            <label class="font-bold">Batch</label>
+            <div id="batchSelection"></div>
+
+            <label class="block text-lg font-medium">Candidate Emails:</label>
+            <div id="candidateList" class="space-y-2 mb-4"></div>
+
+            <input type="email" id="candidateEmail" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter candidate email">
+            <button onclick="addCandidate()" class="bg-green-500 text-white px-4 py-2 mt-2 rounded-md hover:bg-green-600">Add Candidate</button>
+
+            <div class="flex justify-between mt-6">
+                <button onclick="addMoreRoles()" class="bg-blue-400 text-white px-4 py-2 rounded-md hover:bg-blue-500">Add More Roles</button>
+                <button onclick="deleteRole()" class="bg-red-400 text-white px-4 py-2 rounded-md hover:bg-red-500">Delete This Role</button>
+                <button onclick="submitElection()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Submit Election</button>
+            </div>
+            <button onclick="goBack()" class="mt-4 text-blue-500 underline">Back</button>
+        </div>
+
+        <div id="summaryPage" class="hidden">
+            <h2 class="text-xl font-bold mb-4">Election Summary</h2>
+            <div id="summaryContent" class="mb-6"></div>
+            <div class="flex justify-between">
+                <button onclick="confirmElection()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Confirm</button>
+                <button onclick="editElection()" class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600">Edit</button>
+            </div>
+            <button onclick="goBack()" class="mt-4 text-blue-500 underline">Back</button>
+        </div>
+    </div>
+
+    <script>
+        const allCandidates = [];
+        document.getElementById('createElectionButton').addEventListener('click', function() {
+            document.getElementById('adminPage').classList.add('hidden');
+            document.getElementById('createElection').classList.remove('hidden');
+        });
+        function nextPage() {
+            document.getElementById('electionForm').classList.add('hidden');
+            document.getElementById('rolePage').classList.remove('hidden');
+        }
+
+        function addCandidate() {
+            const emailInput = document.getElementById('candidateEmail');
+            const candidateList = document.getElementById('candidateList');
+            const email = emailInput.value.trim();
+            if (email) {
+                const div = document.createElement('div');
+                div.classList.add('flex', 'justify-between', 'items-center', 'bg-gray-200', 'p-2', 'rounded-md');
+                div.innerHTML = `${email} <button onclick="this.parentElement.remove()" class="text-red-500">&times;</button>`;
+                candidateList.appendChild(div);
+                allCandidates.push({ email, election: document.getElementById('electionName').value });
+                emailInput.value = '';
+            }
+        }
+        function generateMultiSelect(id, options) {
+            const container = document.getElementById(id);
+            container.innerHTML = '';
+            options.forEach(opt => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = opt;
+                checkbox.id = `${id}-${opt}`;
+                checkbox.classList.add('mr-2');
+
+                const label = document.createElement('label');
+                label.innerHTML = opt;
+                label.setAttribute('for', checkbox.id);
+
+                const div = document.createElement('div');
+                div.classList.add('flex', 'items-center', 'mt-1');
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                container.appendChild(div);
+            });
+        }
+
+        generateMultiSelect('branchSelection', ['All Branches', 'CSE', 'MECH', 'CIVIL', 'EE', 'EP', 'SSE', 'MEMS', 'MNC', 'MSC', 'PHD']);
+        generateMultiSelect('batchSelection', ['All Batches', '1st Year', '2nd Year', '3rd Year', '4th Year']);
+        function submitElection() {
+            document.getElementById('rolePage').classList.add('hidden');
+            document.getElementById('summaryPage').classList.remove('hidden');
+            const electionName = document.getElementById('electionName').value;
+            const candidatesSummary = allCandidates.map(c => `${c.email} - ${c.election}`).join('<br>');
+            document.getElementById('summaryContent').innerHTML = `<strong>Election:</strong> ${electionName}<br><br><strong>Candidates:</strong><br>${candidatesSummary}`;
+        }
+
+        function editElection() {
+            document.getElementById('summaryPage').classList.add('hidden');
+            document.getElementById('electionForm').classList.remove('hidden');
+        }
+
+        function addMoreRoles() {
+            alert('Role saved! Add a new role now.');
+            document.getElementById('branch').value = '';
+            document.getElementById('batch').value = '';
+            document.getElementById('candidateList').innerHTML = '';
+        }
+
+        function deleteRole() {
+            alert('Role deleted successfully!');
+        }
+
+        function confirmElection() {
+            alert('Election confirmed successfully!');
+        }
+
+        function goBack() {
+            document.getElementById('electionForm').classList.remove('hidden');
+            document.getElementById('rolePage').classList.add('hidden');
+            document.getElementById('summaryPage').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
