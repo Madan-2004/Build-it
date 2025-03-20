@@ -25,6 +25,14 @@ const ElectionPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const authCheck = await axios.get(`${API_URL}auth/check/`, { withCredentials: true });
+        if (!authCheck.data.isAuthenticated) {
+          console.log("User is not authenticated. Attempting to refresh session.");
+          await refreshSession();  // Try refreshing session
+        }
+        else{
+          console.log("User is authenticated");
+        }
         const response = await axios.get(`${API_URL}elections/`, { withCredentials: true });
         const currentDate = new Date();
         
@@ -69,6 +77,23 @@ const ElectionPage = () => {
     };
 
     fetchData();
+    const refreshSession = async () => {
+      try {
+        const response = await axios.post(
+          `${API_URL}auth/token/refresh/`,
+          {},  // No need to manually include token in body, it should be sent via cookies
+          {
+            withCredentials: true,  // Ensures cookies are sent
+          }
+        );
+    
+        console.log("Session refreshed successfully.", response.data);
+        // localStorage.setItemr("access_token", response.data.access);
+      } catch (error) {
+        console.error("Session refresh failed:", error.response?.data || error.message);
+      }
+    };
+    
     
     // Update current time every minute
     const interval = setInterval(() => {

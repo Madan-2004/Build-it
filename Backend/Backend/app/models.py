@@ -9,36 +9,7 @@ class Council(models.Model):
     def __str__(self):
         return self.name
 
-# class Users(models.Model):
-#     STATUS_CHOICES = [
-#         ("head", "Head"),
-#         ("member", "Member"),
-#     ]
 
-#     name = models.CharField(max_length=100)
-#     email = models.EmailField(unique=True)
-#     roll_no = models.CharField(max_length=20, unique=True)
-#     branch = models.CharField(max_length=100)
-#     degree = models.CharField(max_length=100)
-#     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-
-#     def __str__(self):
-#         return f"{self.name} ({self.status})"
-    
-# class Club(models.Model):
-#     name = models.CharField(max_length=255)  # Mandatory
-#     head = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs")  # Optional
-#     description = models.TextField(blank=True, null=True)  # Optional
-#     upcoming_events = models.TextField(blank=True, null=True)  # Optional
-#     members = models.ManyToManyField(Users, related_name="member_clubs", blank=True)  # Optional
-#     projects = models.TextField(blank=True, null=True)  # Optional
-#     council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
-
-#     def __str__(self):
-#         return self.name
-
-#     def __str__(self):
-#         return self.name
     
 class Users(models.Model):
     name = models.CharField(max_length=100)
@@ -67,6 +38,13 @@ class Club(models.Model):
     email = models.EmailField(default="contact@example.com", blank=True)  # Default email
     def __str__(self):
         return self.name
+    @property
+    def members_count(self):
+        return self.members.count() if hasattr(self, 'members') else 0
+    
+    @property
+    def projects_count(self):
+        return self.projects.count() if hasattr(self, 'projects') else 0
 
 
 class ClubMembership(models.Model):
@@ -102,3 +80,13 @@ class ProjectImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.project.title}"  
+    
+class CouncilHead(models.Model):
+    name = models.CharField(max_length=255)  # Full name of the council head
+    position = models.CharField(max_length=100)  # Free text position field
+    email = models.EmailField(unique=True, blank=True, null=True)  # Optional email field
+    linkedin = models.URLField(blank=True, null=True)  # LinkedIn profile
+    image = models.ImageField(upload_to="council_heads/", blank=True, null=True)  # Profile image
+
+    def __str__(self):
+        return f"{self.name} - {self.position}"    

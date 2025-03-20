@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { useEffect } from 'react';
 import { ToastContainer } from "react-toastify";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
@@ -54,6 +54,7 @@ import './styles/index.css';
 import styled from 'styled-components';
 import axios from "axios";
 import FAQPage from './pages/FAQS/FAQPage';
+import ScrollToTop from './components/ScrollToTop';
 
 // Add this to your main app file (e.g., index.js or App.js)
 axios.defaults.withCredentials = true;
@@ -64,10 +65,28 @@ const PageWrapper = styled.div`
 `;
 
 function App() {
+  useEffect(() => {
+    // 🔹 Function to refresh token
+    const refreshToken = async () => {
+      try {
+        await axios.post("http://localhost:8000/api/auth/token/refresh/", {}, { withCredentials: true });
+        console.log("Access token refreshed successfully.");
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+      }
+    };
+
+    // 🔹 Refresh token every 1 hour (3600 * 1000 ms)
+    const interval = setInterval(refreshToken, 60 * 60 * 1000);
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
+
   return (
     <Router>
       <Navbar />
       <ConditionalWrapper>
+        <ScrollToTop /> 
         <Routes>
           {/* ✅ Public Routes */}
           <Route path="/" element={<Home />} />

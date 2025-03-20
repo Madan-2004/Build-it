@@ -40,16 +40,19 @@ class Position(models.Model):
     BRANCH_SELECTION_CHOICES = [
         ('All Branches', 'All Branches'),
         ('CSE', 'CSE'),
+        ('EE', 'EE'),
         ('MECH', 'MECH'),
         ('CIVIL', 'CIVIL'),
-        ('EE', 'EE'),
+        ('MEMS', 'MEMS'),
+        ('CHE', 'CHE'),
         ('EP', 'EP'),
         ('SSE', 'SSE'),
-        ('MEMS', 'MEMS'),
-        ('MNC', 'MNC'),
+        ('MNC', 'MNC'), 
         ('MSC', 'MSC'),
         ('PHD', 'PHD'),
+        ("MTech", "MTech"),
     ]
+        # chemiscla mtech phd
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)

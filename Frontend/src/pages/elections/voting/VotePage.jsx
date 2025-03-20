@@ -65,25 +65,26 @@ const VotePage = () => {
         });
     }, []);
 
-    // Filter positions based on user eligibility once we have both positions and voter info
-    useEffect(() => {
-        if (positions.length > 0 && voterInfo) {
-            const eligible = positions.filter(position => {
-                // If the position allows "All Batches" or "All Branches", allow all users
-                const batchEligible = position.batch_restriction.includes("All Batches") || 
-                    position.batch_restriction.includes(voterInfo.status);
+   // Filter positions based on user eligibility once we have both positions and voter info
+useEffect(() => {
+    if (positions.length > 0 && voterInfo) {
+        const eligible = positions.filter(position => {
+            // If the position allows "All Branches", allow all users
+            const branchEligible = position.branch_restriction.includes("All Branches") || 
+                position.branch_restriction.includes(voterInfo.branch);
             
-                const branchEligible = position.branch_restriction.includes("All Branches") || 
-                    position.branch_restriction.includes(voterInfo.branch);
-            
-                return batchEligible && branchEligible;
-            });
-            
-            
-            console.log("Eligible Positions:", eligible);
-            setEligiblePositions(eligible);
-        }
-    }, [positions, voterInfo]);
+            // Skip batch check for PhD, MTech, MSc; otherwise, check batch restriction
+            const batchEligible = ["PhD", "MTech", "MSc"].includes(voterInfo.branch) || 
+                position.batch_restriction.includes("All Batches") || 
+                position.batch_restriction.includes(voterInfo.status);
+
+            return batchEligible && branchEligible;
+        });
+
+        console.log("Eligible Positions:", eligible);
+        setEligiblePositions(eligible);
+    }
+}, [positions, voterInfo]);
 
     const handleVote = () => {
         if (!user) {

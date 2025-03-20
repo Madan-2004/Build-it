@@ -22,6 +22,7 @@ const Dashboard = () => {
         // Get user from cookie
         const userData = authService.getUserFromCookie();
         setUser(userData);
+        console.log(userData);
 
         if (userData && userData.email) {
           // Fetch clubs for the user

@@ -4,9 +4,9 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from .views import (
     get_councils, get_council_detail, get_clubs, create_council, delete_council,
     clubs_by_council_crud, club_crud, get_club_by_name, AddMemberView, 
-    RemoveMemberView, EditMemberView, get_user_profile, FeedbackView, 
+    RemoveMemberView, EditMemberView, get_user_profile, FeedbackView, CustomTokenRefreshView,
     update_club, delete_club, google_auth_url, google_callback, check_auth, logout,
-    ProjectListCreateView, ProjectDetailView, 
+    ProjectListCreateView, ProjectDetailView, CouncilHeadDetailView,CouncilHeadListCreateView
     # UploadProjectImagesView  # Added project views
 )
 
@@ -21,7 +21,7 @@ urlpatterns = [
     path("api/clubs/", get_clubs, name="get_clubs"),
     path("api/clubs/<str:club_name>/", get_club_by_name, name="club-detail"),
     path("api/clubs/<str:club_name>/update/", update_club, name="update_club"),
-    path("api/clubs/<str:club_name>/delete/", delete_club, name="delete_club"),
+    path('api/councils/<str:council_name>/clubs/<int:club_id>/',views.delete_club,name='delete_club'),
     path("api/clubs/<str:club_name>/rename/", delete_club, name="delete_club"),
     path("api/councils/<str:council_name>/clubs/", clubs_by_council_crud, name="clubs_by_council"),
     path("api/councils/<str:council_name>/clubs/<int:club_id>/", club_crud, name="club_crud"),
@@ -40,10 +40,12 @@ urlpatterns = [
     # Google Authentication
     path('api/auth/google/url/', google_auth_url, name='google_auth_url'),
     path('api/auth/google/callback/', google_callback, name='google_callback'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+    # path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/profile/', get_user_profile, name='user_profile'),
     path('api/auth/check/', check_auth, name='auth_check'),
     path('api/auth/logout/', logout, name='logout'),
+    path('api/token/info/', views.token_info, name='token_info'),
 
     # Feedback
     path('api/feedback/', FeedbackView.as_view(), name='feedback'),
@@ -51,4 +53,9 @@ urlpatterns = [
 
     #testing
     path('auth/check/', views.check_auth_status, name="check-auth"),
+
+    #council heads
+    path("api/council-heads/", CouncilHeadListCreateView.as_view(), name="council-heads-list-create"),
+    path("api/council-heads/<int:pk>/", CouncilHeadDetailView.as_view(), name="council-heads-detail"),
+
 ]

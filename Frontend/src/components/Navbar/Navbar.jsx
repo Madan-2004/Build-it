@@ -12,7 +12,8 @@ import {
   NavMenu,
   NavBtn,
   NavBtnLink,
-  NavContainer
+  NavContainer,
+  CloseIcon,
 } from "./NavbarElements";
 import Logo from "../../Images/general/logo.jpg";
 
@@ -20,11 +21,12 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  
+
   // Check if current route is homepage
   const isHomepage = location.pathname === "/";
 
   const toggleMenu = () => setIsOpen(!isOpen);
+  const closeMenu = () => setIsOpen(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,6 +44,23 @@ export default function Navbar() {
     };
   }, []);
 
+  // Close menu when route changes
+  useEffect(() => {
+    closeMenu();
+  }, [location]);
+
+  // Prevent scrolling when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   return (
     <Nav scrolled={scrolled} isHomepage={isHomepage}>
       <NavContainer scrolled={scrolled || !isHomepage} isHomepage={isHomepage}>
@@ -49,86 +68,128 @@ export default function Navbar() {
           <LogoImage src={Logo} alt="Institute Logo" />
           <LogoText>
             <InstituteName>IIT Indore</InstituteName>
-            <SubHeading scrolled={scrolled || !isHomepage}>Students' Gymkhana</SubHeading>
+            <SubHeading scrolled={scrolled || !isHomepage}>
+              Students' Gymkhana
+            </SubHeading>
           </LogoText>
         </NavLogo>
 
-        <Bars onClick={toggleMenu} aria-label="Open navigation menu" />
+        {isOpen ? (
+          <CloseIcon onClick={toggleMenu} aria-label="Close navigation menu" />
+        ) : (
+          <Bars onClick={toggleMenu} aria-label="Open navigation menu" />
+        )}
 
-        <NavMenu isOpen={isOpen} scrolled={scrolled || !isHomepage} isHomepage={isHomepage}>
+        <NavMenu
+          isOpen={isOpen}
+          scrolled={scrolled || !isHomepage}
+          isHomepage={isHomepage}
+        >
           <NavLink
             to="/"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             HOME
           </NavLink>
           <NavLink
             to="/about"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             ABOUT US
           </NavLink>
           <NavLink
             to="/council"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             COUNCIL
           </NavLink>
           <NavLink
             to="/events"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             EVENTS
           </NavLink>
           <NavLink
             to="/elections"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             ELECTIONS
           </NavLink>
           <NavLink
             to="/faqs"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             FAQ'S
           </NavLink>
           <NavLink
             to="/profile"
-            onClick={toggleMenu}
+            onClick={closeMenu}
             scrolled={scrolled || !isHomepage}
             style={({ isActive }) => ({
-              color: isActive ? "#00a8e8" : (scrolled || !isHomepage) ? "#f7f7f7" : "#f7f7f7",
+              color: isActive
+                ? "#00a8e8"
+                : scrolled || !isHomepage
+                  ? "#f7f7f7"
+                  : "#f7f7f7",
             })}
           >
             PROFILE
           </NavLink>
 
           <NavBtn>
-            <NavBtnLink to="/contact" onClick={toggleMenu} scrolled={scrolled || !isHomepage}>
+            <NavBtnLink
+              to="/contact"
+              onClick={closeMenu}
+              scrolled={scrolled || !isHomepage}
+            >
               Contact Us
             </NavBtnLink>
           </NavBtn>

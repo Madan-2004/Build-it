@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Club, Users, Council, ClubMembership
+from .models import Club, Users, Council, ClubMembership,CouncilHead
 
 
 class CouncilSerializer(serializers.ModelSerializer):
@@ -27,6 +27,8 @@ class ClubSerializer(serializers.ModelSerializer):
     head = UsersSerializer(required=False, allow_null=True)  # Show full head details
     # members = serializers.SerializerMethodField()  # Get members' details
     # council = CouncilSerializer()  # Show full council details
+    members_count = serializers.SerializerMethodField()
+    projects_count = serializers.SerializerMethodField()
 
     head_id = serializers.PrimaryKeyRelatedField(
         queryset=Users.objects.all(), source="head", write_only=True, required=False
@@ -36,11 +38,16 @@ class ClubSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Club
-        fields = "__all__"
-
+        fields = ['id', 'name', 'head', 'head_id', 'description', 'members_count', 
+              'projects_count', 'members', 'council']
     def get_members(self, obj):
         members = ClubMembership.objects.filter(club=obj)
         return ClubMembershipSerializer(members, many=True).data
+    def get_members_count(self, obj):
+        return getattr(obj, 'db_members_count', obj.members_count)
+
+    def get_projects_count(self, obj):
+        return getattr(obj, 'db_projects_count', obj.projects_count)
 from .models import Project
 
 from rest_framework import serializers
@@ -88,3 +95,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                 ProjectImage.objects.create(project=project, image=image)
 
         return project
+class CouncilHeadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CouncilHead
+        fields = ["id", "name", "position", "email", "linkedin", "image"]

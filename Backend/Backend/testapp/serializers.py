@@ -21,8 +21,11 @@ class CandidateSerializer(serializers.ModelSerializer):
         fields = ['id', 'position', 'name', 'roll_no', 'branch', 'degree', 'photo', 'approved', 'votes_count']
         read_only_fields = ['votes_count']
 
+    # def get_votes_count(self, obj):
+    #     return obj.votes.count()
     def get_votes_count(self, obj):
-        return obj.votes.count()
+        return Vote.objects.filter(candidate=obj).count()
+
 
     def validate(self, data):
         if not data.get('name'):
@@ -48,6 +51,11 @@ class PositionSerializer(serializers.ModelSerializer):
 
     def get_candidates(self, obj):
         candidates = obj.candidates.filter(approved=True)
+        candidates = sorted(
+            candidates,
+            key=lambda x: Vote.objects.filter(candidate=x).count(),
+            reverse=True
+        )
         return CandidateSerializer(candidates, many=True).data
 
     def validate_batch_restriction(self, value):
@@ -162,8 +170,6 @@ class VoteSerializer(serializers.ModelSerializer):
     def get_election_name(self, obj):
         """Returns the election name of the vote"""
         return obj.candidate.position.election.title  # ✅ Fetch election name
-
-
 class ElectionResultSerializer(serializers.ModelSerializer):
     positions = serializers.SerializerMethodField()
 
@@ -181,11 +187,16 @@ class ElectionResultSerializer(serializers.ModelSerializer):
 
             for candidate in candidates:
                 votes_count = candidate.votes.count()
-                candidate_name = candidate.name
                 candidates_data.append({
                     'id': candidate.id,
-                    'name': candidate_name,
-                    'votes_count': votes_count
+                    'name': candidate.name,
+                    'roll_no': candidate.roll_no,
+                    'degree': candidate.degree,
+                    'branch': candidate.branch,
+                    'photo': candidate.photo.url if candidate.photo else None,
+                    'votes_count': votes_count,
+                    'approved': candidate.approved,
+                    'created_at': candidate.created_at
                 })
 
             # Sort candidates by votes count in descending order
@@ -194,9 +205,13 @@ class ElectionResultSerializer(serializers.ModelSerializer):
             result.append({
                 'id': position.id,
                 'title': position.title,
+                'description': position.description,
                 'max_votes_per_voter': position.max_votes_per_voter,
+                'batch_restriction': position.batch_restriction,
+                'branch_restriction': position.branch_restriction,
                 'candidates': candidates_data,
                 'total_votes': sum(c['votes_count'] for c in candidates_data)
             })
 
         return result
+ 

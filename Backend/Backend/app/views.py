@@ -4,11 +4,18 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Council, Club, Users, ClubMembership
-from .serializers import CouncilSerializer, ClubSerializer, UsersSerializer
+from .models import Council, Club, Users, ClubMembership,CouncilHead
+from .serializers import CouncilSerializer, ClubSerializer, UsersSerializer,CouncilHeadSerializer
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
 
+import json
+import os
+from django.conf import settings
+from rest_framework import status, generics, parsers
+from PIL import Image
+import io
 # Get all councils
 @api_view(['GET'])
 def get_councils(request):
@@ -68,7 +75,11 @@ def clubs_by_council_crud(request, council_name):
             council = get_object_or_404(Council, name=council_name)
 
         if request.method == 'GET':
-            clubs = Club.objects.filter(council=council)
+            # Add annotations for counting members and projects
+            clubs = Club.objects.filter(council=council).annotate(
+    db_members_count=Count('clubmembership', distinct=True),
+    db_projects_count=Count('projects', distinct=True)
+)
             serializer = ClubSerializer(clubs, many=True)
             return Response({
                 'council': council.name,
@@ -204,16 +215,28 @@ def update_club(request, club_name):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# Delete a club
-@api_view(["DELETE"])
-def delete_club(request, club_name):
+
+@api_view(['GET', 'DELETE'])
+def delete_club(request, council_name, club_id):
     try:
-        club = get_object_or_404(Club, name=club_name)
-        club.delete()
-        return Response({"message": "Club deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-#renaming the club    
+        council = Council.objects.get(name=council_name)
+        club = Club.objects.get(id=club_id, council=council)
+        
+        if request.method == 'DELETE':
+            club.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+    except Council.DoesNotExist:
+        return Response(
+            {"error": "Council not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Club.DoesNotExist:
+        return Response(
+            {"error": "Club not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+# #renaming the club    
 @api_view(["PATCH"])
 def rename_club(request, club_name):
     try:
@@ -856,44 +879,62 @@ class ProjectListCreateView(generics.ListCreateAPIView):
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
-    
+
     def get_queryset(self):
         club_id = self.kwargs.get("club_id")
         return Project.objects.filter(club_id=club_id)
-    
+
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        
-        print("Update request data:", request.data)
-        
-        # If no new image is provided, we don't want to change the existing one
-        if not request.FILES.get('image') and partial:
-            # This prevents the image field from being set to None when not included in request
-            if 'image' in request.data and not request.data['image']:
-                request.data.pop('image')
-        
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        
-        if not serializer.is_valid():
-            print("Validation errors:", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        self.perform_update(serializer)
-        
-        return Response(serializer.data)
-    
-    def perform_update(self, serializer):
-        serializer.save()
-    
+        partial = kwargs.pop("partial", False)
+
+        # Handle existing images
+        existing_images = request.data.getlist("existing_images[]", [])
+        if existing_images:
+            # Delete images not in existing_images list
+            instance.images.exclude(image__in=existing_images).delete()
+
+        # Handle new image uploads
+        new_images = request.FILES.getlist("image_uploads")
+        if new_images:
+            for image in new_images:
+                try:
+                    # Validate image
+                    Image.open(image).verify()
+                    instance.images.create(image=image)
+                except Exception as e:
+                    return Response(
+                        {"error": f"Invalid image: {str(e)}"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        # Update other fields
+        serializer = self.get_serializer(
+            instance,
+            data={
+                'title': request.data.get('title', instance.title),
+                'description': request.data.get('description', instance.description)
+            },
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.perform_destroy(instance)
+
+        # Delete all images associated with this project
+        for img in instance.images.all():
+            img_path = os.path.join(settings.MEDIA_ROOT, img.image.name)
+            if os.path.exists(img_path):
+                os.remove(img_path)
+            img.delete()
+
+        instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-
-
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -912,3 +953,99 @@ def check_auth_status(request):
         "email": user.email,
         "username": user.username
     }, status=status.HTTP_200_OK)
+
+# app/views.py
+from django.http import JsonResponse
+from django.utils import timezone
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
+from datetime import datetime, timezone as dt_timezone  # Rename timezone to avoid conflicts
+
+def get_token_from_request(request):
+    # First check for token in Authorization header
+    auth_header = request.META.get('HTTP_AUTHORIZATION')
+    if auth_header and auth_header.startswith('Bearer '):
+        return auth_header.split(' ')[1]  # Extract token from header
+
+    # Fallback to checking cookies
+    return request.COOKIES.get('access_token')
+
+
+def verify_token(token_string):
+    try:
+        return AccessToken(token_string).payload, None
+    except TokenError as e:
+        return None, str(e)
+
+
+def get_token_expiration(payload):
+    if exp := payload.get('exp'):
+        return datetime.fromtimestamp(exp, tz=dt_timezone.utc)  # Use dt_timezone.utc instead of timezone.utc
+    return None
+
+
+def token_info(request):
+    token = get_token_from_request(request)
+    if not token:
+        return JsonResponse({'error': 'No token found in cookies'}, status=400)
+
+    payload, error = verify_token(token)
+    if error:
+        return JsonResponse({'error': error}, status=400)
+
+    expiration = get_token_expiration(payload)
+    is_expired = expiration < timezone.now() if expiration else True 
+
+    return JsonResponse({
+        'is_valid': not is_expired,
+        'expiration': expiration.isoformat() if expiration else None,
+        'user_id': payload.get('user_id'),
+        'email': payload.get('email')
+    })
+
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')  # Get refresh token from cookies
+        if not refresh_token:
+            print("Refresh token is missing")
+            return Response({"error": "Refresh token is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            print("got token")
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+            print("access token", access_token)
+            
+            # Create response with token in body
+            response = Response({
+                "access": access_token,
+            })
+            
+            # Set access token as cookie
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,  # Prevents JavaScript access
+                secure=True,    # Only sent over HTTPS
+                samesite='Lax', # Provides CSRF protection
+                max_age=86400,   # 1 hour expiration
+                path='/'        # Available across your domain
+            )
+            
+            return response
+        except Exception as e:
+            return Response({"error": "Invalid refresh token"}, status=status.HTTP_400_BAD_REQUEST)
+# List and Create View
+class CouncilHeadListCreateView(generics.ListCreateAPIView):
+    queryset = CouncilHead.objects.all()
+    serializer_class = CouncilHeadSerializer
+
+# Retrieve, Update, and Delete View
+class CouncilHeadDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CouncilHead.objects.all()
+    serializer_class = CouncilHeadSerializer        
