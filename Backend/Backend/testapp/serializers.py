@@ -68,7 +68,7 @@ class PositionSerializer(serializers.ModelSerializer):
 
     def validate_branch_restriction(self, value):
         """Ensure branch restriction is a list and contains valid choices"""
-        valid_choices = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MNC", "MSC", "PHD"]
+        valid_choices = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MC","CHE","MTECH", "MSC", "PHD"]
         if not all(branch in valid_choices for branch in value):
             raise serializers.ValidationError("Invalid branch selection.")
         return value
