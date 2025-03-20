@@ -1,4 +1,142 @@
 import React from "react";
+const ContactInfo = ({ website, email, isDark }) => {
+  // Function to determine icon and label based on URL
+  const getSocialInfo = (url) => {
+    if (!url) return null;
+    
+    if (url.includes('instagram.com')) {
+      return {
+        label: 'Instagram',
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8a4 4 0 100 8 4 4 0 000-8zM16 8v.87m4 0v-.87a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8h-2z"
+          />
+        )
+      };
+    } else if (url.includes('facebook.com')) {
+      return {
+        label: 'Facebook',
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"
+          />
+        )
+      };
+    } else if (url.includes('linkedin.com')) {
+      return {
+        label: 'LinkedIn',
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"
+          />
+        )
+      };
+    }
+    
+    return {
+      label: 'Website',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+        />
+      )
+    };
+  };
+
+  const socialInfo = website ? getSocialInfo(website) : null;
+
+  return (
+    <div className="flex flex-wrap gap-6 items-center mt-8">
+      {website && (
+        <a
+          href={website}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={website.replace(/(^\w+:|^)\/\//, '')}
+          className={`inline-flex items-center px-4 py-2 
+            ${isDark 
+              ? 'bg-blue-600/20 hover:bg-blue-600/30' 
+              : 'bg-blue-400/20 hover:bg-blue-400/30'
+            } backdrop-blur-sm border border-blue-500/30 
+            rounded-lg transition-all duration-300 group hover:scale-105`}
+        >
+          <div className={`p-2 rounded-full 
+            ${isDark 
+              ? 'bg-blue-500/20' 
+              : 'bg-blue-300/20'
+            } mr-3`}
+          >
+            <svg
+              className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors duration-200"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              {socialInfo.icon}
+            </svg>
+          </div>
+          <div>
+            <span className="text-sm text-blue-200 opacity-80">{socialInfo.label}</span>
+            <p className="text-blue-100 font-medium">
+              {website.replace(/(^\w+:|^)\/\//, '').split('/')[0]}
+            </p>
+          </div>
+        </a>
+      )}
+
+{email && (
+        <a
+          href={`mailto:${email}`}
+          title={email}
+          className={`inline-flex items-center px-4 py-2 
+            ${isDark 
+              ? 'bg-blue-600/20 hover:bg-blue-600/30' 
+              : 'bg-blue-400/20 hover:bg-blue-400/30'
+            } backdrop-blur-sm border border-blue-500/30 
+            rounded-lg transition-all duration-300 group hover:scale-105`}
+        >
+          <div className={`p-2 rounded-full 
+            ${isDark 
+              ? 'bg-blue-500/20' 
+              : 'bg-blue-300/20'
+            } mr-3`}
+          >
+            <svg
+              className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors duration-200"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+              />
+            </svg>
+          </div>
+          <div>
+            <span className="text-sm text-blue-200 opacity-80">Email</span>
+            <p className="text-blue-100 font-medium">{email}</p>
+          </div>
+        </a>
+      )}
+    </div>
+  );
+};
+
 
 const HeroSection = ({
   club,
@@ -12,7 +150,7 @@ const HeroSection = ({
 }) => {
   // Default to dark theme to match the navbar in the image
   const isDark = darkMode !== undefined ? darkMode : true;
-
+ console.log(club);
   return (
     <section
       className={`w-full ${
@@ -78,77 +216,174 @@ const HeroSection = ({
         type: "text",
         value: editClub.name,
         required: true,
+        minLength: 3,
+        validation: (value) => {
+          if (!value.trim()) return "Club name is required";
+          if (value.length < 3) return "Club name must be at least 3 characters";
+          return null;
+        }
       },
       {
         id: "description",
         label: "Description",
         type: "textarea",
         value: editClub.description,
-        rows: 3,
+        rows: 4,
+        required: true,
+        minLength: 20,
+        validation: (value) => {
+          if (!value.trim()) return "Description is required";
+          if (value.length < 20) return "Description must be at least 20 characters";
+          return null;
+        }
       },
       {
         id: "website",
         label: "Club Website",
         type: "url",
         value: editClub.website,
+        validation: (value) => {
+          if (value && !value.match(/^https?:\/\/.+\..+$/)) {
+            return "Please enter a valid URL (starting with http:// or https://)";
+          }
+          return null;
+        }
       },
       {
         id: "email",
         label: "Club Email",
         type: "email",
         value: editClub.email,
-      },
+        validation: (value) => {
+          if (value && !value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            return "Please enter a valid email address";
+          }
+          return null;
+        }
+      }
     ];
 
-    return fields.map((field) => (
-      <div key={field.id}>
-        <label
-          htmlFor={field.id}
-          className={`block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
-        >
-          {field.label}
-        </label>
-        {field.type === "textarea" ? (
-          <textarea
-            id={field.id}
-            rows={field.rows}
-            className={`mt-1 block w-full rounded-md ${isDark ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-50 border-gray-300 text-gray-900"} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-            value={field.value}
-            onChange={(e) =>
-              setEditClub({ ...editClub, [field.id]: e.target.value })
-            }
-            required={field.required}
-          />
-        ) : (
-          <input
-            id={field.id}
-            type={field.type}
-            className={`mt-1 block w-full rounded-md ${isDark ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-50 border-gray-300 text-gray-900"} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-            value={field.value}
-            onChange={(e) =>
-              setEditClub({ ...editClub, [field.id]: e.target.value })
-            }
-            required={field.required}
-          />
-        )}
+    return (
+      <div className="space-y-6">
+        {fields.map((field) => {
+          const error = field.validation?.(field.value);
+          
+          return (
+            <div key={field.id} className="relative">
+              <label
+                htmlFor={field.id}
+                className={`block text-sm font-medium mb-2 ${
+                  isDark ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              
+              {field.type === "textarea" ? (
+                <textarea
+                  id={field.id}
+                  rows={field.rows}
+                  className={`w-full rounded-lg transition-all duration-200 ${
+                    isDark 
+                      ? "bg-gray-700 border-gray-600 text-white focus:border-blue-500" 
+                      : "bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-400"
+                  } ${error ? "border-red-500" : "border-gray-300"}
+                    shadow-sm focus:ring-2 focus:ring-opacity-50 focus:ring-blue-500`}
+                  value={field.value}
+                  onChange={(e) => {
+                    setEditClub({ ...editClub, [field.id]: e.target.value });
+                  }}
+                  required={field.required}
+                  minLength={field.minLength}
+                />
+              ) : (
+                <input
+                  id={field.id}
+                  type={field.type}
+                  className={`w-full rounded-lg transition-all duration-200 ${
+                    isDark 
+                      ? "bg-gray-700 border-gray-600 text-white focus:border-blue-500" 
+                      : "bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-400"
+                  } ${error ? "border-red-500" : "border-gray-300"}
+                    shadow-sm focus:ring-2 focus:ring-opacity-50 focus:ring-blue-500`}
+                  value={field.value}
+                  onChange={(e) => {
+                    setEditClub({ ...editClub, [field.id]: e.target.value });
+                  }}
+                  required={field.required}
+                  minLength={field.minLength}
+                />
+              )}
+              
+              {error && (
+                <p className="text-red-500 text-sm mt-1 absolute -bottom-6">
+                  {error}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
-    ));
+    );
   }
 
   function renderFormButtons() {
+    const hasErrors = () => {
+      const fields = renderFormFields().props.children;
+      return fields.some(field => field.props.children[2]); // Check if any field has error message
+    };
+
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-4 mt-8">
         <button
           type="submit"
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition duration-200"
+          disabled={hasErrors()}
+          className={`px-6 py-3 rounded-lg shadow-lg transition duration-200 flex items-center
+            ${hasErrors() 
+              ? "bg-gray-500 cursor-not-allowed" 
+              : "bg-blue-600 hover:bg-blue-700 transform hover:scale-105"}
+            text-white font-medium`}
         >
-          Save
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Save Changes
         </button>
+        
         <button
           type="button"
-          className={`px-5 py-2.5 ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-200" : "bg-gray-200 hover:bg-gray-300 text-gray-800"} rounded-lg shadow transition duration-200`}
-          onClick={() => setEditMode(false)}
+          onClick={() => {
+            setEditMode(false);
+            setEditClub(club); // Reset form
+          }}
+          className={`px-6 py-3 rounded-lg shadow-lg transition duration-200 flex items-center
+            ${isDark 
+              ? "bg-gray-700 hover:bg-gray-600" 
+              : "bg-gray-200 hover:bg-gray-300"}
+            text-gray-200 font-medium transform hover:scale-105`}
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
           Cancel
         </button>
       </div>
@@ -202,58 +437,15 @@ const HeroSection = ({
         >
           {club.description || "No description available."}
         </p>
-        <div className="text-lg text-white space-y-2">
-          {club.website && (
-            <p className="flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-blue-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                />
-              </svg>
-              <a
-                href={club.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${isDark ? "text-blue-300" : "text-blue-200"} hover:underline`}
-              >
-                {club.website}
-              </a>
-            </p>
-          )}
-          {club.email && (
-            <p className="flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-blue-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              <a
-                href={`mailto:${club.email}`}
-                className={`${isDark ? "text-blue-300" : "text-blue-200"} hover:underline`}
-              >
-                {club.email}
-              </a>
-            </p>
-          )}
-        </div>
+        
+        {/* Add the new ContactInfo component */}
+        {(club.website || club.email ) && (
+          <ContactInfo 
+            website={club.website}
+            email={club.email}
+            isDark={isDark}
+          />
+        )}
       </>
     );
   }

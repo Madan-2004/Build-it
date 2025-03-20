@@ -19,14 +19,6 @@ const ClubMembers = ({
   // Helper function to get role-specific colors
   const getRoleColor = (role, isDark) => {
     switch (role) {
-      case "coordinator":
-        return isDark
-          ? "bg-gradient-to-br from-purple-800 to-indigo-900"
-          : "bg-gradient-to-br from-purple-400 to-indigo-500";
-      case "secretary":
-        return isDark
-          ? "bg-gradient-to-br from-green-800 to-teal-900"
-          : "bg-gradient-to-br from-green-400 to-teal-500";
       case "head":
         return isDark
           ? "bg-gradient-to-br from-blue-800 to-indigo-900"
@@ -101,50 +93,7 @@ const ClubMembers = ({
 
       {club.members && club.members.length > 0 ? (
         <>
-          {/* Search and Filter Bar */}
-          <div
-            className={`p-4 ${darkMode ? "bg-gray-750 border-b border-gray-700" : "bg-gray-50 border-b border-gray-200"}`}
-          >
-            <div className="flex flex-col md:flex-row gap-3 items-center">
-              <div className="relative flex-grow">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-5 w-5 ${darkMode ? "text-gray-400" : "text-gray-500"}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  className={`block w-full pl-10 pr-3 py-2 rounded-lg ${darkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder="Search members..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex-shrink-0 w-full md:w-auto">
-                <select
-                  className={`block w-full px-3 py-2 rounded-lg ${darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
-                >
-                  <option value="all">All Roles</option>
-                  <option value="member">Members</option>
-                  <option value="coordinator">Coordinators</option>
-                  <option value="secretary">Secretaries</option>
-                </select>
-              </div>
-            </div>
-          </div>
+         
 
           {/* Members Grid */}
           <div className="p-4">

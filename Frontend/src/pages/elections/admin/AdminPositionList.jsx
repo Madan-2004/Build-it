@@ -186,8 +186,6 @@ const AdminPositionList = () => {
                 <tr className="bg-gray-50">
                   <th className="p-3 text-left">Title</th>
                   <th className="p-3 text-left">Description</th>
-                  <th className="p-3 text-center">Max Candidates</th>
-                  <th className="p-3 text-center">Max Votes</th>
                   <th className="p-3 text-center">Candidates</th>
                   <th className="p-3 text-center">Actions</th>
                 </tr>
@@ -217,8 +215,7 @@ const AdminPositionList = () => {
                           ? position.description.substring(0, 50) + (position.description.length > 50 ? "..." : "") 
                           : "No description"}
                       </td>
-                      <td className="p-3 text-center">{position.max_candidates}</td>
-                      <td className="p-3 text-center">{position.max_votes_per_voter}</td>
+                      
                       <td className="p-3 text-center">
                         <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                           {position.candidates.length| 0}

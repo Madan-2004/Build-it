@@ -7,6 +7,7 @@ import ClubHead from "./ClubHead";
 import ClubStats from "./ClubStats";
 import ClubMembers from "./ClubMembers";
 import authService from "../../services/auth";
+import { isAdmin as checkIsAdmin } from "../../utils/adminCheck";
 
 const API_BASE_URL = "http://localhost:8000"; // Update API URL if needed
 
@@ -82,11 +83,8 @@ const ClubProfile = () => {
         email: data.email || "",
       });
       // Check if user is club head (admin)
-    if (user && data.head && user.email === data.head.email) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
+    // Enhanced admin check
+    
     } catch (err) {
       console.error("Error fetching club details:", err);
       setError(err.message);
@@ -94,6 +92,18 @@ const ClubProfile = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (user && club) {
+      // Check if user is admin
+      const isHeadOfClub = club.head && user.email === club.head.email;
+      const isAdminUser = checkIsAdmin(user.email);
+      console.log("Admin check:", { isHeadOfClub, isAdminUser, userEmail: user.email });
+      setIsAdmin(isHeadOfClub || isAdminUser);
+    } else {
+      console.log("User not logged in or club not loaded");
+      setIsAdmin(false);
+    }
+  }, [user, club]);
 
   const handleUpdateClub = async (e) => {
     e.preventDefault();
@@ -584,7 +594,7 @@ const ClubProfile = () => {
             />
 
             <div id="club-projects" className="mt-8">
-              <ClubProjects clubId={club.id} />
+              <ClubProjects clubId={club.id} darkMode={darkMode} />
             </div>
 
           </div>
@@ -593,149 +603,152 @@ const ClubProfile = () => {
 
       {/* Add Member Dialog */}
       {addMemberDialogOpen && (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto"
-          aria-labelledby="modal-title"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Background overlay */}
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              aria-hidden="true"
-              onClick={handleCloseDialogBackdrop}
-            ></div>
-
-            <span
-              className="hidden sm:inline-block sm:align-middle sm:h-screen"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
-
-            <div
-              className={`inline-block align-bottom ${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full`}
-            >
-              <div
-                className={`${darkMode ? "bg-gray-800" : "bg-white"} px-4 pt-5 pb-4 sm:p-6 sm:pb-4`}
+  <div
+    className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 backdrop-blur-sm"
+    aria-labelledby="modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <div
+        className="bg-gray-900 rounded-xl overflow-hidden shadow-2xl transform transition-all max-w-md w-full border border-gray-700"
+        tabIndex="-1"
+      >
+        {/* Header with gradient background */}
+        <div className="relative bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-4">
+          <div className="flex items-center">
+            <div className="bg-white/20 rounded-full p-3 mr-4 backdrop-blur-sm">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
               >
-                <div className="sm:flex sm:items-start">
-                  <div
-                    className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${darkMode ? "bg-blue-900" : "bg-blue-100"} sm:mx-0 sm:h-10 sm:w-10`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className={`h-6 w-6 ${darkMode ? "text-blue-300" : "text-blue-600"}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3
-                      className={`text-lg leading-6 font-medium ${darkMode ? "text-white" : "text-gray-900"}`}
-                      id="modal-title"
-                    >
-                      Add New Member
-                    </h3>
-                    <div className="mt-4 space-y-4">
-                      <div>
-                        <label
-                          htmlFor="memberName"
-                          className={`block text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                        >
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          name="memberName"
-                          id="memberName"
-                          className={`mt-1 block w-full rounded-md ${darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-50 border-gray-300 text-gray-900"} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                          placeholder="Eg-Varshith"
-                          value={newMember.name}
-                          onChange={(e) =>
-                            setNewMember({ ...newMember, name: e.target.value })
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="memberEmail"
-                          className={`block text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                        >
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          name="memberEmail"
-                          id="memberEmail"
-                          className={`mt-1 block w-full rounded-md ${darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-50 border-gray-300 text-gray-900"} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                          placeholder="Eg-cse220001044@iiti.ac.in"
-                          value={newMember.email}
-                          onChange={(e) =>
-                            setNewMember({
-                              ...newMember,
-                              email: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="memberRole"
-                          className={`block text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                        >
-                          Role
-                        </label>
-                        <select
-                          id="memberRole"
-                          name="memberRole"
-                          className={`mt-1 block w-full rounded-md ${darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-50 border-gray-300 text-gray-900"} shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                          value={newMember.role}
-                          onChange={(e) =>
-                            setNewMember({ ...newMember, role: e.target.value })
-                          }
-                        >
-                          <option value="member">Member</option>
-                          <option value="head">Head</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className={`${darkMode ? "bg-gray-900" : "bg-gray-50"} px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
+              </svg>
+            </div>
+            <h2
+              className="text-xl font-bold text-white"
+              id="modal-title"
+            >
+              Add New Member
+            </h2>
+          </div>
+        </div>
+
+        {/* Form content */}
+        <div className="px-6 py-5 space-y-5">
+          <div>
+            <label
+              htmlFor="memberName"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Name
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="memberName"
+                id="memberName"
+                className="block w-full rounded-lg bg-gray-800 border-gray-700 text-white px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter full name"
+                value={newMember.name}
+                onChange={(e) =>
+                  setNewMember({ ...newMember, name: e.target.value })
+                }
+                required
+                autoFocus
+                aria-required="true"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="memberEmail"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Email
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                name="memberEmail"
+                id="memberEmail"
+                className="block w-full rounded-lg bg-gray-800 border-gray-700 text-white px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter email address"
+                value={newMember.email}
+                onChange={(e) =>
+                  setNewMember({
+                    ...newMember,
+                    email: e.target.value,
+                  })
+                }
+                required
+                aria-required="true"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="memberRole"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Role
+            </label>
+            <div className="relative">
+              <select
+                id="memberRole"
+                name="memberRole"
+                className="block w-full rounded-lg bg-gray-800 border-gray-700 text-white appearance-none px-4 py-2.5 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                value={newMember.role}
+                onChange={(e) =>
+                  setNewMember({ ...newMember, role: e.target.value })
+                }
+                aria-required="true"
               >
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={handleAddMember}
-                >
-                  Add Member
-                </button>
-                <button
-                  type="button"
-                  className={`mt-3 w-full inline-flex justify-center rounded-md border ${darkMode ? "border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"} shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm`}
-                  onClick={() => setAddMemberDialogOpen(false)}
-                >
-                  Cancel
-                </button>
+                <option value="member">Member</option>
+                <option value="head">Head</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
+                </svg>
               </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Footer with actions */}
+        <div className="px-6 py-4 bg-gray-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+          <button
+            type="button"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200 font-medium"
+            onClick={() => setAddMemberDialogOpen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleAddMember}
+            disabled={!newMember.name || !newMember.email}
+          >
+            Add Member
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

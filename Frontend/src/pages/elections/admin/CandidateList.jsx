@@ -63,24 +63,34 @@ const CandidateList = () => {
     }
   };
 
-  const toggleApproval = async (candidateId, approved) => {
+  const toggleApproval = async (candidateId, approved, name) => {
     try {
+      const payload = { 
+        approved: !approved, 
+        name: name || ""  // ✅ Ensure name is sent, even if empty
+      };
+  
+      console.log("Sending request:", payload);  // ✅ Debugging
+  
       await axios.patch(
-        `${API_URL}candidates/${candidateId}/`,
-        { approved: !approved },
-        { withCredentials: true }
+        `${API_URL}elections/${electionId}/positions/${positionId}/candidates/${candidateId}/`,
+        JSON.stringify(payload),  
+        { headers: { "Content-Type": "application/json" }, withCredentials: true }
       );
+  
       setCandidates((prevCandidates) =>
         prevCandidates.map((c) =>
           c.id === candidateId ? { ...c, approved: !approved } : c
         )
       );
+  
       toast.success(`Candidate ${!approved ? "approved" : "rejected"} successfully`);
     } catch (error) {
       console.error("Error updating approval status:", error);
       toast.error("Failed to update approval status");
     }
   };
+  
   const handleDelete = async (candidateId, candidateName) => {
     if (!window.confirm(`Are you sure you want to delete the candidate "${candidateName}"? This action cannot be undone.`)) {
         return;
@@ -405,7 +415,7 @@ const CandidateList = () => {
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            onClick={() => toggleApproval(candidate.id, candidate.approved)}
+                            onClick={() => toggleApproval(candidate.id, candidate.approved,candidate.name)}
                             className={`p-1 rounded hover:bg-gray-100 ${
                               candidate.approved ? "text-red-500" : "text-green-500"
                             }`}

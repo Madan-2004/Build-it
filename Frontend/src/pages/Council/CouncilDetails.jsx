@@ -6,115 +6,159 @@ import axios from "axios";
 import "../../styles/councildetails.css";
 import { motion } from "framer-motion";
 import CouncilStats from "./CouncilStats";
+import { isAdmin } from "../../utils/adminCheck";
+import { toast } from "react-toastify";
 
 const BASE_URL = "http://127.0.0.1:8000";
 
 const ClubForm = ({ onSubmit, onClose, initialData = null }) => {
     const [formData, setFormData] = useState({
         name: initialData?.name || "",
-        head: initialData?.head || "",
         description: initialData?.description || "",
+        head: "", // Keep this empty as it will be handled by backend
     });
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
 
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.name.trim()) newErrors.name = "Club name is required";
-        if (!formData.description.trim()) newErrors.description = "Description is required";
+        if (!formData.name.trim()) {
+            newErrors.name = "Club name is required";
+        } else if (formData.name.length < 3) {
+            newErrors.name = "Club name must be at least 3 characters";
+        }
         
+        if (!formData.description.trim()) {
+            newErrors.description = "Description is required";
+        } else if (formData.description.length < 20) {
+            newErrors.description = "Description must be at least 20 characters";
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData(prev => ({
+            ...prev,
+            [name]: value.trim(),
+        }));
+        
         // Clear error when field is edited
         if (errors[name]) {
-            setErrors({ ...errors, [name]: undefined });
+            setErrors(prev => ({ ...prev, [name]: undefined }));
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+    
         if (!validateForm()) return;
-        
+    
         setIsSubmitting(true);
         try {
-            await onSubmit(formData);
+            // ✅ Send JSON instead of FormData
+            const payload = {
+                name: formData.name,
+                description: formData.description,
+                head: "", // Handle in backend if empty
+            };
+    
+            await onSubmit(payload);  // ⬅️ Ensure onSubmit handles JSON
+    
             onClose();
         } catch (error) {
             console.error("Form submission error:", error);
+            setErrors(prev => ({
+                ...prev,
+                submit: "Failed to submit form. Please try again."
+            }));
         } finally {
             setIsSubmitting(false);
         }
     };
+    
 
     return (
-        <div className="modal" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <motion.div 
-                initial={{ scale: 0.9, opacity: 0 }}
+        <div 
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+            onClick={(e) => e.target === e.currentTarget && onClose()}
+        >
+            <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="modal-content bg-gray-800 text-white rounded-xl shadow-2xl"
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full shadow-2xl border border-gray-700"
                 onClick={(e) => e.stopPropagation()}
             >
                 <h2 className="text-2xl font-bold mb-6 text-blue-400">
-                    {initialData ? "Edit Club" : "Add New Club"}
+                    {initialData ? "Edit Club" : "Create New Club"}
                 </h2>
-                <form onSubmit={handleSubmit}>
-                    {[
-                        { name: "name", label: "Club Name", type: "text" },
-                        { name: "description", label: "Description", type: "textarea" }
-                    ].map((field) => (
-                        <div key={field.name} className="form-group mb-4">
-                            <label className="block text-blue-300 mb-2 uppercase text-sm tracking-wider">
-                                {field.label}
-                            </label>
-                            {field.type === "textarea" ? (
-                                <textarea
-                                    name={field.name}
-                                    value={formData[field.name]}
-                                    onChange={handleChange}
-                                    required
-                                    rows={4}
-                                    className={`w-full bg-gray-700 border ${errors[field.name] ? "border-red-500" : "border-gray-600"} rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    placeholder={`Enter ${field.label.toLowerCase()}`}
-                                />
-                            ) : (
-                                <input
-                                    type={field.type}
-                                    name={field.name}
-                                    value={formData[field.name]}
-                                    onChange={handleChange}
-                                    className={`w-full bg-gray-700 border ${errors[field.name] ? "border-red-500" : "border-gray-600"} rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    placeholder={`Enter ${field.label.toLowerCase()}`}
-                                />
-                            )}
-                            {errors[field.name] && (
-                                <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>
-                            )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="block text-blue-300 mb-2 text-sm font-medium">
+                            Club Name
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            className={`w-full bg-gray-700 border ${
+                                errors.name ? "border-red-500" : "border-gray-600"
+                            } rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                            placeholder="Enter club name"
+                        />
+                        {errors.name && (
+                            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-blue-300 mb-2 text-sm font-medium">
+                            Description
+                        </label>
+                        <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            rows={4}
+                            className={`w-full bg-gray-700 border ${
+                                errors.description ? "border-red-500" : "border-gray-600"
+                            } rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                            placeholder="Enter club description"
+                        />
+                        {errors.description && (
+                            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                        )}
+                    </div>
+
+                    {errors.submit && (
+                        <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded-lg">
+                            {errors.submit}
                         </div>
-                    ))}
-                    <div className="modal-actions flex justify-end mt-6 gap-4">
+                    )}
+
+                    <div className="flex justify-end gap-4">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:opacity-50"
+                            className="px-6 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200"
                             disabled={isSubmitting}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center"
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? (
                                 <>
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -130,6 +174,7 @@ const ClubForm = ({ onSubmit, onClose, initialData = null }) => {
         </div>
     );
 };
+
 
 const DeleteConfirmation = ({ clubName, onConfirm, onCancel }) => {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -234,6 +279,8 @@ const CouncilDetails = () => {
     const [showForm, setShowForm] = useState(false);
     const [deletingClub, setDeletingClub] = useState(null);
     const [notification, setNotification] = useState(null);
+    const [userEmail, setUserEmail] = useState(null);
+    const [isAdminUser, setIsAdminUser] = useState(false);
 
     const showNotification = (message, type = "success") => {
         setNotification({ message, type });
@@ -247,11 +294,11 @@ const CouncilDetails = () => {
             // Fetch council details
             const councilResponse = await axios.get(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/`);
             setCouncilDetails(councilResponse.data);
-            
+
             // Fetch clubs for this council
             const clubsResponse = await axios.get(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/`);
             setClubs(clubsResponse.data.clubs);
-            
+
             setLoading(false);
         } catch (error) {
             console.error("Error fetching council data:", error);
@@ -263,9 +310,29 @@ const CouncilDetails = () => {
     useEffect(() => {
         fetchCouncilData();
     }, [councilName]);
+    useEffect(() => {
+        const getUserEmail = async () => {
+            try {
+                const response = await axios.get('http://localhost:8000/api/auth/profile/', {
+                    withCredentials: true
+                });
+                const email = response.data.email;
+                setUserEmail(email);
+                setIsAdminUser(isAdmin(email));
+            } catch (error) {
+                console.error("Error fetching user profile:", error);
+            }
+        };
+
+        getUserEmail();
+    }, []);
 
     // Create new club
     const handleAddClub = async (formData) => {
+        if (!isAdminUser) {
+            toast.error("You don't have permission to add clubs");
+            return false;
+        }
         try {
             await axios.post(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/clubs/`, formData);
             await fetchCouncilData();
@@ -280,6 +347,10 @@ const CouncilDetails = () => {
 
     // Update the handleDeleteClub function
     const handleDeleteClub = async () => {
+        if (!isAdminUser) {
+            toast.error("You don't have permission to delete clubs");
+            return false;
+        }
         try {
             console.log('Attempting to delete club:', deletingClub.id);
             const response = await axios.delete(
@@ -307,10 +378,10 @@ const CouncilDetails = () => {
 
     // Function to get a random gradient background for each club
     const gradients = [
-        "bg-gradient-to-br from-blue-500 to-teal-400", 
-        "bg-gradient-to-br from-purple-500 to-pink-500", 
-        "bg-gradient-to-br from-amber-500 to-orange-500", 
-        "bg-gradient-to-br from-emerald-500 to-lime-500", 
+        "bg-gradient-to-br from-blue-500 to-teal-400",
+        "bg-gradient-to-br from-purple-500 to-pink-500",
+        "bg-gradient-to-br from-amber-500 to-orange-500",
+        "bg-gradient-to-br from-emerald-500 to-lime-500",
         "bg-gradient-to-br from-sky-500 to-indigo-500"
     ];
 
@@ -329,9 +400,8 @@ const CouncilDetails = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-                        notification.type === "success" ? "bg-green-600" : "bg-red-600"
-                    } text-white flex items-center max-w-md`}
+                    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
+                        } text-white flex items-center max-w-md`}
                 >
                     <div className="mr-3">
                         {notification.type === "success" ? (
@@ -345,7 +415,7 @@ const CouncilDetails = () => {
                         )}
                     </div>
                     <p>{notification.message}</p>
-                    <button 
+                    <button
                         onClick={() => setNotification(null)}
                         className="ml-auto text-white hover:text-gray-200"
                     >
@@ -373,7 +443,7 @@ const CouncilDetails = () => {
                                 <p className="font-medium">{error}</p>
                             </div>
                             <div className="mt-4 flex justify-end">
-                                <button 
+                                <button
                                     onClick={() => fetchCouncilData()}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center"
                                 >
@@ -388,7 +458,7 @@ const CouncilDetails = () => {
                 ) : (
                     <div className="max-w-7xl mx-auto px-4 py-16 relative">
                         {/* Subtle background pattern */}
-                        
+
                         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
                             {/* Council Info */}
                             <div className="text-center md:text-left">
@@ -448,24 +518,28 @@ const CouncilDetails = () => {
                                 </motion.div>
                             )}
                         </div>
+                        {isAdminUser && (
                         <CouncilStats councilName={councilName} />
-                       {/* Add Club Button */}
-<div className="flex justify-center md:justify-start mt-12">
-    <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center shadow-lg"
-        onClick={() => { 
-            console.log("Button clicked!");
-            setShowForm(true);
-        }}
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-        </svg>
-        Add New Club
-    </motion.button>
-</div>
+                         )}
+                        {/* Add Club Button */}
+                        {isAdminUser && (
+                            <div className="flex justify-center md:justify-start mt-12">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center shadow-lg"
+                                    onClick={() => {
+                                        console.log("Button clicked!");
+                                        setShowForm(true);
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                    </svg>
+                                    Add New Club
+                                </motion.button>
+                            </div>
+                        )}
 
                     </div>
                 )}
@@ -559,67 +633,68 @@ const CouncilDetails = () => {
                                             </div>
                                         </div>
 
-                                       
 
-                                            {/* Actions */}
-                                            <div className="flex justify-between items-center">
-                                                <Link
-                                                    to={`/clubs/${encodeURIComponent(club.name)}`}
-                                                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                                                >
-                                                    View Details
-                                                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </Link>
 
-                                                <button
-                                                    onClick={() => setDeletingClub(club)}
-                                                    className="p-2 text-gray-400 hover:text-red-400 transition-colors group"
-                                                    title="Delete Club"
+                                        {/* Actions */}
+                                        <div className="flex justify-between items-center">
+                                            <Link
+                                                to={`/clubs/${encodeURIComponent(club.name)}`}
+                                                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                            >
+                                                View Details
+                                                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </Link>
+                                            {isAdminUser && (
+                                            <button
+                                                onClick={() => setDeletingClub(club)}
+                                                className="p-2 text-gray-400 hover:text-red-400 transition-colors group"
+                                                title="Delete Club"
+                                            >
+                                                <svg className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-200"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
                                                 >
-                                                    <svg className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-200"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            )}
                                         </div>
-                                    </motion.div>
-                                ))}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="max-w-2xl mx-auto bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl text-center border border-gray-700/50 relative"
+                        >
+                            <div className="w-20 h-20 mx-auto mb-6 bg-gray-700 rounded-full flex items-center justify-center">
+                                <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
                             </div>
-                        ) : (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="max-w-2xl mx-auto bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl text-center border border-gray-700/50 relative"
+                            <h3 className="text-xl font-bold text-white mb-2">No Clubs Yet</h3>
+                            <p className="text-gray-400 mb-6">Be the first to create a club in this council!</p>
+                            <button
+                                onClick={() => setShowForm(true)}
+                                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-300"
                             >
-                                <div className="w-20 h-20 mx-auto mb-6 bg-gray-700 rounded-full flex items-center justify-center">
-                                    <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">No Clubs Yet</h3>
-                                <p className="text-gray-400 mb-6">Be the first to create a club in this council!</p>
-                                <button
-                                    onClick={() => setShowForm(true)}
-                                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-300"
-                                >
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    Create First Club
-                                </button>
-                            </motion.div>
-                        )}
-                    </div>
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Create First Club
+                            </button>
+                        </motion.div>
+                    )}
                 </div>
-            
+            </div>
+
         </div>
     );
 };

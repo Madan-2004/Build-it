@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 const API_URL = "http://localhost:8000/api/";
 
 const BATCH_OPTIONS = ["All Batches", "1st Year", "2nd Year", "3rd Year", "4th Year"];
-const BRANCH_OPTIONS = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MNC", "MSC", "PHD"];
+const BRANCH_OPTIONS = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MC","CHE", "MSC", "PHD","MTech"];
 
 const EditPositionForm = ({ position, onPositionUpdated, onCancel, electionId }) => {
   const [title, setTitle] = useState("");
@@ -31,8 +31,7 @@ const EditPositionForm = ({ position, onPositionUpdated, onCancel, electionId })
     if (position) {
       setTitle(position.title || "");
       setDescription(position.description || "");
-      setMaxCandidates(position.max_candidates || 1);
-      setMaxVotes(position.max_votes_per_voter || 1);
+      
       
       // Ensure batch and branch restrictions are treated as strings before splitting
       setBatchRestriction(
@@ -76,8 +75,7 @@ const EditPositionForm = ({ position, onPositionUpdated, onCancel, electionId })
       election: parseInt(electionId),
       title,
       description,
-      max_candidates: maxCandidates,
-      max_votes_per_voter: maxVotes,
+      
       batch_restriction: batchRestriction.length ? batchRestriction : ["All Batches"],  // ✅ Ensure list
       branch_restriction: branchRestriction.length ? branchRestriction : ["All Branches"],  // ✅ Ensure list
     };
@@ -128,31 +126,7 @@ const EditPositionForm = ({ position, onPositionUpdated, onCancel, electionId })
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Max Candidates</label>
-            <input
-              type="number"
-              value={maxCandidates}
-              onChange={(e) => setMaxCandidates(parseInt(e.target.value))}
-              className="w-full p-2 border rounded"
-              min="1"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">Max Votes per Voter</label>
-            <input
-              type="number"
-              value={maxVotes}
-              onChange={(e) => setMaxVotes(parseInt(e.target.value))}
-              className="w-full p-2 border rounded"
-              min="1"
-              required
-            />
-          </div>
-        </div>
+        
 
         {/* Batch Restriction */}
         <div>

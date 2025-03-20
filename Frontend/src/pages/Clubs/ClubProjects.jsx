@@ -17,7 +17,7 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8000";
 
-const ClubProjects = ({ clubId }) => {
+const ClubProjects = ({ clubId,darkMode }) => {
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState({
     title: "",
@@ -30,7 +30,7 @@ const ClubProjects = ({ clubId }) => {
   const [error, setError] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [darkMode, setDarkMode] = useState(false);
+  
 
   const toggleTheme = () => {
     setDarkMode(!darkMode);

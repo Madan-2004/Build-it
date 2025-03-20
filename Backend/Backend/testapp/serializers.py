@@ -11,6 +11,7 @@ from .models import Candidate
 
 class CandidateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)  # Ensure name is always provided
+    # name = serializers.CharField(required=False, allow_blank=True, allow_null=True)  # ✅ Fix here
     votes_count = serializers.SerializerMethodField()  # ✅ Compute votes dynamically
     roll_no = serializers.CharField(default="Unknown Roll No")  # ✅ Default roll number
     branch = serializers.CharField(default="CSE")  # ✅ Default branch
@@ -45,8 +46,8 @@ class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
         fields = [
-            'id', 'election', 'title', 'description', 'max_candidates', 
-            'max_votes_per_voter', 'batch_restriction', 'branch_restriction', 'candidates'
+            'id', 'election', 'title', 'description',
+             'batch_restriction', 'branch_restriction', 'candidates'
         ]
 
     def get_candidates(self, obj):
@@ -206,7 +207,6 @@ class ElectionResultSerializer(serializers.ModelSerializer):
                 'id': position.id,
                 'title': position.title,
                 'description': position.description,
-                'max_votes_per_voter': position.max_votes_per_voter,
                 'batch_restriction': position.batch_restriction,
                 'branch_restriction': position.branch_restriction,
                 'candidates': candidates_data,

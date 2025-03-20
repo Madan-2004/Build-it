@@ -20,6 +20,14 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        const authCheck = await axios.get(`$http://localhost:8000/api/auth/check/`, { withCredentials: true });
+        if (!authCheck.data.isAuthenticated) {
+          console.log("User is not authenticated. Attempting to refresh session.");
+          await refreshSession();  // Try refreshing session
+        }
+        else{
+          console.log("User is authenticated");
+        }
         const statsResponse = await axios.get(API_URL);
         console.log("Dashboard Stats:", statsResponse.data);
         setStats(statsResponse.data);
@@ -35,6 +43,22 @@ const AdminDashboard = () => {
     };
 
     fetchDashboardData();
+    const refreshSession = async () => {
+      try {
+        const response = await axios.post(
+          `http://localhost:8000/api/auth/token/refresh/`,
+          {},  // No need to manually include token in body, it should be sent via cookies
+          {
+            withCredentials: true,  // Ensures cookies are sent
+          }
+        );
+    
+        console.log("Session refreshed successfully.", response.data);
+        // localStorage.setItemr("access_token", response.data.access);
+      } catch (error) {
+        console.error("Session refresh failed:", error.response?.data || error.message);
+      }
+    };
   }, []);
 
   // ... (keep existing loading and error checks)

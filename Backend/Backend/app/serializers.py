@@ -35,11 +35,12 @@ class ClubSerializer(serializers.ModelSerializer):
     )
     members = serializers.SerializerMethodField()
     council = serializers.PrimaryKeyRelatedField(queryset=Council.objects.all())  # ✅ This accepts an ID
-
+    website = serializers.URLField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
     class Meta:
         model = Club
         fields = ['id', 'name', 'head', 'head_id', 'description', 'members_count', 
-              'projects_count', 'members', 'council']
+              'projects_count', 'members', 'council', 'website', 'email']
     def get_members(self, obj):
         members = ClubMembership.objects.filter(club=obj)
         return ClubMembershipSerializer(members, many=True).data

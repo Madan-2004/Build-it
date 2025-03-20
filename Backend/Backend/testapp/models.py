@@ -47,7 +47,7 @@ class Position(models.Model):
         ('CHE', 'CHE'),
         ('EP', 'EP'),
         ('SSE', 'SSE'),
-        ('MNC', 'MNC'), 
+        ('MC', 'MC'), 
         ('MSC', 'MSC'),
         ('PHD', 'PHD'),
         ("MTech", "MTech"),
@@ -56,8 +56,6 @@ class Position(models.Model):
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    max_candidates = models.PositiveIntegerField(default=1)
-    max_votes_per_voter = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
       # ✅ Store multiple batch restrictions as JSON or ArrayField
     batch_restriction = models.JSONField(

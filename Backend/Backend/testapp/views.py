@@ -122,11 +122,26 @@ class CandidateViewSet(viewsets.ModelViewSet):
         serializer.save(position=position)
 
     def perform_update(self, serializer):
+        print("Incoming request data:", self.request.data)  # Debug log
+
+        if not serializer.is_valid():
+            print("Serializer Errors:", serializer.errors)  # Log validation errors
+            raise ValidationError(serializer.errors)
+
+        serializer.save(partial=True)
+
+        print("Incoming request data:", self.request.data)  # Debug log
         """Ensure candidate updates maintain the correct position"""
         candidate = self.get_object()
         position_id = self.kwargs.get('position_pk')
         roll_no = self.request.data.get('roll_no')
+        approved = self.request.data.get('approved')
         # email = self.request.data.get('email')
+
+        # If this is an approval toggle, handle it separately
+        if approved is not None and isinstance(approved, bool):
+            serializer.save(approved=approved)
+            return
         
         # Ensure the position of the candidate is not being changed
         if position_id and candidate.position.id != int(position_id):
@@ -145,10 +160,21 @@ class CandidateViewSet(viewsets.ModelViewSet):
                 roll_no=roll_no,
                 position__election=candidate.position.election
             ).exclude(position=candidate.position).exclude(pk=candidate.pk).exists():
-                raise ValidationError("This candidate is already registered for another position in this election.")
+                raise ValidationError({"roll_no": "This candidate is already registered for another position in this election."})
 
         
-        serializer.save()
+         # Handle file upload if present
+        photo = self.request.FILES.get('photo')
+        if photo:
+            # Delete old photo if it exists
+            if candidate.photo:
+                candidate.photo.delete()
+        
+        # Save the updated candidate
+        try:
+            serializer.save(partial=True)
+        except Exception as e:
+            raise ValidationError(f"Error updating candidate: {str(e)}")
     
     def destroy(self, request, *args, **kwargs):
         """Delete a candidate"""

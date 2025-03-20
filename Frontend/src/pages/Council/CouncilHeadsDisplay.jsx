@@ -7,6 +7,8 @@ import EmailIcon from "@mui/icons-material/Email";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import AddIcon from "@mui/icons-material/Add";
 import CouncilHeadsForm from "./CouncilHeadsForm";
+import { isAdmin } from "../../utils/adminCheck";
+import { toast } from "react-toastify";
 
 const API_BASE_URL = "http://localhost:8000/api/council-heads/";
 
@@ -16,8 +18,25 @@ const CouncilHeadsDisplay = () => {
   const [selectedHead, setSelectedHead] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
+    const getUserEmail = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/auth/profile/', {
+          withCredentials: true
+        });
+        const email = response.data.email;
+        console.log("User email:", email);
+        setUserEmail(email);
+        setIsAdminUser(isAdmin(email));
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    getUserEmail();
     fetchCouncilHeads();
   }, []);
 
@@ -36,18 +55,27 @@ const CouncilHeadsDisplay = () => {
   };
 
   const handleEdit = (head) => {
+    if (!isAdminUser) {
+      toast.error("You don't have permission to edit council heads");
+      return;
+    }
     setSelectedHead(head);
     setIsFormOpen(true);
   };
 
   const handleDelete = async (id) => {
+    if (!isAdminUser) {
+      toast.error("You don't have permission to delete council heads");
+      return;
+    }
     if (window.confirm("Are you sure you want to remove this council head?")) {
       try {
         await axios.delete(`${API_BASE_URL}${id}/`);
         setHeads(heads.filter((head) => head.id !== id));
+        toast.success("Council head removed successfully");
       } catch (error) {
         console.error("Error deleting council head:", error);
-        setError("Failed to delete council head");
+        toast.error("Failed to delete council head");
       }
     }
   };
@@ -56,12 +84,14 @@ const CouncilHeadsDisplay = () => {
     <div className="max-w-7xl mx-auto py-10 px-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Council Heads</h2>
-        <IconButton
-          onClick={() => setIsFormOpen(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          <AddIcon />
-        </IconButton>
+        {isAdminUser && (
+          <IconButton
+            onClick={() => setIsFormOpen(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            <AddIcon />
+          </IconButton>
+        )}
       </div>
 
       {isLoading ? (
@@ -77,22 +107,24 @@ const CouncilHeadsDisplay = () => {
               key={head.id}
               className="bg-white rounded-lg shadow-md hover:shadow-xl p-5 text-center transform transition-all duration-300 hover:-translate-y-1 relative"
             >
-              <div className="absolute top-2 right-2 flex space-x-1">
-                <IconButton
-                  size="small"
-                  onClick={() => handleEdit(head)}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-600"
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => handleDelete(head.id)}
-                  className="bg-red-50 hover:bg-red-100 text-red-600"
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </div>
+              {isAdminUser && (
+                <div className="absolute top-2 right-2 flex space-x-1">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleEdit(head)}
+                    className="bg-blue-50 hover:bg-blue-100 text-blue-600"
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDelete(head.id)}
+                    className="bg-red-50 hover:bg-red-100 text-red-600"
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              )}
 
               <div className="relative w-32 h-32 mx-auto mb-4">
                 <img
@@ -138,7 +170,7 @@ const CouncilHeadsDisplay = () => {
         </div>
       )}
 
-      {isFormOpen && (
+      {isFormOpen && isAdminUser && (
         <CouncilHeadsForm
           head={selectedHead}
           onClose={() => setIsFormOpen(false)}

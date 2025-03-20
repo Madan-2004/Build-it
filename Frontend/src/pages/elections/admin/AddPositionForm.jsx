@@ -8,7 +8,7 @@ const API_URL = "http://localhost:8000/api/";
 const batchOptions = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 const branchOptions = [
   "CSE", "MECH", "CIVIL", "EE", "EP", 
-  "SSE", "MEMS", "MNC", "MSC", "PHD"
+  "SSE", "MEMS", "MC", "MSC", "PHD","CHE", "MTech"  
 ];
 
 const AddPositionForm = () => {
@@ -53,8 +53,7 @@ const AddPositionForm = () => {
       election: electionId,
       title,
       description,
-      max_candidates: maxCandidates,
-      max_votes_per_voter: maxVotes,
+      
       batch_restriction: batchRestriction.length ? batchRestriction : ["All Batches"],
       branch_restriction: branchRestriction.length ? branchRestriction : ["All Branches"]
     };
@@ -102,29 +101,9 @@ const AddPositionForm = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Max Candidates</label>
-            <input
-              type="number"
-              value={maxCandidates}
-              onChange={(e) => setMaxCandidates(parseInt(e.target.value))}
-              className="w-full p-2 border rounded"
-              min="1"
-              required
-            />
-          </div>
+          
 
-          <div>
-            <label className="block font-medium mb-1">Max Votes per Voter</label>
-            <input
-              type="number"
-              value={maxVotes}
-              onChange={(e) => setMaxVotes(parseInt(e.target.value))}
-              className="w-full p-2 border rounded"
-              min="1"
-              required
-            />
-          </div>
+          
         </div>
 
         {/* Batch Restriction (Multi-select Checkboxes) */}
