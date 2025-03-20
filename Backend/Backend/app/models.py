@@ -90,3 +90,34 @@ class CouncilHead(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.position}"    
+
+from django.db import models
+
+class Inventory(models.Model): 
+    club = models.OneToOneField(
+        'Club', 
+        on_delete=models.CASCADE, 
+        related_name="inventory", 
+        null=True, 
+        blank=True
+    )
+    
+    council = models.ForeignKey(  # 🔹 Allow multiple clubs under one council
+        'Council', 
+        on_delete=models.CASCADE, 
+        related_name="inventories",  # Changed to plural as it holds multiple
+        null=True, 
+        blank=True
+    )
+    
+    budget_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    budget_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):  
+        entity = self.club.name if self.club else self.council.name if self.council else "Unknown"
+        return f"Inventory for {entity} (Allocated: {self.budget_allocated}, Used: {self.budget_used})"
+    
+    @property
+    def remaining_budget(self):
+        return self.budget_allocated - self.budget_used  
+ 

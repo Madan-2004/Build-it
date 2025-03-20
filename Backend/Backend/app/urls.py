@@ -6,7 +6,8 @@ from .views import (
     clubs_by_council_crud, club_crud, get_club_by_name, AddMemberView, 
     RemoveMemberView, EditMemberView, get_user_profile, FeedbackView, CustomTokenRefreshView,
     update_club, delete_club, google_auth_url, google_callback, check_auth, logout,
-    ProjectListCreateView, ProjectDetailView, CouncilHeadDetailView,CouncilHeadListCreateView
+    ProjectListCreateView, ProjectDetailView, CouncilHeadDetailView,CouncilHeadListCreateView,InventoryDetailView
+    ,InventoryListCreateView,CouncilInventoryView
     # UploadProjectImagesView  # Added project views
 )
 
@@ -16,6 +17,7 @@ urlpatterns = [
     path("api/councils/<str:council_name>/", get_council_detail, name="get_council_detail"),
     path("api/councils/create/", create_council, name="create_council"),
     path("api/councils/<int:council_id>/delete/", delete_council, name="delete_council"),
+    path("api/councils/<str:council_name>/inventory/", CouncilInventoryView.as_view(), name="council-inventory"),
 
     # Clubs
     path("api/clubs/", get_clubs, name="get_clubs"),
@@ -57,5 +59,12 @@ urlpatterns = [
     #council heads
     path("api/council-heads/", CouncilHeadListCreateView.as_view(), name="council-heads-list-create"),
     path("api/council-heads/<int:pk>/", CouncilHeadDetailView.as_view(), name="council-heads-detail"),
+
+    # Inventory Management
+    # List/Create inventory for a club
+   path("api/clubs/<str:club_name>/inventory/", InventoryListCreateView.as_view(), name="club-inventory"),
+
+    # Retrieve, update, or delete specific inventory item
+   path("api/clubs/<int:club_id>/inventory/<int:pk>/", InventoryDetailView.as_view(), name="inventory-detail"),
 
 ]

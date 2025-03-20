@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Council, Club, Users, ClubMembership,CouncilHead
-from .serializers import CouncilSerializer, ClubSerializer, UsersSerializer,CouncilHeadSerializer
+from .models import Council, Club, Users, ClubMembership,CouncilHead,Inventory
+from .serializers import CouncilSerializer, ClubSerializer, UsersSerializer,CouncilHeadSerializer,InventorySerializer
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
@@ -1049,3 +1049,91 @@ class CouncilHeadListCreateView(generics.ListCreateAPIView):
 class CouncilHeadDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CouncilHead.objects.all()
     serializer_class = CouncilHeadSerializer        
+
+class CouncilInventoryView(generics.RetrieveAPIView):
+    """
+    API view to fetch the inventory details of a specific council.
+    """
+    serializer_class = InventorySerializer
+    lookup_field = 'name'  # Use council name as the lookup field
+
+    def get_object(self):
+        # Retrieve the council by name
+        council_name = self.kwargs.get('council_name')
+        council = get_object_or_404(Council, name=council_name)
+
+        # Retrieve the inventory for the council
+        inventory = Inventory.objects.filter(council=council).first()
+
+        if inventory:
+            return inventory
+        else:
+            # Raise a 404 if no inventory is found
+            self.response = Response(
+                {"error": "No inventory found for this council"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            return None
+
+    def get(self, request, *args, **kwargs):
+        inventory = self.get_object()
+
+        if inventory:
+            serializer = InventorySerializer(inventory)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # Return 404 if no inventory exists
+        return Response(
+            {"error": "No inventory found for this council"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+class InventoryListCreateView(generics.ListCreateAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+
+    def get_queryset(self):
+        """
+        Filter inventory by club name from the URL path.
+        """
+        club_name = self.kwargs.get("club_name")
+        if club_name:
+            return Inventory.objects.filter(club_name_iexact=club_name)
+        return super().get_queryset()
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new inventory entry for the club specified by name in the URL.
+        """
+        club_name = self.kwargs.get("club_name")
+
+        if not club_name:
+            return Response({"error": "Club name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch the club by name
+        club = get_object_or_404(Club, name=club_name)
+
+        # ✅ Use the correct model field name
+        inventory = Inventory.objects.create(
+            club=club,
+            budget_allocated=request.data.get("budget_allocated", 0),
+            budget_used=request.data.get("budget_used", 0)  # Map to the correct field
+        )
+
+        serializer = InventorySerializer(inventory)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# Retrieve, update, or delete a specific inventory item
+class InventoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+
+    def get_object(self):
+        """Retrieve the specific inventory object by club_id and pk"""
+        club_id = self.kwargs.get('club_id')
+        pk = self.kwargs.get('pk')
+        
+        try:
+            return Inventory.objects.get(club_id=club_id, pk=pk)
+        except Inventory.DoesNotExist:
+            raise generics.Http404    

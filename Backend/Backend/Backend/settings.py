@@ -201,3 +201,5 @@ EMAIL_HOST_USER = 'mvarshith12005@gmail.com'  # Replace with your email
 EMAIL_HOST_PASSWORD = 'lfustdtlrxipppke'  # Replace with your password or app password
 DEFAULT_FROM_EMAIL = 'mvarshith12005@gmail.com'  # Replace with your email
 ADMIN_EMAIL = 'mvarshith2005@gmail.com'  # Replace with admin email
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

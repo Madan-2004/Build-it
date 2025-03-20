@@ -5,6 +5,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import "../../styles/councildetails.css";
 import { motion } from "framer-motion";
+import CouncilStats from "./CouncilStats";
 
 const BASE_URL = "http://127.0.0.1:8000";
 
@@ -447,7 +448,7 @@ const CouncilDetails = () => {
                                 </motion.div>
                             )}
                         </div>
-
+                        <CouncilStats councilName={councilName} />
                        {/* Add Club Button */}
 <div className="flex justify-center md:justify-start mt-12">
     <motion.button

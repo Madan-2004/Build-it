@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Council, Club,Users,ClubMembership,Project,ProjectImage,CouncilHead # Import your models
+from .models import Council, Club,Users,ClubMembership,Project,ProjectImage,CouncilHead,Inventory # Import your models
 
 
 # Alternative way to register models
@@ -10,3 +10,4 @@ admin.site.register(ClubMembership)
 admin.site.register(Project)
 admin.site.register(ProjectImage)
 admin.site.register(CouncilHead)
+admin.site.register(Inventory)

@@ -99,3 +99,10 @@ class CouncilHeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = CouncilHead
         fields = ["id", "name", "position", "email", "linkedin", "image"]
+
+from .models import Inventory
+
+class InventorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Inventory
+        fields = ['budget_allocated', 'budget_used']  # Display as budget_utilized        
