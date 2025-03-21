@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogTitle,
@@ -13,6 +14,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from '@mui/icons-material/Close';
+import InventoryIcon from "@mui/icons-material/Inventory";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8000";
@@ -199,6 +201,13 @@ const ClubProjects = ({ clubId,darkMode }) => {
         (prevIndex - 1 + selectedProject?.images?.length) %
         selectedProject?.images?.length,
     );
+  };
+
+  const navigate = useNavigate();
+
+  // Handle navigation to the project's inventory page
+  const handleViewInventory = (id) => {
+    navigate(`/inventory/${id}`);
   };
 
   return (
@@ -388,6 +397,15 @@ const ClubProjects = ({ clubId,darkMode }) => {
         >
           <DeleteIcon />
         </IconButton>
+
+         {/* Inventory Button */}
+         <IconButton
+            onClick={() => navigate(`/inventory/${selectedProject.id}`)}   // Navigate to inventory page
+            className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
+          >
+          <InventoryIcon sx={{ fontSize: 20 }} />            
+          </IconButton>
+
         <IconButton
           onClick={closeProjectDetails}
           className="bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 hover:text-white transition-colors"

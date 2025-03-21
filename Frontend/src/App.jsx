@@ -44,6 +44,9 @@ import AddPositionForm from './pages/elections/admin/AddPositionForm';
 import CandidateForm from './pages/elections/admin/CandidateForm';
 import CandidateList from './pages/elections/admin/CandidateList';
 
+// Inventory pages
+import ProjectInventory from './pages/Clubs/ProjectInventory';
+
 // ✅ Utilities & Components
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
@@ -192,6 +195,9 @@ function App() {
 
           {/* ✅ Redirect Logic */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
+          {/* Inventory routes */}
+          <Route path='inventory/:projectId' element={<ProjectInventory />} />
         </Routes>
       </ConditionalWrapper>
       <ToastContainer position="top-right" autoClose={5000} />

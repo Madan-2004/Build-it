@@ -107,3 +107,48 @@ class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Inventory
         fields = ['budget_allocated', 'budget_used']  # Display as budget_utilized        
+
+
+from rest_framework import serializers
+from .models import ProjectInventory, InventoryItem, Project
+
+
+# ==============================
+# 🚀 Inventory Item Serializer
+# ==============================
+class InventoryItemSerializer(serializers.ModelSerializer):
+    """🔹 Serializer for InventoryItem model"""
+
+    total_cost = serializers.ReadOnlyField()  # Computed field
+
+    class Meta:
+        model = InventoryItem
+        fields = ['id', 'name', 'quantity', 'cost', 'consumable', 'total_cost', 'project_inventory']
+
+
+# ==============================
+# 🚀 Project Inventory Serializer
+# ==============================
+class ProjectInventorySerializer(serializers.ModelSerializer):
+    """🔹 Serializer for ProjectInventory model"""
+
+    # Include related `items` in the response
+    items = InventoryItemSerializer(many=True, read_only=True)
+    
+    # Include the project title in the response
+    project_title = serializers.CharField(source='project.title', read_only=True)
+    
+    remaining_budget = serializers.ReadOnlyField()  # Computed field
+
+    class Meta:
+        model = ProjectInventory
+        fields = [
+            'id', 
+            'project', 
+            'project_title',  
+            'budget_allocated', 
+            'budget_used', 
+            'remaining_budget', 
+            'items'
+        ]
+

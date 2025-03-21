@@ -268,9 +268,9 @@ class AdminDashboardViewSet(viewsets.ViewSet):
     def stats(self, request):
         """Get overall election statistics including hourly and monthly vote trends"""
         #change this to env file not isstaff
-        if not request.user.is_staff and not Election.objects.filter(created_by=request.user).exists():
-            return Response({"error": "You do not have permission to view dashboard statistics."}, 
-                           status=status.HTTP_403_FORBIDDEN)
+        # if not request.user.is_staff and not Election.objects.filter(created_by=request.user).exists():
+        #     return Response({"error": "You do not have permission to view dashboard statistics."}, 
+        #                    status=status.HTTP_403_FORBIDDEN)
 
         now = timezone.now()
 

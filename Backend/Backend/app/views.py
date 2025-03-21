@@ -1137,3 +1137,132 @@ class InventoryDetailView(generics.RetrieveUpdateDestroyAPIView):
             return Inventory.objects.get(club_id=club_id, pk=pk)
         except Inventory.DoesNotExist:
             raise generics.Http404    
+from allauth.socialaccount.models import SocialAccount
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_profile(request):
+    try:
+        social_account = SocialAccount.objects.get(user=request.user, provider='google')
+        # Google stores the picture URL directly in the 'picture' field
+        picture_url = social_account.extra_data.get('picture', '')
+        
+        return Response({
+            'name': social_account.extra_data.get('name', ''),
+            'email': request.user.email,
+            'picture': picture_url,
+        })
+    except SocialAccount.DoesNotExist:
+        return Response({
+            'name': request.user.get_full_name(),
+            'email': request.user.email,
+            'picture': None
+        })            
+    
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ObjectDoesNotExist
+from .models import Project, ProjectInventory, InventoryItem
+import json
+
+# ✅ Get inventory details
+def get_inventory(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    
+    try:
+        inventory = ProjectInventory.objects.get(project=project)
+        items = InventoryItem.objects.filter(project_inventory=inventory)
+        
+        total_cost = sum(item.cost * item.quantity for item in items)
+        inventory_data = {
+            "id": inventory.id,
+            "budget_allocated": inventory.budget_allocated,
+            "budget_used": total_cost,
+            "items": [
+                {
+                    "id": item.id,
+                    "name": item.name,
+                    "quantity": item.quantity,
+                    "cost": item.cost,
+                    "consumable": item.consumable
+                }
+                for item in items
+            ]
+        }
+    except ObjectDoesNotExist:
+        inventory_data = None
+
+    return JsonResponse({"inventory": inventory_data, "project_name": project.title})
+
+# ✅ Add new inventory
+@csrf_exempt
+def add_inventory(request, project_id):
+    if request.method == "POST":
+        project = get_object_or_404(Project, id=project_id)
+        data = json.loads(request.body)
+
+        inventory, created = ProjectInventory.objects.get_or_create(
+            project=project,
+            defaults={"budget_allocated": data["budget_allocated"]}
+        )
+
+        return JsonResponse({
+            "message": "Inventory added successfully",
+            "id": inventory.id
+        })
+
+# ✅ Add item to inventory
+@csrf_exempt
+def add_inventory_item(request, project_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        project = get_object_or_404(Project, id=project_id)
+        inventory, created = ProjectInventory.objects.get_or_create(project=project)
+
+        new_item = InventoryItem.objects.create(
+            project_inventory=inventory,
+            name=data["name"],
+            quantity=int(data["quantity"]),
+            cost=float(data["cost"]),
+            consumable=data["consumable"]
+        )
+
+        return JsonResponse({
+            "message": "Item added successfully",
+            "id": new_item.id
+        })
+
+# ✅ Edit inventory item
+@csrf_exempt
+def edit_inventory_item(request, item_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        item = get_object_or_404(InventoryItem, id=item_id)
+
+        item.name = data["name"]
+        item.quantity = int(data["quantity"])
+        item.cost = float(data["cost"])
+        item.consumable = data["consumable"]
+        item.save()
+
+        return JsonResponse({"message": "Item updated successfully"})
+
+# ✅ Delete inventory along with items
+@csrf_exempt
+def delete_inventory(request, project_id):
+    if request.method == "DELETE":
+        project = get_object_or_404(Project, id=project_id)
+        
+        try:
+            inventory = ProjectInventory.objects.get(project=project)
+            InventoryItem.objects.filter(project_inventory=inventory).delete()
+            inventory.delete()
+            
+            return JsonResponse({"message": "Inventory and items deleted successfully"})
+        except ProjectInventory.DoesNotExist:
+            return JsonResponse({"error": "Inventory not found"}, status=404)

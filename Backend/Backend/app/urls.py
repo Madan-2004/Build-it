@@ -7,7 +7,7 @@ from .views import (
     RemoveMemberView, EditMemberView, get_user_profile, FeedbackView, CustomTokenRefreshView,
     update_club, delete_club, google_auth_url, google_callback, check_auth, logout,
     ProjectListCreateView, ProjectDetailView, CouncilHeadDetailView,CouncilHeadListCreateView,InventoryDetailView
-    ,InventoryListCreateView,CouncilInventoryView
+    ,InventoryListCreateView,CouncilInventoryView, get_inventory, add_inventory, add_inventory_item, edit_inventory_item, delete_inventory
     # UploadProjectImagesView  # Added project views
 )
 
@@ -38,6 +38,14 @@ urlpatterns = [
     path('api/clubs/<int:club_id>/projects/<int:pk>/', ProjectDetailView.as_view(), name='project-detail'),
 
     # path("api/projects/<int:project_id>/upload-images/", UploadProjectImagesView.as_view(), name="upload-project-images"),  # Upload multiple images for a project
+    # Project Inventory
+
+    path('inventory/<int:project_id>/', get_inventory, name='get_inventory'),
+    path('inventory/<int:project_id>/add/', add_inventory, name='add_inventory'),
+    path('inventory/<int:project_id>/add-item/', add_inventory_item, name='add_inventory_item'),
+    path('inventory/item/<int:item_id>/edit/', edit_inventory_item, name='edit_inventory_item'),
+    path('inventory/<int:project_id>/delete/', delete_inventory, name='delete_inventory'),
+
 
     # Google Authentication
     path('api/auth/google/url/', google_auth_url, name='google_auth_url'),
@@ -55,6 +63,7 @@ urlpatterns = [
 
     #testing
     path('auth/check/', views.check_auth_status, name="check-auth"),
+    path('api/user-profile/', get_user_profile, name='user-profile'),
 
     #council heads
     path("api/council-heads/", CouncilHeadListCreateView.as_view(), name="council-heads-list-create"),

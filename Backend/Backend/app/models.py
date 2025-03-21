@@ -10,7 +10,7 @@ class Council(models.Model):
         return self.name
 
 
-    
+
 class Users(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -28,7 +28,7 @@ class Club(models.Model):
         Users, on_delete=models.SET_NULL, null=True, blank=True, related_name="headed_clubs"
     )  # Optional
     description = models.TextField(blank=True, null=True)  # Optional
-   
+
     council = models.ForeignKey(Council, on_delete=models.CASCADE, related_name="clubs")  # Mandatory
     image = models.ImageField(upload_to="club_images/", blank=True, null=True)
 
@@ -41,7 +41,7 @@ class Club(models.Model):
     @property
     def members_count(self):
         return self.members.count() if hasattr(self, 'members') else 0
-    
+
     @property
     def projects_count(self):
         return self.projects.count() if hasattr(self, 'projects') else 0
@@ -80,7 +80,7 @@ class ProjectImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.project.title}"  
-    
+
 class CouncilHead(models.Model):
     name = models.CharField(max_length=255)  # Full name of the council head
     position = models.CharField(max_length=100)  # Free text position field
@@ -101,7 +101,7 @@ class Inventory(models.Model):
         null=True, 
         blank=True
     )
-    
+
     council = models.ForeignKey(  # 🔹 Allow multiple clubs under one council
         'Council', 
         on_delete=models.CASCADE, 
@@ -109,15 +109,75 @@ class Inventory(models.Model):
         null=True, 
         blank=True
     )
-    
+
     budget_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     budget_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):  
         entity = self.club.name if self.club else self.council.name if self.council else "Unknown"
         return f"Inventory for {entity} (Allocated: {self.budget_allocated}, Used: {self.budget_used})"
-    
+
     @property
     def remaining_budget(self):
         return self.budget_allocated - self.budget_used  
- 
+
+
+class ProjectInventory(models.Model):
+    """🔹 Inventory for Projects"""
+    project = models.OneToOneField(
+        Project, on_delete=models.CASCADE, related_name="inventory"
+    )
+    budget_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    budget_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"Inventory for Project: {self.project.title}"
+
+    @property
+    def remaining_budget(self):
+        return self.budget_allocated - self.budget_used
+
+
+# class EventInventory(models.Model):
+#     """🔹 Inventory for Events"""
+#     event = models.OneToOneField(
+#         Event, on_delete=models.CASCADE, related_name="inventory"
+#     )
+#     budget_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+#     budget_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+#     def __str__(self):
+#         return f"Inventory for Event: {self.event.title}"
+
+#     @property
+#     def remaining_budget(self):
+#         return self.budget_allocated - self.budget_used
+
+
+class InventoryItem(models.Model):
+    """🔹 Inventory Items for Project and Event Inventories"""
+    CONSUMABLE_CHOICES = [
+        ('consumable', 'Consumable'),
+        ('non_consumable', 'Non-Consumable'),
+    ]
+
+    project_inventory = models.ForeignKey(
+        ProjectInventory, on_delete=models.CASCADE, related_name="items", null=True, blank=True
+    )
+    # event_inventory = models.ForeignKey(
+    #     EventInventory, on_delete=models.CASCADE, related_name="items", null=True, blank=True
+    # )
+
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField()
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    consumable = models.CharField(max_length=15, choices=CONSUMABLE_CHOICES)
+
+    def __str__(self):
+        # entity = self.project_inventory.project.title if self.project_inventory else self.event_inventory.event.title
+        return f"{self.name} ({self.consumable}) - {self.project_inventory.project.title}"
+
+    @property
+    def total_cost(self):
+        """🔹 Calculate total cost of items"""
+        return self.quantity * self.cost
