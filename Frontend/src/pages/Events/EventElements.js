@@ -259,3 +259,18 @@ export const NoEventsMessage = styled.div`
   color: #666;
   font-size: 1.2rem;
 `;
+
+export const AdminButton = styled.button`
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  transition: 0.3s;
+  
+  &:hover {
+    background-color: #0056b3;
+  }
+`;

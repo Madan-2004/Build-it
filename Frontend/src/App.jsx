@@ -19,6 +19,7 @@ import FeedbackForm from './pages/Feedback/FeedbackForm';
 // ✅ Events
 import Events from './pages/Events/Events';
 import EventDetails from './pages/Events/EventDetails';
+import Eventsadmin from './pages/Events/Eventadmin';
 
 // ✅ Councils & Clubs
 import Council from './pages/Council/Council';
@@ -93,6 +94,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:eventId" element={<EventDetails />} />
+          <Route path="/events/events-admin" element={<Eventsadmin />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/feedback" element={<FeedbackForm />} />
           <Route path="/faqs" element={<FAQPage />} />

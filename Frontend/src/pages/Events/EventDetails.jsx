@@ -31,7 +31,7 @@ const darkTheme = {
 };
 
 export default function EventDetails() {
-  const { eventTitle } = useParams();
+  const { eventId } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,15 +41,13 @@ export default function EventDetails() {
   useEffect(() => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
-  
-  const { eventId } = useParams();
 
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
         const response = await fetch(`http://127.0.0.1:8000/api/events/${eventId}/`);
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-  
+
         const data = await response.json();
         console.log("Fetched event details:", data);
         setEvent(data);
@@ -59,21 +57,14 @@ export default function EventDetails() {
         setLoading(false);
       }
     };
-  
+
     fetchEventDetails();
   }, [eventId]);
-  
 
   const toggleDarkMode = () => setDarkMode((prevMode) => !prevMode);
 
-  if (loading) {
-    return <p>Loading event details...</p>;
-  }
-
-  if (error) {
-    return <p style={{ color: "red" }}>Error: {error}</p>;
-  }
-
+  if (loading) return <p>Loading event details...</p>;
+  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
   if (!event) {
     return (
       <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
@@ -101,36 +92,27 @@ export default function EventDetails() {
         {event.poster && <S.EventImage src={event.poster} alt={event.title} />}
         <S.EventDescription>{event.description}</S.EventDescription>
 
-        {/* Agenda */}
-        {event.agenda && event.agenda.length > 0 && (
+        {/* 🔹 Single Agenda Section */}
+        {event.agenda && event.agenda.time && (
           <S.Section>
             <S.SectionTitle>Agenda</S.SectionTitle>
-            <S.AgendaList>
-              {event.agenda.map((item, index) => (
-                <S.AgendaItem key={index}>
-                  <span>{item.time} - {item.topic}</span>
-                  {item.speaker && <span>🎤 {item.speaker}</span>}
-                </S.AgendaItem>
-              ))}
-            </S.AgendaList>
+            <S.AgendaItem>
+              <span>{event.agenda.time} - {event.agenda.topic}</span>
+            </S.AgendaItem>
           </S.Section>
         )}
 
-        {/* Speakers */}
-        {event.speakers && event.speakers.length > 0 && (
+        {/* 🔹 Single Speaker Section */}
+        {event.speaker && event.speaker.name && (
           <S.Section>
-            <S.SectionTitle>Speakers</S.SectionTitle>
-            <S.SpeakerList>
-              {event.speakers.map((speaker, index) => (
-                <S.SpeakerItem key={index}>
-                  {speaker.name} - {speaker.bio}
-                </S.SpeakerItem>
-              ))}
-            </S.SpeakerList>
+            <S.SectionTitle>Speaker</S.SectionTitle>
+            <S.SpeakerItem>
+              <strong>{event.speaker.name}</strong> - {event.speaker.bio}
+            </S.SpeakerItem>
           </S.Section>
         )}
 
-        {/* Additional Information */}
+        {/* 🔹 Additional Information */}
         <S.Section>
           <S.SectionTitle>Additional Information</S.SectionTitle>
           <p><strong>Schedule:</strong> {event.schedule || "N/A"}</p>
@@ -138,7 +120,7 @@ export default function EventDetails() {
           <p><strong>Contact:</strong> {event.contact || "Not Available"}</p>
         </S.Section>
 
-        <S.RegisterButton href={event.registerLink}>Register Now</S.RegisterButton>
+        <S.RegisterButton href={event.register_link}>Register Now</S.RegisterButton>
         <S.BackButton onClick={() => navigate("/events")}>Back to Events</S.BackButton>
       </S.EventContainer>
     </ThemeProvider>
