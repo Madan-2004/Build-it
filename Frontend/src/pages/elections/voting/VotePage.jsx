@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import axios from 'axios';
@@ -21,7 +21,29 @@ const VotePage = () => {
     const [voterInfo, setVoterInfo] = useState(null);
 
     // Get user from authService
-    const user = authService.getUserFromCookie();
+    // const user = authService.getUserFromCookie();
+    const user = useMemo(() => authService.getUserFromCookie(), []);
+    useEffect(() => {
+        const fetchVoterInfo = async () => {
+            if (!user || !user.email) return;
+
+            try {
+                console.log("Fetching voter details for:", user.email);
+                const response = await axios.get(`${API_URL}api/voter-details/`, {
+                    params: { email: user.email }, // Send email as query param
+                    withCredentials: true, // Ensure authentication
+                });
+
+                console.log("Voter Info from Backend:", response.data);
+                setVoterInfo(response.data);
+            } catch (error) {
+                console.error("Error fetching voter details:", error.response?.data || error.message);
+                setVoterInfo(null);
+            }
+        };
+
+        fetchVoterInfo();
+    }, [user]);
 
     useEffect(() => {
         if (!user) {
@@ -34,7 +56,10 @@ const VotePage = () => {
         if (user && user.email) {
             const decodedVoterInfo = decodeVoterEmail(user.email);
             console.log("Decoded Voter Info:", decodedVoterInfo);
-            setVoterInfo(decodedVoterInfo);
+            // setVoterInfo(decodedVoterInfo);
+        }
+        else{
+            console.error("User not authenticated decodded");
         }
         
         // Fetch election details
@@ -43,6 +68,7 @@ const VotePage = () => {
         })
         .then((response) => {
             setElection(response.data);
+            
         })
         .catch((error) => {
             console.error("Error fetching election details:", error);
@@ -74,7 +100,7 @@ useEffect(() => {
                 position.branch_restriction.includes(voterInfo.branch);
             
             // Skip batch check for PhD, MTech, MSc; otherwise, check batch restriction
-            const batchEligible = ["PhD", "MTech", "MSc"].includes(voterInfo.branch) || 
+            const batchEligible = ["PHD", "MTech", "MSC"].includes(voterInfo.branch) || 
                 position.batch_restriction.includes("All Batches") || 
                 position.batch_restriction.includes(voterInfo.status);
 

@@ -4,6 +4,7 @@ from .models import Election, Position, Candidate, Vote
 from django.utils import timezone
 from django.utils.timezone import localtime
 from datetime import timedelta
+from .utils import decode_voter_email  # ✅ Import the decoding function
 
 
 from rest_framework import serializers
@@ -15,7 +16,7 @@ class CandidateSerializer(serializers.ModelSerializer):
     votes_count = serializers.SerializerMethodField()  # ✅ Compute votes dynamically
     roll_no = serializers.CharField(default="Unknown Roll No")  # ✅ Default roll number
     branch = serializers.CharField(default="CSE")  # ✅ Default branch
-    degree = serializers.ChoiceField(choices=[("BTech", "BTech"), ("MTech", "MTech"), ("PhD", "PhD")], default="BTech")  # ✅ Degree choices
+    degree = serializers.ChoiceField(choices=[("BTech", "BTech"), ("MTech", "MTech"), ("PHD", "PHD"),("MSC","MSC")], default="BTech")  # ✅ Degree choices
 
     class Meta:
         model = Candidate
@@ -171,6 +172,29 @@ class VoteSerializer(serializers.ModelSerializer):
     def get_election_name(self, obj):
         """Returns the election name of the vote"""
         return obj.candidate.position.election.title  # ✅ Fetch election name
+    def validate(self, data):
+        """
+        Validate voter's email to ensure they meet batch & branch restrictions.
+        """
+        voter = self.context['request'].user  # ✅ Get the voter
+        voter_info = decode_voter_email(voter.email)  # ✅ Decode email
+
+        # Ensure degree and branch match the election rules
+        candidate = data['candidate']
+        position = candidate.position
+
+        # ✅ Restrict based on branch
+        if position.branch_restriction and "All Branches" not in position.branch_restriction:
+            if voter_info["branch"] not in position.branch_restriction:
+                raise serializers.ValidationError(f"Only {', '.join(position.branch_restriction)} branches can vote for {position.title}.")
+
+        # ✅ Restrict based on batch
+        if position.batch_restriction and "All Batches" not in position.batch_restriction:
+            if voter_info["status"] not in position.batch_restriction:
+                raise serializers.ValidationError(f"Only {', '.join(position.batch_restriction)} batches can vote for {position.title}.")
+
+        return data
+    
 class ElectionResultSerializer(serializers.ModelSerializer):
     positions = serializers.SerializerMethodField()
 
@@ -215,3 +239,11 @@ class ElectionResultSerializer(serializers.ModelSerializer):
 
         return result
  
+
+from rest_framework import serializers
+from .models import VoterFile
+
+class VoterFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VoterFile
+        fields = ["id", "file", "uploaded_at"]

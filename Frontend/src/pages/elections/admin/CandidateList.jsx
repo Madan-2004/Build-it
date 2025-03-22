@@ -287,7 +287,8 @@ const CandidateList = () => {
                   >
                     <option value="BTech">BTech</option>
                     <option value="MTech">MTech</option>
-                    <option value="PhD">PhD</option>
+                    <option value="PHD">PhD</option>
+                    <option value="MSC"> MSC</option>
                   </select>
                 </div>
                 

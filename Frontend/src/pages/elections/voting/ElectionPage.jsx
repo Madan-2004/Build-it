@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import api from "../../../api";
 
 const API_URL = "http://localhost:8000/api/";
 
@@ -25,7 +26,7 @@ const ElectionPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const authCheck = await axios.get(`${API_URL}auth/check/`, { withCredentials: true });
+        const authCheck = await api.get(`${API_URL}auth/check/`, { withCredentials: true });
         if (!authCheck.data.isAuthenticated) {
           console.log("User is not authenticated. Attempting to refresh session.");
           await refreshSession();  // Try refreshing session

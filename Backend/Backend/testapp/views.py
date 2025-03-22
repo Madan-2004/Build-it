@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
+from .utils import decode_voter_email 
 
 from .models import Election, Candidate, Vote, Position
 from .serializers import (
@@ -212,7 +213,20 @@ class VoteViewSet(viewsets.ModelViewSet):
             return Response({"error": "Expected a list of votes"}, status=status.HTTP_400_BAD_REQUEST)
 
         voter = request.user  # ✅ Ensure voter is logged in
+        # voter_info = decode_voter_email(voter.email)  # ✅ Decode voter email
+        # print(voter_info)
+        voter_email = voter.email.strip().lower()
+
+        # Ensure voter data is loaded
+        if not VOTER_DATA:
+            load_voter_data()
+
+        voter_info = VOTER_DATA.get(voter_email)
+        if not voter_info:
+            return Response({"error": "Voter information not found"}, status=status.HTTP_400_BAD_REQUEST)
+
         created_votes = []
+        print(voter_info)
 
         for vote_data in votes_data:
             candidate_id = vote_data.get("candidate")
@@ -228,17 +242,16 @@ class VoteViewSet(viewsets.ModelViewSet):
                 return Response({"error": f"Election '{election.title}' is not active."}, 
                                 status=status.HTTP_400_BAD_REQUEST)
             
-            #decode and do it in future
-            # # ✅ Check batch restriction (supports multiple selections)
-            # if position.batch_restriction and "All Batches" not in position.batch_restriction:
-            #     if voter.batch not in position.batch_restriction:
-            #         return Response({"error": f"Only {', '.join(position.batch_restriction)} batches can vote for {position.title}."}, 
+            #  # ✅ Check branch restriction
+            # if position.branch_restriction and "All Branches" not in position.branch_restriction:
+            #     if voter_info["branch"] not in position.branch_restriction:
+            #         return Response({"error": f"Only {', '.join(position.branch_restriction)} branches can vote for {position.title}."}, 
             #                         status=status.HTTP_400_BAD_REQUEST)
 
-            # # ✅ Check branch restriction (supports multiple selections)
-            # if position.branch_restriction and "All Branches" not in position.branch_restriction:
-            #     if voter.branch not in position.branch_restriction:
-            #         return Response({"error": f"Only {', '.join(position.branch_restriction)} branches can vote for {position.title}."}, 
+            # # ✅ Check batch restriction
+            # if position.batch_restriction and "All Batches" not in position.batch_restriction:
+            #     if voter_info["status"] not in position.batch_restriction:
+            #         return Response({"error": f"Only {', '.join(position.batch_restriction)} batches can vote for {position.title}."}, 
             #                         status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Prevent duplicate votes for the same position
@@ -337,3 +350,136 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             "unusual_patterns": unusual_patterns,
             "status": "Fraud detection complete"
         })
+    
+
+import csv
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+from rest_framework.parsers import MultiPartParser, FormParser
+from .models import VoterFile
+
+class UploadVoterListView(APIView):
+    permission_classes = [IsAuthenticated]  # Only Admins can upload
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, *args, **kwargs):
+        if "file" not in request.FILES:
+            return Response({"error": "No file provided"}, status=400)
+
+        voter_file = request.FILES["file"]
+
+        # Save file to storage
+        saved_file = default_storage.save(f"voter_files/{voter_file.name}", ContentFile(voter_file.read()))
+
+        # Save file to database
+        VoterFile.objects.create(file=saved_file)
+
+        return Response({"message": "Voter list uploaded successfully"}, status=201)
+import csv
+import os
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from datetime import datetime
+# ✅ Global dictionary to store voter data
+VOTER_DATA = {}
+# Define department mapping
+DEPARTMENT_MAPPING = {
+    "Computer Science & Engineering": "CSE",
+    "Electrical Engineering": "EE",
+    "Mechanical Engineering": "MECH",
+    "Civil Engineering": "CIVIL",
+    "Metallurgical Engineering and Materials Science": "MEMS",
+    "Chemical Engineering": "CHE",
+    "Engineering Physics": "EP",
+    "Space Science and Engineering": "SSE",
+    "Mathematics and Computing": "MC",
+}
+# Define degree mapping
+DEGREE_MAPPING = {
+    "B.Tech.": "BTech",
+    "Ph.D.": "PHD",
+    "M.Tech.": "MTech",
+    "M.Sc.": "MSC",
+}
+def yearSuffix(yr):
+    if yr == 1:
+        return "1st Year"
+    if yr == 2:
+        return "2nd Year"
+    if yr == 3:
+        return "3rd Year"
+    return f"{yr}th Year"
+
+def load_voter_data():
+    """Loads voter data from the latest uploaded CSV file."""
+    global VOTER_DATA  # Use the global dictionary
+    VOTER_DATA.clear()  # Clear old data before loading new
+
+    file_path = r"C:\Users\mvars\Downloads\Build-it\Backend\Backend\media\voter_files\Voters_List_-_Student_Gymkhana_Elections_2025_-_Sheet1.csv"
+    current_year = datetime.now().year % 100
+
+    if not os.path.exists(file_path):
+        print("⚠️ No voter list file found. Skipping data load.")
+        return False
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                email = row["Email"].strip().lower()
+                roll_number = row["Roll Number"].strip()
+                mapped_branch = DEPARTMENT_MAPPING.get(row["Department"].strip(), "Unknown")  # Apply mapping
+                mapped_degree = DEGREE_MAPPING.get(row["Program"].strip(), row["Program"].strip())  # Apply degree mapping
+                entry_year = int(roll_number[:2])
+                academic_year = max(1, (current_year - entry_year))
+                VOTER_DATA[email] = {
+                    "roll_no": row["Roll Number"].strip(),
+                    "name": row["Name"].strip(),
+                    "degree": mapped_degree,
+                    "branch": mapped_branch,
+                    "status": yearSuffix(academic_year),
+                }
+
+        print(f"✅ Successfully loaded {len(VOTER_DATA)} voter records.")
+        return True
+
+    except Exception as e:
+        print(f"❌ Error loading voter data: {e}")
+        return False
+    
+
+# ✅ Load voter data on server start
+load_voter_data()
+
+
+
+class VoterDetailsView(APIView):
+    permission_classes = [IsAuthenticated]  # Only logged-in users can access
+
+    def get(self, request):
+        global VOTER_DATA  # Ensure we use the updated dictionary
+
+        # ✅ Reload data if it's empty
+        if not VOTER_DATA:
+            print("⚠️ Voter data is empty. Reloading...")
+            load_voter_data()
+
+        # ✅ Print a few sample entries to verify
+        sample_voters = list(VOTER_DATA.items())[:5]
+        print("🔍 Sample VOTER_DATA (first 5 entries):", sample_voters)
+
+        # ✅ Get voter email (from request or logged-in user)
+        # voter_email = request.data.get("email", request.user.email).strip().lower()
+        voter_email = request.user.email.strip().lower()
+        print(f"🔍 Requested Voter Email: {voter_email}")
+
+        if voter_email not in VOTER_DATA:
+            print(f"❌ Voter not found for email: {voter_email}")
+            return Response({"error": "Voter not found"}, status=404)
+
+        print(f"✅ Voter found: {VOTER_DATA[voter_email]}")
+        return Response(VOTER_DATA[voter_email], status=200)

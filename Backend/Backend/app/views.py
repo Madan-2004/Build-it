@@ -1098,7 +1098,8 @@ class InventoryListCreateView(generics.ListCreateAPIView):
         """
         club_name = self.kwargs.get("club_name")
         if club_name:
-            return Inventory.objects.filter(club_name_iexact=club_name)
+         return Inventory.objects.filter(club__name__iexact=club_name)
+
         return super().get_queryset()
 
     def create(self, request, *args, **kwargs):

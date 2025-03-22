@@ -82,7 +82,7 @@ class Candidate(models.Model):
     roll_no = models.CharField(max_length=50, default="Unknown Roll No")  # ✅ Default roll number
     degree = models.CharField(
         max_length=10,
-        choices=[("BTech", "BTech"), ("MTech", "MTech"), ("PhD", "PhD")],
+        choices=[("BTech", "BTech"), ("MTech", "MTech"), ("PHD", "PHD"), ("MSC", "MSC")],
         default="BTech"
     )  # ✅ Added degree field with choices
     branch = models.CharField(max_length=100, default="CSE")  # ✅ Branch-based elections
@@ -114,3 +114,8 @@ class Vote(models.Model):
     def get_election(self):
         """Fetch the election for this vote via Candidate -> Position -> Election."""
         return self.candidate.position.election
+
+
+class VoterFile(models.Model):
+    file = models.FileField(upload_to="voter_files/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)

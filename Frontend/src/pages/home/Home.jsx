@@ -28,6 +28,7 @@ import img1 from "../../images/home/img1.jpg";
 import img2 from "../../images/home/img2.jpg";
 import img3 from "../../images/home/img3.jpg";
 import missionImage from "../../images/home/mission.jpg";
+import UpcomingEvents from "./UpcomingEvents";
 
 const slides = [
   {
@@ -227,6 +228,7 @@ export default function Home() {
           ))}
         </CouncilGrid>
       </CouncilSection>
+      < UpcomingEvents />
     </>
   );
 }

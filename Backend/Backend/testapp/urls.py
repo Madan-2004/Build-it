@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ElectionViewSet, PositionViewSet, CandidateViewSet,
-    VoteViewSet, AdminDashboardViewSet
+    VoteViewSet, AdminDashboardViewSet,UploadVoterListView,VoterDetailsView
 )
 candidate_list = CandidateViewSet.as_view({
     'get': 'list',
@@ -35,4 +35,6 @@ urlpatterns = [
 
     # 🔹 Retrieve, Update, Delete Candidate (by ID)
     path('elections/<int:election_pk>/positions/<int:position_pk>/candidates/<int:pk>/', candidate_detail, name="candidate-detail"),
+    path("upload-voter-list/", UploadVoterListView.as_view(), name="upload-voter-list"),
+    path("voter-details/", VoterDetailsView.as_view(), name="voter-details"),
 ]
