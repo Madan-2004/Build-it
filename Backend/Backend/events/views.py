@@ -45,4 +45,4 @@ class ClubEventsView(generics.ListAPIView):
 
     def get_queryset(self):
         club_id = self.kwargs['club_id']
-        return Event.objects.filter(club_id=club_id)m
+        return Event.objects.filter(club_id=club_id)
