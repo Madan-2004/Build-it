@@ -101,8 +101,21 @@ const ProjectInventory = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete_inventory" }),
     })
-      .then(() => navigate(`/projects`))
-      .catch((error) => console.error("Error deleting inventory:", error));
+      .then(response => response.json())
+      .then(data => {
+        setDeleteDialogOpen(false);
+        // Reset inventory state to null to trigger the create inventory view
+        setInventory(null);
+        // Keep the current project name if available
+        if (data.project_name) {
+          setProjectName(data.project_name);
+        }
+        // No navigation needed - React will rerender the component with inventory=null
+      })
+      .catch((error) => {
+        console.error("Error deleting inventory:", error);
+        setDeleteDialogOpen(false);
+      });
   };
 
   const handleCreateInventory = () => {
@@ -226,7 +239,8 @@ const ProjectInventory = () => {
               value={budgetUsage}
               size={120}
               thickness={5}
-              style={{ color: budgetColor }}
+              style={{ color: budgetColor
+               }}
             />
             <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
               <span className="text-xl font-bold">{budgetUsage.toFixed(1)}%</span>
@@ -235,10 +249,10 @@ const ProjectInventory = () => {
           <div className="text-center sm:text-right">
             <h3 className="text-xl font-semibold mb-2">Budget Details</h3>
             <p className="text-gray-600">
-              <span className="font-medium">Used:</span> ₹{totalCost.toLocaleString()}
+              <span className="font-medium">Allocated:</span> ₹{inventory.budget_allocated.toLocaleString()}
             </p>
             <p className="text-gray-600">
-              <span className="font-medium">Allocated:</span> ₹{inventory.budget_allocated.toLocaleString()}
+              <span className="font-medium">Used:</span> ₹{totalCost.toLocaleString()}
             </p>
             <p className="text-gray-600">
               <span className="font-medium">Remaining:</span> ₹{(inventory.budget_allocated - totalCost).toLocaleString()}
@@ -275,8 +289,7 @@ const ProjectInventory = () => {
                       variant="contained"
                       size="small"
                       style={{ 
-                        borderRadius: "20px",
-                        backgroundColor: "#00C853",
+                        backgroundColor: " #1565C0",
                         textTransform: "none",
                         transition: "transform 0.2s, box-shadow 0.2s",
                       }}
