@@ -8,6 +8,7 @@ import ClubStats from "./ClubStats";
 import ClubMembers from "./ClubMembers";
 import authService from "../../services/auth";
 import { isAdmin as checkIsAdmin } from "../../utils/adminCheck";
+import ClubEvents from "./ClubEvents";
 
 const API_BASE_URL = "http://localhost:8000"; // Update API URL if needed
 
@@ -37,8 +38,9 @@ const ClubProfile = () => {
   });
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); // Default to false
+  const [isAdmin, setIsAdmin] = useState(false); 
   const [user, setUser] = useState(null); // Store logged-in user details
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     // Get logged-in user from cookie
@@ -430,33 +432,39 @@ const ClubProfile = () => {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 mt-8">
         {/* Navigation Tabs */}
-        {/* <div
-          className={`mb-8 border-b ${darkMode ? "border-gray-700" : "border-gray-300"}`}
-        >
-          <div className="flex space-x-8 overflow-x-auto">
-            <button
-              className={`py-4 px-1 border-b-2 font-medium text-lg ${darkMode ? "border-blue-500 text-blue-400" : "border-blue-600 text-blue-600"} -mb-px`}
-            >
-              Overview
-            </button>
-            <button
-              className={`py-4 px-1 border-b-2 border-transparent font-medium text-lg ${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"} hover:border-gray-300`}
-            >
-              Events
-            </button>
-            <button
-              className={`py-4 px-1 border-b-2 border-transparent font-medium text-lg ${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"} hover:border-gray-300`}
-            >
-              Gallery
-            </button>
-            <button
-              className={`py-4 px-1 border-b-2 border-transparent font-medium text-lg ${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"} hover:border-gray-300`}
-            >
-              About
-            </button>
-          </div>
-        </div> */}
-
+        <div className={`mb-8 border-b ${darkMode ? "border-gray-700" : "border-gray-300"}`}>
+  <div className="flex space-x-8">
+    <button
+      onClick={() => setActiveTab("overview")}
+      className={`py-4 px-1 border-b-2 font-medium text-lg ${
+        activeTab === "overview"
+          ? darkMode
+            ? "border-blue-500 text-blue-400"
+            : "border-blue-600 text-blue-600"
+          : darkMode
+          ? "text-gray-400 hover:text-gray-300 border-transparent"
+          : "text-gray-500 hover:text-gray-700 border-transparent"
+      } -mb-px`}
+    >
+      Overview
+    </button>
+    <button
+      onClick={() => setActiveTab("events")}
+      className={`py-4 px-1 border-b-2 font-medium text-lg ${
+        activeTab === "events"
+          ? darkMode
+            ? "border-blue-500 text-blue-400"
+            : "border-blue-600 text-blue-600"
+          : darkMode
+          ? "text-gray-400 hover:text-gray-300 border-transparent"
+          : "text-gray-500 hover:text-gray-700 border-transparent"
+      } -mb-px`}
+    >
+      Events
+    </button>
+  </div>
+</div>
+        {activeTab === "overview" ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column */}
           <div className="lg:col-span-1 space-y-8">
@@ -599,7 +607,11 @@ const ClubProfile = () => {
 
           </div>
         </div>
+         ) : (
+          <ClubEvents clubId={club.id} darkMode={darkMode} />
+        )}
       </div>
+      
 
       {/* Add Member Dialog */}
       {addMemberDialogOpen && (

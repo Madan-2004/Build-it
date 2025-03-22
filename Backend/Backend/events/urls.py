@@ -6,11 +6,13 @@ from .views import EventDetailView
 from .views import EventCreateView
 from .views import EventUpdateView
 from .views import EventDeleteView
+from .views import ClubEventsView
 
 urlpatterns = [
     path('events/', EventListView.as_view(), name='event-list'),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),  # Add this line
-    
+    path('clubs/<int:club_id>/events/', ClubEventsView.as_view(), name='club-events'),  # Add this line
+
     # New Routes
     path("events/create/", EventCreateView.as_view(), name="event-create"),
     path("events/update/<int:pk>/", EventUpdateView.as_view(), name="event-update"),

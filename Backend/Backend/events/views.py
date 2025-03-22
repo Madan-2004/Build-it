@@ -39,3 +39,10 @@ class EventDeleteView(APIView):
         
         event.delete()
         return Response({"message": "Event deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+class ClubEventsView(generics.ListAPIView):
+    """ View to list events based on club ID """
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        club_id = self.kwargs['club_id']
+        return Event.objects.filter(club_id=club_id)

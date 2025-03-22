@@ -1,4 +1,5 @@
 from django.db import models
+from app.models import Club
 
 class Event(models.Model):
     CATEGORY_CHOICES = [
@@ -18,6 +19,9 @@ class Event(models.Model):
     fees = models.CharField(max_length=255, default="Free Entry")
     schedule = models.CharField(max_length=255, default="TBD")
     contact = models.EmailField(default="info@iitindore.ac.in")
+    club = models.ForeignKey(
+        Club, on_delete=models.SET_NULL, null=True, blank=True, related_name="events"
+    )  # ✅ Some events may not have a club
 
     def __str__(self):
         return self.title
