@@ -24,15 +24,16 @@ class Event(models.Model):
 
 
 class Agenda(models.Model):
-    event = models.OneToOneField(Event, related_name="agenda", on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, related_name="agendas", on_delete=models.CASCADE)
     time = models.CharField(max_length=50)
     topic = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.event.title} - {self.topic}"
 
+
 class Speaker(models.Model):
-    event = models.OneToOneField(Event, related_name="speaker", on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, related_name="speakers", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     bio = models.TextField()
 

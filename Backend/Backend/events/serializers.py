@@ -16,61 +16,65 @@ class SpeakerSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    poster = serializers.ImageField(required=False, allow_null=True)  # ✅ Supports image uploads
-    agenda = AgendaSerializer(required=False)  # No longer a list
-    speaker = SpeakerSerializer(required=False)  # No longer a list
+    poster = serializers.ImageField(required=False, allow_null=True)  
+    agendas = AgendaSerializer(many=True, required=False)  
+    speakers = SpeakerSerializer(many=True, required=False)  
 
     class Meta:
         model = Event
         fields = "__all__"
 
     def create(self, validated_data):
-        agenda_data = validated_data.pop("agenda", None)
-        speaker_data = validated_data.pop("speaker", None)
+        agendas_data = validated_data.pop("agendas", [])
+        speakers_data = validated_data.pop("speakers", [])
 
         event = Event.objects.create(**validated_data)
 
-        if agenda_data:
+        for agenda_data in agendas_data:
             Agenda.objects.create(event=event, **agenda_data)
 
-        if speaker_data:
+        for speaker_data in speakers_data:
             Speaker.objects.create(event=event, **speaker_data)
 
         return event
 
     def update(self, instance, validated_data):
-        agenda_data = validated_data.pop("agenda", None)
-        speaker_data = validated_data.pop("speaker", None)
+        agendas_data = validated_data.pop("agendas", [])
+        speakers_data = validated_data.pop("speakers", [])
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value if value is not None else getattr(instance, attr))
 
         instance.save()
 
-        if agenda_data:
-            Agenda.objects.update_or_create(event=instance, defaults=agenda_data)
+        if agendas_data:
+            instance.agendas.all().delete()  # Remove old entries
+            for agenda_data in agendas_data:
+                Agenda.objects.create(event=instance, **agenda_data)
 
-        if speaker_data:
-            Speaker.objects.update_or_create(event=instance, defaults=speaker_data)
+        if speakers_data:
+            instance.speakers.all().delete()  # Remove old entries
+            for speaker_data in speakers_data:
+                Speaker.objects.create(event=instance, **speaker_data)
 
         return instance
 
     def to_internal_value(self, data):
         """
-        Convert `agenda` and `speaker` from JSON strings to Python objects when using multipart/form-data.
+        Convert `agendas` and `speakers` from JSON strings to Python objects when using multipart/form-data.
         """
         data = data.copy()
 
-        if "agenda" in data:
+        if "agendas" in data:
             try:
-                data["agenda"] = json.loads(data["agenda"])
+                data["agendas"] = json.loads(data["agendas"])
             except (TypeError, json.JSONDecodeError):
-                raise serializers.ValidationError({"agenda": "Invalid JSON format"})
+                raise serializers.ValidationError({"agendas": "Invalid JSON format"})
 
-        if "speaker" in data:
+        if "speakers" in data:
             try:
-                data["speaker"] = json.loads(data["speaker"])
+                data["speakers"] = json.loads(data["speakers"])
             except (TypeError, json.JSONDecodeError):
-                raise serializers.ValidationError({"speaker": "Invalid JSON format"})
+                raise serializers.ValidationError({"speakers": "Invalid JSON format"})
 
         return super().to_internal_value(data)

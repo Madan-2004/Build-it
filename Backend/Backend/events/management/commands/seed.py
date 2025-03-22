@@ -10,19 +10,13 @@ class Command(BaseCommand):
     help = "Seed the database with extensive dummy event data"
 
     def handle(self, *args, **kwargs):
-        # Ensure media/event_posters directory exists
-        event_posters_dir = os.path.join(settings.MEDIA_ROOT, "event_posters")
-        os.makedirs(event_posters_dir, exist_ok=True)
+        # Delete existing records to avoid duplicates
+        Event.objects.all().delete()
+        Agenda.objects.all().delete()
+        Speaker.objects.all().delete()
 
         # Define a default poster image path
-        default_poster_path = os.path.join(event_posters_dir, "default.png")
-
-        # If the default image is missing, download a placeholder
-        if not os.path.exists(default_poster_path):
-            urllib.request.urlretrieve("https://via.placeholder.com/600x300", default_poster_path)
-
-        # Clear existing event-related data
-        Event.objects.all().delete()
+        default_poster_path = os.path.join(settings.MEDIA_ROOT, "event_posters/default.png")
 
         events_data = [
             {
@@ -36,13 +30,18 @@ class Command(BaseCommand):
                 "fees": "₹500 per team",
                 "schedule": "24-Hour Event",
                 "contact": "hackathon@iitindore.ac.in",
-                "agenda": {"time": "9:00 AM", "topic": "Opening Ceremony"},
-                "speaker": {"name": "Dr. Rahul Sharma", "bio": "AI & ML Expert, IIT Indore"},
+                "agenda": [
+                    {"time": "9:00 AM", "topic": "Opening Ceremony"},
+                    {"time": "10:00 AM", "topic": "Problem Statement Reveal"},
+                ],
+                "speakers": [
+                    {"name": "Dr. Rahul Sharma", "bio": "AI & ML Expert, IIT Indore"},
+                ]
             },
             {
                 "title": "Machine Learning Workshop",
                 "date": date(2024, 4, 12),
-                "poster": "event_posters/default.png",
+                "poster": "event_posters/default.png",  
                 "description": "A hands-on workshop on AI and ML...",
                 "venue": "Data Science Lab, IIT Indore",
                 "category": "Workshops",
@@ -50,9 +49,16 @@ class Command(BaseCommand):
                 "fees": "₹300 for students, ₹700 for professionals",
                 "schedule": "10:00 AM - 5:00 PM",
                 "contact": "mlworkshop@iitindore.ac.in",
-                "agenda": {"time": "10:00 AM", "topic": "Introduction to ML"},
-                "speaker": {"name": "Dr. Ankit Verma", "bio": "Professor, Data Science, IIT Indore"},
+                "agenda": [
+                    {"time": "10:00 AM", "topic": "Introduction to ML"},
+                    {"time": "10:29 AM", "topic": "Introduction to ML"},
+                    {"time": "10:30 AM", "topic": "Introduction to ML"},
+                ],
+                "speakers": [
+                    {"name": "Dr. Ankit Verma", "bio": "Professor, Data Science, IIT Indore"},
+                ]
             }
+            
         ]
 
         for event_data in events_data:
@@ -61,15 +67,19 @@ class Command(BaseCommand):
             poster_file = None
 
             if poster_filename:
-                poster_path = os.path.join(settings.MEDIA_ROOT, poster_filename)
-
-                if not os.path.exists(poster_path):
-                    poster_path = default_poster_path  # Use default if missing
-
-                poster_file = File(open(poster_path, "rb"))
+                if poster_filename.startswith("http"):  # Remote image
+                    poster_path = os.path.join(settings.MEDIA_ROOT, "event_posters", os.path.basename(poster_filename))
+                    urllib.request.urlretrieve(poster_filename, poster_path)  # Download the image
+                    poster_file = File(open(poster_path, "rb"))
+                else:  # Local image
+                    poster_path = os.path.join(settings.MEDIA_ROOT, poster_filename)
+                    if os.path.exists(poster_path):
+                        poster_file = File(open(poster_path, "rb"))
+                    else:
+                        poster_file = File(open(default_poster_path, "rb"))  # Use default if missing
 
             # Create event instance
-            event = Event.objects.create(
+            event = Event(
                 title=event_data["title"],
                 date=event_data["date"],
                 description=event_data["description"],
@@ -81,16 +91,17 @@ class Command(BaseCommand):
                 contact=event_data["contact"],
             )
 
-            # Save poster
             if poster_file:
-                event.poster.save(os.path.basename(poster_path), poster_file, save=True)
+                event.poster.save(os.path.basename(poster_path), poster_file, save=False)  # Assign image
 
-            # Create single agenda entry
-            if "agenda" in event_data:
-                Agenda.objects.create(event=event, **event_data["agenda"])
+            event.save()  # Save event to database
 
-            # Create single speaker entry
-            if "speaker" in event_data:
-                Speaker.objects.create(event=event, **event_data["speaker"])
+            # Create agenda entries
+            for agenda_item in event_data.get("agenda", []):
+                Agenda.objects.create(event=event, time=agenda_item["time"], topic=agenda_item["topic"])
+
+            # Create speaker entries
+            for speaker in event_data.get("speakers", []):
+                Speaker.objects.create(event=event, name=speaker["name"], bio=speaker["bio"])
 
         self.stdout.write(self.style.SUCCESS("Successfully seeded the database with event data! 🚀"))
