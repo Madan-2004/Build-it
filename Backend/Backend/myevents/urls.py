@@ -1,6 +1,4 @@
 from django.urls import path
-from django.conf import settings
-from django.conf.urls.static import static
 from .views import (
     EventListView,
     EventDetailView,
@@ -10,20 +8,16 @@ from .views import (
     ClubEventsView,
 )
 
-app_name = 'events'  # Add namespace for better URL organization
+app_name = 'myevents'
 
 urlpatterns = [
     # Event CRUD operations
     path('events/', EventListView.as_view(), name='event-list'),
-    path('events/create/', EventCreateView.as_view(), name='event-create'),
     path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('events/create/', EventCreateView.as_view(), name='event-create'),
     path('events/<int:pk>/update/', EventUpdateView.as_view(), name='event-update'),
     path('events/<int:pk>/delete/', EventDeleteView.as_view(), name='event-delete'),
     
     # Club specific routes
     path('clubs/<int:club_id>/events/', ClubEventsView.as_view(), name='club-events'),
 ]
-
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

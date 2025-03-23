@@ -1,73 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ThemeProvider, createGlobalStyle } from "styled-components";
-import * as S from "./EventElements";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Plus } from 'react-feather';
+import EventCard from './components/EventCard';
+import EventFilters from './components/EventFilters';
+import ViewToggle from './components/ViewToggle';
+import EventForm from './components/EventForm';
 
-// Global Styles for Full Page Theme Support
-const GlobalStyle = createGlobalStyle`
-  body {
-    background: ${({ theme }) => theme.background};
-    color: ${({ theme }) => theme.text};
-    transition: background 0.3s ease, color 0.3s ease;
-  }
-`;
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
-const lightTheme = {
-  background: "#f5f5f5",
-  text: "#002147",
-  cardBackground: "#ffffff",
-  inputBackground: "#ffffff",
-  buttonBackground: "#333333",
-  buttonText: "#ffffff",
-  filterBackground: "#ffffff",
-  borderColor: "#ddd",
-  categoryButton: "#007BFF",
-  categoryButtonText: "#ffffff",
-};
-
-const darkTheme = {
-  background: "#181818",
-  text: "#ffffff",
-  cardBackground: "#222222",
-  inputBackground: "#2C2C2C",
-  buttonBackground: "#ffffff",
-  buttonText: "#002147",
-  filterBackground: "#222222",
-  borderColor: "#444",
-  categoryButton: "#007BFF",
-  categoryButtonText: "#ffffff",
-  eventTitle: "#00A6FF",
-  eventDescription: "#E0E0E0",
-  eventVenue: "#CCCCCC",
-};
-
-export default function Events() {
+export default function EventsPage() {
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("date");
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    localStorage.setItem("theme", darkMode ? "dark" : "light");
-  }, [darkMode]);
+  const [filters, setFilters] = useState({ search: '', category: '', date: '' });
+  const [viewMode, setViewMode] = useState('grid');
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
+      setLoading(true);
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/events/");
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        console.log("Fetched events:", data);
-        setEvents(Array.isArray(data) ? data : data.events || []);
+        const response = await axios.get(`${API_BASE_URL}/events`, { params: filters });
+        setEvents(response.data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -76,113 +30,133 @@ export default function Events() {
     };
 
     fetchEvents();
-  }, []);
+  }, [filters]);
 
-  const handleSearch = (e) => setSearchTerm(e.target.value.toLowerCase());
-  const handleCategoryFilter = (category) => setSelectedCategory(category);
-  const handleSortChange = (e) => setSortBy(e.target.value);
-  const toggleTheme = () => setDarkMode((prevMode) => !prevMode);
+  const createEvent = async (newEvent) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/events`, newEvent);
+      setEvents([...events, response.data]);
+      setShowForm(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-  let filteredEvents = events
-    .filter(
-      (event) =>
-        event.title?.toLowerCase().includes(searchTerm) &&
-        (selectedCategory === "All" || event.category === selectedCategory)
-    )
-    .sort((a, b) => {
-      if (sortBy === "name")
-        return (a.title || "").localeCompare(b.title || "");
-      if (sortBy === "date")
-        return new Date(a.date || 0) - new Date(b.date || 0);
-      if (sortBy === "venue")
-        return (a.venue || "").localeCompare(b.venue || "");
-      return 0;
-    });
+  const updateEvent = async (updatedEvent) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/events/${updatedEvent.id}`, updatedEvent);
+      setEvents(events.map(event => (event.id === updatedEvent.id ? response.data : event)));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const deleteEvent = async (eventId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/events/${eventId}`);
+      setEvents(events.filter(event => event.id !== eventId));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
-    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-      <GlobalStyle />
-      <S.EventsContainer>
-        <S.HeroSection>
-          <S.HeroContent>
-            <S.HeroTitle>Upcoming Events</S.HeroTitle>
-            <S.HeroSubtitle>
-              Stay updated with the latest events happening near you
-            </S.HeroSubtitle>
-            <S.ThemeToggle onClick={toggleTheme}>
-              {darkMode ? "🌞" : "🌙"}
-            </S.ThemeToggle>
-          </S.HeroContent>
-        </S.HeroSection>
+    <div className="min-h-screen bg-gray-100">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-blue-400 to-purple-500 text-white py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-2">Discover Exciting Events</h1>
+          <p className="text-md mb-4">Explore a wide range of events tailored to your interests.</p>
+          <div className="flex items-center justify-between gap-4">
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 shadow-sm hover:shadow-md"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Event
+            </button>
+            <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+          </div>
+        </div>
+      </section>
 
-        {/* Search, Sort & Category Filters */}
-        <S.FilterSection>
-          <S.SearchContainer>
-            <S.SearchInput
-              type="text"
-              placeholder="Search events..."
-              value={searchTerm}
-              onChange={handleSearch}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {showForm && (
+          <div className="mb-8">
+            <EventForm
+              onSubmit={createEvent}
+              onClose={() => setShowForm(false)}
             />
-            <S.SortSelect value={sortBy} onChange={handleSortChange}>
-              <option value="name">Sort by Name</option>
-              <option value="date">Sort by Date</option>
-              <option value="venue">Sort by Venue</option>
-            </S.SortSelect>
-          </S.SearchContainer>
-
-          <S.CategoryFilter>
-            {["All", "Technical", "Cultural", "Sports", "Workshops"].map(
-              (category) => (
-                <S.CategoryButton
-                  key={category}
-                  active={selectedCategory === category}
-                  onClick={() => handleCategoryFilter(category)}
-                >
-                  {category}
-                </S.CategoryButton>
-              )
-            )}
-          </S.CategoryFilter>
-           {/* Admin Button */}
-          <S.AdminButton onClick={() => navigate("/events/events-admin")}>
-            Go to Admin Page
-          </S.AdminButton>
-        </S.FilterSection>
-
-        {/* Events List */}
-        {filteredEvents.length > 0 ? (
-          <S.EventsGrid>
-            {filteredEvents.map((event, index) => (
-              <S.EventCard key={index}>
-                {event.poster && (
-                  <S.EventImage src={event.poster} alt={event.title} />
-                )}
-                <S.EventDate>{event.date}</S.EventDate>
-                <S.EventContent>
-                  <S.EventTitle>{event.title}</S.EventTitle>
-                  <S.EventVenue>📍 {event.venue}</S.EventVenue>
-                  <S.EventDescription>
-                    {event.description.substring(0, 100)}...
-                  </S.EventDescription>
-                  <S.EventFooter>
-                    <S.EventCategory category={event.category}>
-                      {event.category}
-                    </S.EventCategory>
-                    <S.RegisterButton
-                      onClick={() => navigate(`/events/${event.id}`)}
-                    >
-                      View Details
-                    </S.RegisterButton>
-                  </S.EventFooter>
-                </S.EventContent>
-              </S.EventCard>
-            ))}
-          </S.EventsGrid>
-        ) : (
-          <S.NoEventsMessage>No events found</S.NoEventsMessage>
+          </div>
         )}
-      </S.EventsContainer>
-    </ThemeProvider>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filters Sidebar */}
+          <aside className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-8">
+              <EventFilters filters={filters} setFilters={setFilters} />
+            </div>
+          </aside>
+
+          {/* Events Grid/List */}
+          <main className="flex-1">
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
+                  <div className="mt-4 text-gray-600 text-center">Loading events...</div>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center text-red-600">
+                <div className="font-medium">Error</div>
+                <div className="text-sm">{error}</div>
+              </div>
+            ) : events.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div className="text-gray-500 mb-2">No events found</div>
+                <p className="text-sm text-gray-400">
+                  Try adjusting your filters or create a new event
+                </p>
+              </div>
+            ) : (
+              <div className={
+                viewMode === 'grid'
+                  ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  : "flex flex-col gap-4"
+              }>
+                {events.map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    viewMode={viewMode}
+                    onEdit={updateEvent}
+                    onDelete={deleteEvent}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination - Optional */}
+            {events.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <nav className="flex items-center gap-2">
+                  {/* Add pagination controls if needed */}
+                </nav>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {/* Footer Section */}
+      <footer className="bg-gray-800 text-white py-6">
+        <div className="container mx-auto px-4 text-center">
+          <p>&copy; {new Date().getFullYear()} Event Discovery Platform. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
   );
 }

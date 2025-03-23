@@ -26,19 +26,29 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ['-date']
+
 
 class Agenda(models.Model):
-    event = models.OneToOneField(Event, related_name="agenda", on_delete=models.CASCADE)
-    time = models.CharField(max_length=50)
-    topic = models.CharField(max_length=255)
-
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='agendas')
+    time = models.CharField(max_length=50)  # Changed from TimeField to CharField
+    topic = models.CharField(max_length=200)
+    
     def __str__(self):
         return f"{self.event.title} - {self.topic}"
+    
+    class Meta:
+        ordering = ['time']
+
 
 class Speaker(models.Model):
-    event = models.OneToOneField(Event, related_name="speaker", on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
     bio = models.TextField()
 
     def __str__(self):
         return f"{self.name} ({self.event.title})"
+
+    class Meta:
+        ordering = ['name']

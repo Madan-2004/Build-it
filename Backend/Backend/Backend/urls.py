@@ -41,7 +41,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls')),  # Include councils app URLs
     path('api/', include('testapp.urls')),  # Include councils app URLs
-    path('api/', include('events.urls')),
+    path('api/', include('myevents.urls')),
 ]
 
 if settings.DEBUG:

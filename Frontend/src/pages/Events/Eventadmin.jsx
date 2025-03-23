@@ -115,42 +115,50 @@ export default function ManageEventsPage() {
       setShowForm(true);
     }
   };
-
   const handleAddOrEditEvent = async () => {
     try {
       const method = editingEvent ? "PUT" : "POST";
       const url = editingEvent
-        ? `http://127.0.0.1:8000/api/events/update/${editingEvent.id}/`
+        ? `http://127.0.0.1:8000/api/events/${editingEvent.id}/update/`
         : "http://127.0.0.1:8000/api/events/create/";
-
+  
       const formData = new FormData();
       
-      if (newEvent.poster) {
+      // Handle file upload
+      if (newEvent.poster instanceof File) {
         formData.append("poster", newEvent.poster);
       }
-      formData.append("agenda.time", newEvent.agenda.time);
-      formData.append("agenda.topic", newEvent.agenda.topic);
-      formData.append("speaker.name", newEvent.speaker.name);
-      formData.append("speaker.bio", newEvent.speaker.bio);
-      formData.append("club_name", newEvent.club_name);
-      formData.append("title", newEvent.title);
-      formData.append("date", newEvent.date);
-      formData.append("description", newEvent.description);
-      formData.append("venue", newEvent.venue);
-      formData.append("category", newEvent.category);
-      formData.append("register_link", newEvent.register_link);
-      formData.append("fees", newEvent.fees);
-      formData.append("schedule", newEvent.schedule);
-      formData.append("contact", newEvent.contact);
-
-
+  
+      // Convert agenda to JSON string - ensure it's a valid array format
+      const agendaData = newEvent.agenda && newEvent.agenda.time && newEvent.agenda.topic 
+        ? [{ time: newEvent.agenda.time, topic: newEvent.agenda.topic }]
+        : [];
+      formData.append("agenda", JSON.stringify(agendaData));
+  
+      // Convert speakers to JSON string - ensure it's a valid array format
+      const speakersData = newEvent.speaker && newEvent.speaker.name && newEvent.speaker.bio
+        ? [{ name: newEvent.speaker.name, bio: newEvent.speaker.bio }]
+        : [];
+      formData.append("speakers", JSON.stringify(speakersData));
+  
+      // Append other form fields
+      Object.keys(newEvent).forEach(key => {
+        if (key !== 'poster' && key !== 'agenda' && key !== 'speaker') {
+          formData.append(key, newEvent[key]);
+        }
+      });
+  
       const response = await fetch(url, {
         method,
         body: formData,
+        credentials: 'include'
       });
-
-      if (!response.ok) throw new Error("Failed to save event");
-
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to save event');
+      }
+  
       const updatedEvent = await response.json();
       if (editingEvent) {
         setEvents(
@@ -161,7 +169,7 @@ export default function ManageEventsPage() {
       } else {
         setEvents([...events, updatedEvent]);
       }
-
+  
       setNewEvent({
         title: "",
         date: "",
@@ -177,41 +185,46 @@ export default function ManageEventsPage() {
         agenda: { time: "", topic: "" },
         speaker: { name: "", bio: "" },
       });
-
+  
       setEditingEvent(null);
       setShowForm(false);
     } catch (err) {
       console.error("Error saving event:", err);
     }
   };
-
   const handleEditEvent = (event) => {
+    // Extract the first agenda item if it exists
+    const agendaItems = Array.isArray(event.agenda) ? event.agenda : [];
+    const speakerItems = Array.isArray(event.speakers) ? event.speakers : [];
+    
+    const agendaData = agendaItems.length > 0 ? {
+      time: agendaItems[0].time || "",
+      topic: agendaItems[0].topic || ""
+    } : { time: "", topic: "" };
+    
+    const speakerData = speakerItems.length > 0 ? {
+      name: speakerItems[0].name || "",
+      bio: speakerItems[0].bio || ""
+    } : { name: "", bio: "" };
+  
     setNewEvent({
       title: event.title || "",
       date: event.date || "",
       venue: event.venue || "",
-      club_name: event.club_name || "",
+      club_name: event.club || "",  // Make sure this matches what comes from the backend
       category: event.category || "Technical",
       description: event.description || "",
-      poster: event.poster || "event_posters/default.jpg", // ✅ Fixed poster default path
+      poster: event.poster || "",
       register_link: event.register_link || "#",
       fees: event.fees || "Free Entry",
       schedule: event.schedule || "TBD",
       contact: event.contact || "info@iitindore.ac.in",
-
-      // ✅ Ensure agenda is a single object
-      agenda: event.agenda
-        ? { time: event.agenda.time || "", topic: event.agenda.topic || "" }
-        : { time: "", topic: "" },
-
-      // ✅ Ensure speaker is a single object
-      speaker: event.speaker
-        ? { name: event.speaker.name || "", bio: event.speaker.bio || "" }
-        : { name: "", bio: "" },
+      agenda: agendaData,
+      speaker: speakerData
     });
-
-    setEditingEvent(event); // Mark event as being edited
-    setShowForm(true); // Show the form
+  
+    setEditingEvent(event);
+    setShowForm(true);
   };
 
   const handleDeleteEvent = async (id) => {

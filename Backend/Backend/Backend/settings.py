@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'app',
     'testapp',
     'events',
+    'myevents',
     # Add your apps here to enable them
     'django.contrib.admin',
     'django.contrib.auth',
@@ -172,6 +173,9 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
 SESSION_COOKIE_SECURE = True

@@ -40,13 +40,21 @@ const UpcomingEvents = () => {
         const mappedEvents = response.data.map(event => ({
           id: event.id,
           title: event.title,
-          start: new Date(event.date + 'T' + event.agenda.time),
-          end: new Date(event.date + 'T' + event.agenda.time), // Adjust end time if available
-          category: event.category.toLowerCase(),
+          start: new Date(event.start_date), // Changed from event.date
+          end: new Date(event.end_date), // Changed from event.agenda.time
+          category: event.categories?.[0]?.name?.toLowerCase() || 'default', // Handle categories
           description: event.description,
-          organizer: event.contact,
-          location: event.venue,
-          url: event.register_link
+          organizer: event.club?.name || event.contact, // Use club name if available, fallback to contact
+          location: event.location,
+          url: event.register_link,
+          status: event.status,
+          image: event.image,
+          pdf: event.pdf,
+          fees: event.fees,
+          contact: event.contact,
+          is_past_event: event.is_past_event,
+          is_upcoming_event: event.is_upcoming_event,
+          is_ongoing_event: event.is_ongoing_event
         }));
         setEvents(mappedEvents);
         console.log('Fetched events m:', mappedEvents);
