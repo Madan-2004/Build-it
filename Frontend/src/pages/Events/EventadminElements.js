@@ -280,6 +280,26 @@ export const StyledTextArea = styled.textarea`
     box-shadow: 0 0 5px rgba(0, 166, 255, 0.3);
   }
 `;
+export const StyledSelect = styled.select`
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid ${({ theme }) => theme.borderColor};
+  border-radius: 8px;
+  background: ${({ theme }) => theme.cardBackground};
+  color: ${({ theme }) => theme.text};
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  appearance: none; /* Removes default dropdown arrow (optional) */
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) =>
+      theme.background === "#121212" ? "#00A6FF" : "#007BFF"};
+    box-shadow: 0 0 5px rgba(0, 166, 255, 0.3);
+  }
+`;
+
 
 
 // 🔹 Submit Button (Light & Dark Mode)

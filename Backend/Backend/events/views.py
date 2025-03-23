@@ -20,6 +20,9 @@ class EventCreateView(generics.CreateAPIView):
     """ New View to Create an Event """
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+    def create(self, request, *args, **kwargs):
+        print("Received Data:", json.dumps(request.data, indent=4))
+        return super().create(request, *args, **kwargs)
 
 import json
 
@@ -28,6 +31,9 @@ class EventUpdateView(generics.UpdateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     lookup_field = "pk"
+    def update(self, request, *args, **kwargs):
+        print("Received Data for Update:", json.dumps(request.data, indent=4))
+        return super().update(request, *args, **kwargs)
 
 class EventDeleteView(APIView):
     """ New View to Delete an Event """

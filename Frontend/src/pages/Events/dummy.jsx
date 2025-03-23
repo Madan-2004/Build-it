@@ -41,34 +41,29 @@ export default function ManageEventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedClub, setSelectedClub] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("date");
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
+  const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [showForm, setShowForm] = useState(false); // ⬅️ NEW STATE
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
+
   const navigate = useNavigate();
 
+  const categories = ["Technical", "Cultural", "Sports", "Workshops"];
+  
   const [newEvent, setNewEvent] = useState({
-    title: "",
-    date: "",
-    venue: "",
-    club_name: "",
-    category: "Technical",
-    description: "",
     poster: "",
-    register_link: "",
-    fees: "Free Entry",
-    schedule: "TBD",
-    contact: "info@iitindore.ac.in",
     agenda: { time: "", topic: "" },
     speaker: { name: "", bio: "" },
+    club_name: "",
+    title: "",
+    date: "",
+    description: "",
+    venue: "",
+    category: "Technical",
+    register_link: "",
+    fees: "",
+    schedule: "",
+    contact: "",
   });
-
-  const categories = ["Technical", "Cultural", "Sports", "Workshops"];
 
   useEffect(() => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
@@ -78,8 +73,7 @@ export default function ManageEventsPage() {
     const fetchEvents = async () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/api/events/");
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         setEvents(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -92,30 +86,6 @@ export default function ManageEventsPage() {
     fetchEvents();
   }, []);
 
-  const handleAddNewEvent = () => {
-    if (showForm && !editingEvent) {
-      setShowForm(false); // Close the form if it's already open and not in edit mode
-    } else {
-      setNewEvent({
-        title: "",
-        date: "",
-        venue: "",
-        club_name: "",
-        category: "Technical",
-        description: "",
-        poster: "",
-        register_link: "",
-        fees: "Free Entry",
-        schedule: "TBD",
-        contact: "info@iitindore.ac.in",
-        agenda: { time: "", topic: "" }, // ✅ Now a single object instead of an array
-        speaker: { name: "", bio: "" }, // ✅ Now a single object instead of an array
-      });
-      setEditingEvent(null);
-      setShowForm(true);
-    }
-  };
-
   const handleAddOrEditEvent = async () => {
     try {
       const method = editingEvent ? "PUT" : "POST";
@@ -123,59 +93,35 @@ export default function ManageEventsPage() {
         ? `http://127.0.0.1:8000/api/events/update/${editingEvent.id}/`
         : "http://127.0.0.1:8000/api/events/create/";
 
-      const formData = new FormData();
-      
-      if (newEvent.poster) {
-        formData.append("poster", newEvent.poster);
-      }
-      formData.append("agenda.time", newEvent.agenda.time);
-      formData.append("agenda.topic", newEvent.agenda.topic);
-      formData.append("speaker.name", newEvent.speaker.name);
-      formData.append("speaker.bio", newEvent.speaker.bio);
-      formData.append("club_name", newEvent.club_name);
-      formData.append("title", newEvent.title);
-      formData.append("date", newEvent.date);
-      formData.append("description", newEvent.description);
-      formData.append("venue", newEvent.venue);
-      formData.append("category", newEvent.category);
-      formData.append("register_link", newEvent.register_link);
-      formData.append("fees", newEvent.fees);
-      formData.append("schedule", newEvent.schedule);
-      formData.append("contact", newEvent.contact);
-
-
       const response = await fetch(url, {
         method,
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEvent),
       });
 
       if (!response.ok) throw new Error("Failed to save event");
 
       const updatedEvent = await response.json();
       if (editingEvent) {
-        setEvents(
-          events.map((event) =>
-            event.id === updatedEvent.id ? updatedEvent : event
-          )
-        );
+        setEvents(events.map((event) => (event.id === updatedEvent.id ? updatedEvent : event)));
       } else {
         setEvents([...events, updatedEvent]);
       }
 
       setNewEvent({
-        title: "",
-        date: "",
-        venue: "",
-        club_name: "",
-        category: "Technical",
-        description: "",
         poster: "",
-        register_link: "",
-        fees: "Free Entry",
-        schedule: "TBD",
-        contact: "info@iitindore.ac.in",
         agenda: { time: "", topic: "" },
         speaker: { name: "", bio: "" },
+        club_name: "",
+        title: "",
+        date: "",
+        description: "",
+        venue: "",
+        category: "Technical",
+        register_link: "",
+        fees: "",
+        schedule: "",
+        contact: "",
       });
 
       setEditingEvent(null);
@@ -186,39 +132,14 @@ export default function ManageEventsPage() {
   };
 
   const handleEditEvent = (event) => {
-    setNewEvent({
-      title: event.title || "",
-      date: event.date || "",
-      venue: event.venue || "",
-      club_name: event.club_name || "",
-      category: event.category || "Technical",
-      description: event.description || "",
-      poster: event.poster || "event_posters/default.jpg", // ✅ Fixed poster default path
-      register_link: event.register_link || "#",
-      fees: event.fees || "Free Entry",
-      schedule: event.schedule || "TBD",
-      contact: event.contact || "info@iitindore.ac.in",
-
-      // ✅ Ensure agenda is a single object
-      agenda: event.agenda
-        ? { time: event.agenda.time || "", topic: event.agenda.topic || "" }
-        : { time: "", topic: "" },
-
-      // ✅ Ensure speaker is a single object
-      speaker: event.speaker
-        ? { name: event.speaker.name || "", bio: event.speaker.bio || "" }
-        : { name: "", bio: "" },
-    });
-
-    setEditingEvent(event); // Mark event as being edited
-    setShowForm(true); // Show the form
+    setNewEvent(event);
+    setEditingEvent(event);
+    setShowForm(true);
   };
 
   const handleDeleteEvent = async (id) => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/events/delete/${id}/`, {
-        method: "DELETE",
-      });
+      await fetch(`http://127.0.0.1:8000/api/events/delete/${id}/`, { method: "DELETE" });
       setEvents(events.filter((event) => event.id !== id));
     } catch (err) {
       console.error("Error deleting event:", err);
@@ -297,15 +218,9 @@ export default function ManageEventsPage() {
                 setNewEvent({ ...newEvent, venue: e.target.value })
               }
             />
-            <S.StyledInput
-              type="text"
-              placeholder="Club Name"
-              value={newEvent.club_name}
-              onChange={(e) =>
-                setNewEvent({ ...newEvent, club_name: e.target.value })
-              }
-            />
-
+            <S.StyledInput type="text" placeholder="Club Name" value={newEvent.club_name}
+              onChange={(e) => setNewEvent({ ...newEvent, club_name: e.target.value })} />
+            
             <S.StyledLabel>Category</S.StyledLabel>
             <S.StyledSelect
               value={newEvent.category}
@@ -368,29 +283,12 @@ export default function ManageEventsPage() {
               }
             />
 
+
             {/* Agenda Section */}
-            <S.StyledInput
-              type="text"
-              placeholder="Agenda Time"
-              value={newEvent.agenda.time}
-              onChange={(e) =>
-                setNewEvent({
-                  ...newEvent,
-                  agenda: { ...newEvent.agenda, time: e.target.value },
-                })
-              }
-            />
-            <S.StyledInput
-              type="text"
-              placeholder="Agenda Topic"
-              value={newEvent.agenda.topic}
-              onChange={(e) =>
-                setNewEvent({
-                  ...newEvent,
-                  agenda: { ...newEvent.agenda, topic: e.target.value },
-                })
-              }
-            />
+            <S.StyledInput type="text" placeholder="Agenda Time" value={newEvent.agenda.time}
+              onChange={(e) => setNewEvent({ ...newEvent, agenda: { ...newEvent.agenda, time: e.target.value } })} />
+            <S.StyledInput type="text" placeholder="Agenda Topic" value={newEvent.agenda.topic}
+              onChange={(e) => setNewEvent({ ...newEvent, agenda: { ...newEvent.agenda, topic: e.target.value } })} />
 
             {/* 🔹 Speaker Section (Only One Speaker Allowed) */}
             <S.StyledLabel>Speaker</S.StyledLabel>
