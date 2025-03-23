@@ -37,8 +37,8 @@ const FAQPage = () => {
             answer: "Library@IIT Indore, known as Learning Resource Center, is a 4-storey building with several books, journals and other publications as well. In addition, the Library also has a 24 hours free study-zone that can be accessed at any time. It has some computers and provides a vibrant space to have a good study time."
           },
           {
-            question: "What are the branch change rules in IIT Indore?",
-            answer: "There are options for change of branch and this option is based on the grade point average secured in the first year. More details will be provided by the Academic Office at the time of admission."
+            question: "What are the Department change rules in IIT Indore?",
+            answer: "There are options for change of Department and this option is based on the grade point average secured in the first year. More details will be provided by the Academic Office at the time of admission."
           },
           {
             question: "What are the job opportunities after graduation?",

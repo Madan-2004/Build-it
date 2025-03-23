@@ -8,6 +8,9 @@ import {
   Button,
   TextField,
   IconButton,
+  Tooltip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -15,11 +18,15 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from '@mui/icons-material/Close';
 import InventoryIcon from "@mui/icons-material/Inventory";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8000";
 
-const ClubProjects = ({ clubId,darkMode }) => {
+const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState({
     title: "",
@@ -32,7 +39,9 @@ const ClubProjects = ({ clubId,darkMode }) => {
   const [error, setError] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+  const [fullScreenCarouselOpen, setFullScreenCarouselOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setDarkMode(!darkMode);
@@ -41,17 +50,13 @@ const ClubProjects = ({ clubId,darkMode }) => {
   useEffect(() => {
     fetchProjects();
   }, [clubId]);
-
+  
   const fetchProjects = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/clubs/${clubId}/projects/`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch projects");
-
-      const data = await response.json();
+      const response = await axios.get(`${API_BASE_URL}/api/clubs/${clubId}/projects/`);
+      const data = response.data;
       setProjects(
         data.map((project) => ({
           ...project,
@@ -61,20 +66,54 @@ const ClubProjects = ({ clubId,darkMode }) => {
     } catch (error) {
       console.error("Error fetching projects:", error);
       setError("Failed to load projects. Please try again later.");
+      showSnackbar("Failed to load projects", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setCurrentProject((prev) => ({
-      ...prev,
-      images: [
-        ...(prev.images || []),
-        ...files.slice(0, 5 - (prev.images?.length || 0)),
-      ],
-    }));
+    if (files.length === 0) return;
+    
+    // Check file sizes
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      showSnackbar("Some images exceed the 5MB size limit and were not added", "warning");
+      return;
+    }
+    
+    const validFiles = files.filter(file => file.type.startsWith('image/'));
+    if (validFiles.length !== files.length) {
+      showSnackbar("Only image files are allowed", "warning");
+    }
+
+    setCurrentProject((prev) => {
+      const currentImages = prev.images || [];
+      const newImages = [
+        ...currentImages,
+        ...validFiles.slice(0, 5 - currentImages.length),
+      ];
+      
+      if (newImages.length >= 5 && validFiles.length > (5 - currentImages.length)) {
+        showSnackbar("Maximum 5 images allowed - only added what was possible", "info");
+      }
+      
+      return {
+        ...prev,
+        images: newImages,
+      };
+    });
   };
 
   const removeImage = (index) => {
@@ -107,18 +146,33 @@ const ClubProjects = ({ clubId,darkMode }) => {
     setDialogOpen(true);
   };
 
+  const validateProject = () => {
+    if (!currentProject.title.trim()) {
+      showSnackbar("Please enter a project title", "error");
+      return false;
+    }
+    if (!currentProject.description.trim()) {
+      showSnackbar("Please enter a project description", "error");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateProject()) return;
+    
     try {
+      setIsLoading(true);
       const formData = new FormData();
-      formData.append("title", currentProject.title);
-      formData.append("description", currentProject.description);
+      formData.append("title", currentProject.title.trim());
+      formData.append("description", currentProject.description.trim());
   
       if (currentProject.images) {
-        // Fix: Ensure correct filtering of existing images
+        // Handle existing images
         const existingImages = currentProject.images.filter(img => !(img instanceof File));
         const newImages = currentProject.images.filter(img => img instanceof File);
   
-        // Fix: Send existing images as a JSON string
+        // Send existing images as a JSON string
         formData.append("existing_images", JSON.stringify(existingImages.map(img => img.image || img)));
   
         // Append new images
@@ -139,13 +193,21 @@ const ClubProjects = ({ clubId,darkMode }) => {
       });
   
       setDialogOpen(false);
+      showSnackbar(
+        dialogMode === "add" ? "Project created successfully!" : "Project updated successfully!",
+        "success"
+      );
       fetchProjects();
     } catch (error) {
       console.error("Error submitting project:", error);
-      setError("Failed to save project");
+      showSnackbar(
+        `Failed to ${dialogMode === "add" ? "create" : "update"} project. Please try again.`,
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   const handleDelete = async (projectId, e) => {
     e.stopPropagation();
@@ -154,22 +216,21 @@ const ClubProjects = ({ clubId,darkMode }) => {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/clubs/${clubId}/projects/${projectId}/`,
-        {
-          method: "DELETE",
-        },
+      setIsLoading(true);
+      await axios.delete(
+        `${API_BASE_URL}/api/clubs/${clubId}/projects/${projectId}/`
       );
 
-      if (!response.ok) throw new Error("Failed to delete project");
-
+      showSnackbar("Project deleted successfully", "success");
       fetchProjects();
       if (selectedProject && selectedProject.id === projectId) {
         setSelectedProject(null);
       }
     } catch (error) {
       console.error("Error deleting project:", error);
-      setError("Failed to delete project. Please try again.");
+      showSnackbar("Failed to delete project. Please try again.", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -183,6 +244,17 @@ const ClubProjects = ({ clubId,darkMode }) => {
 
   const closeProjectDetails = () => {
     setSelectedProject(null);
+  };
+
+  const openFullScreenCarousel = (e) => {
+    e.stopPropagation();
+    if (selectedProject?.images?.length > 0) {
+      setFullScreenCarouselOpen(true);
+    }
+  };
+
+  const closeFullScreenCarousel = () => {
+    setFullScreenCarouselOpen(false);
   };
 
   const nextImage = (e) => {
@@ -203,41 +275,40 @@ const ClubProjects = ({ clubId,darkMode }) => {
     );
   };
 
-  const navigate = useNavigate();
-
   // Handle navigation to the project's inventory page
-  const handleViewInventory = (id) => {
-    navigate(`/inventory/${id}`);
+  const handleViewInventory = (projectId, e) => {
+    e?.stopPropagation();
+    navigate(`/inventory/${projectId}`);
+  };
+
+  // Get image placeholder with project title
+  const getImagePlaceholder = (title) => {
+    return `https://via.placeholder.com/600x400?text=${encodeURIComponent(title || 'No Image')}`;
   };
 
   return (
     <div className={`p-6 ${darkMode ? "bg-gray-800" : "bg-white"} ${darkMode ? "text-white" : "text-gray-900"} rounded-lg shadow-xl transition-colors duration-300`}>
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Club Projects</h2>
         <div className="flex items-center gap-3">
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-lg transition-colors duration-200 ${
-              darkMode 
-                ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
-                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-            }`}
-            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {darkMode ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-              </svg>
-            )}
-          </button>
+          <Tooltip title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-colors duration-200 ${
+                darkMode 
+                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+              }`}
+            >
+              {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            </button>
+          </Tooltip>
           <Button
             variant="contained"
             color="primary"
             onClick={openAddDialog}
+            startIcon={<AddAPhotoIcon />}
             className={`${darkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"}`}
           >
             Add Project
@@ -245,17 +316,27 @@ const ClubProjects = ({ clubId,darkMode }) => {
         </div>
       </div>
 
+      {/* Error Banner (if any) */}
       {error && (
-        <div className="bg-red-600 text-white p-3 rounded-md mb-4">{error}</div>
+        <div className="bg-red-600 text-white p-3 rounded-md mb-4 flex justify-between items-center">
+          <span>{error}</span>
+          <button 
+            onClick={() => setError(null)}
+            className="text-white hover:text-gray-200"
+          >
+            <CloseIcon fontSize="small" />
+          </button>
+        </div>
       )}
 
+      {/* Content */}
       {isLoading ? (
-        <div className="text-center py-8">
+        <div className="text-center py-12">
           <div className="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-blue-400">Loading projects...</p>
+          <p className={`${darkMode ? "text-blue-400" : "text-blue-600"}`}>Loading projects...</p>
         </div>
       ) : projects.length === 0 ? (
-        <div className="text-center py-12 bg-gray-700/50 rounded-xl border border-gray-600/50">
+        <div className={`text-center py-12 ${darkMode ? "bg-gray-700/50 border-gray-600/50" : "bg-gray-100 border-gray-200/50"} rounded-xl border`}>
           <div className="mb-4 text-gray-400">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -272,16 +353,17 @@ const ClubProjects = ({ clubId,darkMode }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-300 text-lg font-semibold mb-2">
+          <p className={`${darkMode ? "text-gray-300" : "text-gray-700"} text-lg font-semibold mb-2`}>
             No projects yet
           </p>
-          <p className="text-gray-400 mb-6">
+          <p className={`${darkMode ? "text-gray-400" : "text-gray-500"} mb-6`}>
             Showcase your club's achievements by adding your first project!
           </p>
           <Button
             variant="contained"
             color="primary"
             onClick={openAddDialog}
+            startIcon={<AddAPhotoIcon />}
             className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 px-6 py-2 rounded-full shadow-lg"
           >
             Create First Project
@@ -304,35 +386,63 @@ const ClubProjects = ({ clubId,darkMode }) => {
                   src={
                     project.images && project.images.length > 0
                       ? project.images[0].image
-                      : "https://via.placeholder.com/600x400?text=No+Image"
+                      : getImagePlaceholder(project.title)
                   }
                   alt={project.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = getImagePlaceholder(project.title);
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                  <Button 
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    onClick={(e) => { e.stopPropagation(); openProjectDetails(project); }}
+                  >
+                    View Details
+                  </Button>
+                </div>
               </div>
               <div className={`p-5 ${darkMode ? "bg-gray-800" : "bg-gray-50"} flex-grow flex flex-col`}>
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-gray-900"} group-hover:text-blue-400 transition-colors duration-300 flex-grow`}>
+                  <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-gray-900"} group-hover:text-blue-400 transition-colors duration-300 flex-grow line-clamp-1`}>
                     {project.title}
                   </h3>
                   <div className="flex space-x-1 ml-2">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => openEditDialog(project, e)}
-                      className="text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20"
-                      aria-label="Edit project"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleDelete(project.id, e)}
-                      className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20"
-                      aria-label="Delete project"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Edit Project">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => openEditDialog(project, e)}
+                        className="text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20"
+                        aria-label="Edit project"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Project">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleDelete(project.id, e)}
+                        className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20"
+                        aria-label="Delete project"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="View Inventory">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleViewInventory(project.id, e)}
+                        className="text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20"
+                        aria-label="View inventory"
+                      >
+                        <InventoryIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </div>
                 </div>
                 <p className={`${darkMode ? "text-gray-300" : "text-gray-600"} line-clamp-3 mb-4 text-sm flex-grow`}>
@@ -366,85 +476,107 @@ const ClubProjects = ({ clubId,darkMode }) => {
             } rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modern Header */}
-            <div className="relative h-64 md:h-[5rem]">
-              <div className="absolute inset-0">
-                <img
-                  src={selectedProject.images?.[0]?.image || "https://via.placeholder.com/1200x400"}
-                  alt=""
-                  className="w-full h-full object-cover filter blur-sm opacity-30"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/70 to-gray-900"></div>
-              </div>
-              
-              <div className="relative h-full flex flex-col justify-between p-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                      {selectedProject.title}
-                    </h2>
-                  </div>
-                  <div className="flex gap-2">
-        <IconButton
-          onClick={(e) => openEditDialog(selectedProject, e)}
-          className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
-        >
-          <EditIcon />
-        </IconButton>
-        <IconButton
-          onClick={(e) => handleDelete(selectedProject.id, e)}
-          className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
-        >
-          <DeleteIcon />
-        </IconButton>
-
-         {/* Inventory Button */}
-         <IconButton
-            onClick={() => navigate(`/inventory/${selectedProject.id}`)}   // Navigate to inventory page
-            className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
-          >
-          <InventoryIcon sx={{ fontSize: 20 }} />            
-          </IconButton>
-
-        <IconButton
-          onClick={closeProjectDetails}
-          className="bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 hover:text-white transition-colors"
-  >
-    <CloseIcon sx={{ fontSize: 28 }} /> {/* Increased icon size */}
-        </IconButton>
-      </div>
+            {/* Header with compact design */}
+            <div className={`p-6 ${darkMode ? "bg-gray-900" : "bg-gray-100"} border-b ${darkMode ? "border-gray-700" : "border-gray-200"}`}>
+              <div className="flex justify-between items-center">
+                <h2 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
+                  {selectedProject.title}
+                </h2>
+                <div className="flex gap-2">
+                  <Tooltip title="Edit Project">
+                    <IconButton
+                      onClick={(e) => openEditDialog(selectedProject, e)}
+                      className={`${darkMode ? "bg-blue-500/10 text-blue-400" : "bg-blue-100 text-blue-600"} hover:bg-blue-500/20`}
+                      size="small"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Project">
+                    <IconButton
+                      onClick={(e) => handleDelete(selectedProject.id, e)}
+                      className={`${darkMode ? "bg-red-500/10 text-red-400" : "bg-red-100 text-red-600"} hover:bg-red-500/20`}
+                      size="small"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="View Inventory">
+                    <IconButton
+                      onClick={(e) => handleViewInventory(selectedProject.id, e)}
+                      className={`${darkMode ? "bg-green-500/10 text-green-400" : "bg-green-100 text-green-600"} hover:bg-green-500/20`}
+                      size="small"
+                    >
+                      <InventoryIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Close">
+                    <IconButton
+                      onClick={closeProjectDetails}
+                      className={`${darkMode ? "bg-gray-500/10 text-gray-400" : "bg-gray-100 text-gray-600"} hover:bg-gray-500/20`}
+                      size="small"
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </div>
               </div>
             </div>
 
             {/* Content Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 overflow-y-auto">
               {/* Image Gallery */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-300 flex items-center gap-2">
-                  <span>Project Gallery</span>
-                  <span className="text-sm text-gray-500">
-                    ({currentImageIndex + 1} of {selectedProject.images?.length || 0})
-                  </span>
-                </h3>
+                <div className="flex justify-between items-center">
+                  <h3 className={`text-lg font-semibold ${darkMode ? "text-gray-300" : "text-gray-700"} flex items-center gap-2`}>
+                    Project Gallery
+                    {selectedProject.images?.length > 0 && (
+                      <span className={`text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+                        ({currentImageIndex + 1} of {selectedProject.images?.length})
+                      </span>
+                    )}
+                  </h3>
+                  {selectedProject.images?.length > 0 && (
+                    <Tooltip title="View Fullscreen">
+                      <IconButton 
+                        size="small" 
+                        onClick={openFullScreenCarousel}
+                        className={`${darkMode ? "text-blue-400" : "text-blue-600"}`}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </div>
                 
                 <div className="relative group">
-                  <img
-                    src={selectedProject.images?.[currentImageIndex]?.image}
-                    alt={selectedProject.title}
-                    className="w-full h-72 object-contain rounded-lg bg-gray-800/50"
-                  />
+                  {selectedProject.images?.length > 0 ? (
+                    <img
+                      src={selectedProject.images?.[currentImageIndex]?.image}
+                      alt={selectedProject.title}
+                      className="w-full h-72 object-contain rounded-lg bg-gray-800/50"
+                      onClick={openFullScreenCarousel}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = getImagePlaceholder(selectedProject.title);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-72 bg-gray-800/50 rounded-lg flex items-center justify-center">
+                      <p className="text-gray-400">No images available</p>
+                    </div>
+                  )}
                   
                   {selectedProject.images?.length > 1 && (
                     <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={(e) => { e.stopPropagation(); prevImage(e); }}
+                        onClick={(e) => prevImage(e)}
                         className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transform -translate-x-2 transition"
                       >
                         <ArrowBackIosIcon />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); nextImage(e); }}
+                        onClick={(e) => nextImage(e)}
                         className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transform translate-x-2 transition"
                       >
                         <ArrowForwardIosIcon />
@@ -459,17 +591,24 @@ const ClubProjects = ({ clubId,darkMode }) => {
                     {selectedProject.images.map((img, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImageIndex(idx);
+                        }}
                         className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                           currentImageIndex === idx 
                             ? 'border-blue-500 opacity-100' 
-                            : 'border-gray-700 opacity-50 hover:opacity-100'
+                            : `${darkMode ? 'border-gray-700' : 'border-gray-300'} opacity-50 hover:opacity-100`
                         }`}
                       >
                         <img
                           src={img.image}
                           alt={`Thumbnail ${idx + 1}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getImagePlaceholder(selectedProject.title);
+                          }}
                         />
                       </button>
                     ))}
@@ -478,52 +617,46 @@ const ClubProjects = ({ clubId,darkMode }) => {
               </div>
 
               {/* Project Details */}
-     <div className="space-y-4 h-full flex flex-col">
-  <div className="flex-grow flex flex-col">
-    <h3 className="text-lg font-semibold text-gray-300 mb-2">
-      Project Description
-    </h3>
-    <div className="bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700/50 flex-grow">
-      <div className="p-4 overflow-y-auto custom-scrollbar max-h-[400px] pb-4">
-        <p className="text-gray-300 leading-relaxed whitespace-pre-line">
-          {selectedProject.description}
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
+              <div className="space-y-4 h-full flex flex-col">
+                <h3 className={`text-lg font-semibold ${darkMode ? "text-gray-300" : "text-gray-700"} mb-2`}>
+                  Project Description
+                </h3>
+                <div className={`${darkMode ? "bg-gray-800/50 border-gray-700/50" : "bg-gray-100/50 border-gray-200/50"} rounded-lg backdrop-blur-sm border flex-grow overflow-hidden`}>
+                  <div className="p-4 overflow-y-auto custom-scrollbar max-h-[400px]">
+                    <p className={`${darkMode ? "text-gray-300" : "text-gray-700"} leading-relaxed whitespace-pre-line`}>
+                      {selectedProject.description || "No description available."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Full screen image carousel */}
-      {selectedProject && (
+      {/* Full screen carousel */}
+      {selectedProject && fullScreenCarouselOpen && (
         <div
-          id="fullScreenCarousel"
-          className={`fixed inset-0 ${darkMode ? "bg-black/95" : "bg-white/95"} flex items-center justify-center z-[60] hidden`}
-          onClick={() =>
-            document
-              .getElementById("fullScreenCarousel")
-              .classList.add("hidden")
-          }
+          className={`fixed inset-0 ${darkMode ? "bg-black/95" : "bg-black/90"} flex items-center justify-center z-[70]`}
+          onClick={closeFullScreenCarousel}
         >
           <div
             className="relative w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={
-                selectedProject.images && selectedProject.images.length > 0
-                  ? selectedProject.images[currentImageIndex].image
-                  : "https://via.placeholder.com/600x400?text=No+Image"
-              }
-              alt={selectedProject.title}
-              className="max-w-[90%] max-h-[90%] object-contain"
-            />
+            {selectedProject.images?.length > 0 ? (
+              <img
+                src={selectedProject.images?.[currentImageIndex]?.image}
+                alt={selectedProject.title}
+                className="max-w-[90%] max-h-[90%] object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = getImagePlaceholder(selectedProject.title);
+                }}
+              />
+            ) : (
+              <div className="text-white text-xl">No images available</div>
+            )}
 
             {selectedProject?.images?.length > 1 && (
               <>
@@ -532,11 +665,7 @@ const ClubProjects = ({ clubId,darkMode }) => {
                     e.stopPropagation();
                     prevImage(e);
                   }}
-                  className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${
-                    darkMode 
-                      ? "bg-black/50 hover:bg-black/70" 
-                      : "bg-gray-800/50 hover:bg-gray-800/70"
-                  } text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center`}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center"
                   aria-label="Previous image"
                 >
                   <ArrowBackIosIcon />
@@ -546,11 +675,7 @@ const ClubProjects = ({ clubId,darkMode }) => {
                     e.stopPropagation();
                     nextImage(e);
                   }}
-                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${
-                    darkMode 
-                      ? "bg-black/50 hover:bg-black/70" 
-                      : "bg-gray-800/50 hover:bg-gray-800/70"
-                  } text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center`}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full z-10 w-12 h-12 flex items-center justify-center"
                   aria-label="Next image"
                 >
                   <ArrowForwardIosIcon />
@@ -559,27 +684,15 @@ const ClubProjects = ({ clubId,darkMode }) => {
             )}
 
             <button
-              className={`absolute top-4 right-4 ${
-                darkMode 
-                  ? "bg-black/50 hover:bg-black/70" 
-                  : "bg-gray-800/50 hover:bg-gray-800/70"
-              } text-white p-3 rounded-full`}
-              onClick={() =>
-                document
-                  .getElementById("fullScreenCarousel")
-                  .classList.add("hidden")
-              }
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+              onClick={closeFullScreenCarousel}
             >
-              <span className="text-xl">×</span>
+              <CloseIcon />
             </button>
 
             {selectedProject?.images?.length > 1 && (
               <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-                <div className={`${
-                  darkMode 
-                    ? "bg-black/70" 
-                    : "bg-gray-800/70"
-                } rounded-full px-4 py-2 text-sm text-white`}>
+                <div className="bg-black/70 rounded-full px-4 py-2 text-sm text-white">
                   {currentImageIndex + 1} / {selectedProject?.images?.length}
                 </div>
               </div>
@@ -588,6 +701,7 @@ const ClubProjects = ({ clubId,darkMode }) => {
         </div>
       )}
 
+      {/* Add/Edit Project Dialog */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

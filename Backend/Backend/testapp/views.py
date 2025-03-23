@@ -62,12 +62,12 @@ class PositionViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
 
-        # ✅ Ensure lists are received correctly for batch and branch restrictions
+        # ✅ Ensure lists are received correctly for batch and Department restrictions
         batch_restriction = request.data.get('batch_restriction', [])
         branch_restriction = request.data.get('branch_restriction', [])
 
         if not isinstance(batch_restriction, list) or not isinstance(branch_restriction, list):
-            return Response({"error": "Batch and Branch restrictions must be lists."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Batch and Department restrictions must be lists."}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Serialize and update
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -206,7 +206,7 @@ class VoteViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Custom vote submission logic with batch & branch restrictions.
+        Custom vote submission logic with batch & Department restrictions.
         """
         votes_data = request.data
         if not isinstance(votes_data, list):
@@ -226,7 +226,7 @@ class VoteViewSet(viewsets.ModelViewSet):
             return Response({"error": "Voter information not found"}, status=status.HTTP_400_BAD_REQUEST)
 
         created_votes = []
-        print(voter_info)
+        print("voter_info",voter_info)
 
         for vote_data in votes_data:
             candidate_id = vote_data.get("candidate")
@@ -242,17 +242,17 @@ class VoteViewSet(viewsets.ModelViewSet):
                 return Response({"error": f"Election '{election.title}' is not active."}, 
                                 status=status.HTTP_400_BAD_REQUEST)
             
-            #  # ✅ Check branch restriction
-            # if position.branch_restriction and "All Branches" not in position.branch_restriction:
-            #     if voter_info["branch"] not in position.branch_restriction:
-            #         return Response({"error": f"Only {', '.join(position.branch_restriction)} branches can vote for {position.title}."}, 
-            #                         status=status.HTTP_400_BAD_REQUEST)
+             # ✅ Check Department restriction
+            if position.branch_restriction and "All Branches" not in position.branch_restriction:
+                if voter_info["Department"] not in position.branch_restriction:
+                    return Response({"error": f"Only {', '.join(position.branch_restriction)} departments can vote for {position.title}."}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
 
-            # # ✅ Check batch restriction
-            # if position.batch_restriction and "All Batches" not in position.batch_restriction:
-            #     if voter_info["status"] not in position.batch_restriction:
-            #         return Response({"error": f"Only {', '.join(position.batch_restriction)} batches can vote for {position.title}."}, 
-            #                         status=status.HTTP_400_BAD_REQUEST)
+             # ✅ Check batch restriction
+            if position.batch_restriction and "All Batches" not in position.batch_restriction:
+                if voter_info["status"] not in position.batch_restriction:
+                    return Response({"error": f"Only {', '.join(position.batch_restriction)} batches can vote for {position.title}."}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Prevent duplicate votes for the same position
             if Vote.objects.filter(voter=voter, candidate__position=position).exists():
@@ -440,7 +440,7 @@ def load_voter_data():
                     "roll_no": row["Roll Number"].strip(),
                     "name": row["Name"].strip(),
                     "degree": mapped_degree,
-                    "branch": mapped_branch,
+                    "Department": mapped_branch,
                     "status": yearSuffix(academic_year),
                 }
 

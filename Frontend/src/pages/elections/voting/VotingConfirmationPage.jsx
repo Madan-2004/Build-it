@@ -37,7 +37,7 @@ const VotingConfirmationPage = () => {
   
           console.log("✅ Vote Submission Response:", response.data);
   
-          toast.success("✅ Your vote has been successfully submitted!", { autoClose: 5000 });
+          toast.success(" Your vote has been successfully submitted!", { autoClose: 5000 });
 
           navigate("/elections"); // Redirect to elections page
       } catch (error) {

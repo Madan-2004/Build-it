@@ -541,22 +541,27 @@ const ClubProfile = () => {
                     className={`block p-3 rounded-lg ${darkMode ? "bg-gray-750 text-blue-400 hover:bg-gray-700" : "bg-gray-50 text-blue-600 hover:bg-gray-100"} transition duration-150`}
                   >
                     <div className="flex items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Upcoming Events
-                    </div>
+  <button
+    onClick={() => setActiveTab("events")}
+    className={`block  rounded-lg ${darkMode ? "bg-gray-750 text-blue-400 hover:bg-gray-700" : "bg-gray-50 text-blue-600 hover:bg-gray-100"} transition duration-150 flex items-center`}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5 mr-3"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+    Upcoming Events
+  </button>
+</div>
                   </a>
                   <a
                     href="#"

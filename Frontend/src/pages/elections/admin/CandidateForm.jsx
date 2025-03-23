@@ -38,7 +38,7 @@ const CandidateForm = () => {
     candidateData.append("name", formData.name);
     candidateData.append("degree", formData.degree);
     candidateData.append("roll_no", formData.roll_number);
-    candidateData.append("branch", formData.department);
+    candidateData.append("Department", formData.department);
     if (formData.photo) {
       candidateData.append("photo", formData.photo);
   }

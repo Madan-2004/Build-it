@@ -12,12 +12,7 @@ export default function Footer() {
   return (
     <FooterContainer>
       <FooterContent>
-        <FooterSection>
-          <h3>About Us</h3>
-          <p>Building innovative solutions for tomorrow's challenges.</p>
-          <FooterLink href="/about">Our Story</FooterLink>
-          <FooterLink href="/careers">Careers</FooterLink>
-        </FooterSection>
+       
 
         <FooterSection>
           <h3>Quick Links</h3>
@@ -29,38 +24,52 @@ export default function Footer() {
 
         <FooterSection>
           <h3>Contact</h3>
-          <FooterLink href="mailto:info@example.com">
-            info@example.com
+          <FooterLink href="mailto:info@build-it.com">
+            info@build-it.com
           </FooterLink>
           <FooterLink href="tel:+1234567890">+1 (234) 567-890</FooterLink>
           <p>
-            123 Business Street
+            Indian Institute of Technology Indore
             <br />
-            New York, NY 10001
+            Khandwa Road, Simrol
+            <br />
+            Indore, Madhya Pradesh 453552
           </p>
         </FooterSection>
 
         <FooterSection>
           <h3>Connect With Us</h3>
           <SocialContainer>
-            <FooterLink href="#">
+            <FooterLink href="https://www.facebook.com/yourpage" target="_blank" rel="noopener noreferrer">
               <FaFacebook size={24} />
             </FooterLink>
-            <FooterLink href="#">
+            <FooterLink href="https://www.twitter.com/yourpage" target="_blank" rel="noopener noreferrer">
               <FaTwitter size={24} />
             </FooterLink>
-            <FooterLink href="#">
+            <FooterLink href="https://www.instagram.com/yourpage" target="_blank" rel="noopener noreferrer">
               <FaInstagram size={24} />
             </FooterLink>
-            <FooterLink href="#">
+            <FooterLink href="https://www.linkedin.com/yourpage" target="_blank" rel="noopener noreferrer">
               <FaLinkedin size={24} />
             </FooterLink>
           </SocialContainer>
         </FooterSection>
+
+        {/* <FooterSection>
+          <h3>Our Location</h3>
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3683.488726663184!2d75.9199963149575!3d22.5207449852038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3962e31c5e7b7b6d%3A0x5d5e5e5e5e5e5e5e!2sIndian%20Institute%20of%20Technology%20Indore!5e0!3m2!1sen!2sin!4v1616581234567!5m2!1sen!2sin"
+            width="100%"
+            height="200"
+            style={{ border: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+          ></iframe>
+        </FooterSection> */}
       </FooterContent>
 
       <Copyright>
-        © {new Date().getFullYear()} Your Company Name. All rights reserved.
+        © {new Date().getFullYear()} Build-It. All rights reserved.
       </Copyright>
     </FooterContainer>
   );

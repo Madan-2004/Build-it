@@ -4,6 +4,19 @@ import axios from "axios";
 const ClubEvents = ({ clubId, darkMode }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    date: "",
+    poster: "",
+    description: "",
+    venue: "",
+    category: "",
+    register_link: "",
+    fees: "",
+    schedule: "",
+    contact: "",
+    club: clubId,
+  });
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -19,6 +32,46 @@ const ClubEvents = ({ clubId, darkMode }) => {
 
     fetchEvents();
   }, [clubId]);
+
+  const handleCreateEvent = async () => {
+    try {
+      const response = await axios.post(`http://localhost:8000/api/events/`, newEvent);
+      setEvents([...events, response.data]);
+      setNewEvent({
+        title: "",
+        date: "",
+        poster: "",
+        description: "",
+        venue: "",
+        category: "",
+        register_link: "",
+        fees: "",
+        schedule: "",
+        contact: "",
+        club: clubId,
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+    }
+  };
+
+  const handleUpdateEvent = async (id, updatedEvent) => {
+    try {
+      const response = await axios.put(`http://localhost:8000/api/events/${id}/`, updatedEvent);
+      setEvents(events.map(event => (event.id === id ? response.data : event)));
+    } catch (error) {
+      console.error("Error updating event:", error);
+    }
+  };
+
+  const handleDeleteEvent = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8000/api/events/${id}/`);
+      setEvents(events.filter(event => event.id !== id));
+    } catch (error) {
+      console.error("Error deleting event:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -46,9 +99,24 @@ const ClubEvents = ({ clubId, darkMode }) => {
                 <a href={event.register_link} className={`block mt-4 text-center py-2 rounded-lg ${darkMode ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-blue-500 text-white hover:bg-blue-600"} transition duration-150`}>
                   View Details
                 </a>
+                <button onClick={() => handleUpdateEvent(event.id, { ...event, title: "Updated Title" })} className="mt-2 bg-yellow-500 text-white py-1 px-2 rounded">Update</button>
+                <button onClick={() => handleDeleteEvent(event.id)} className="mt-2 bg-red-500 text-white py-1 px-2 rounded">Delete</button>
               </div>
             </div>
           ))}
+        </div>
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Create New Event</h2>
+          <input type="text" placeholder="Title" value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <input type="date" placeholder="Date" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <input type="text" placeholder="Venue" value={newEvent.venue} onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <input type="text" placeholder="Category" value={newEvent.category} onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <textarea placeholder="Description" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} className="block w-full mb-2 p-2 border rounded"></textarea>
+          <input type="text" placeholder="Register Link" value={newEvent.register_link} onChange={(e) => setNewEvent({ ...newEvent, register_link: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <input type="text" placeholder="Fees" value={newEvent.fees} onChange={(e) => setNewEvent({ ...newEvent, fees: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <input type="text" placeholder="Schedule" value={newEvent.schedule} onChange={(e) => setNewEvent({ ...newEvent, schedule: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <input type="email" placeholder="Contact" value={newEvent.contact} onChange={(e) => setNewEvent({ ...newEvent, contact: e.target.value })} className="block w-full mb-2 p-2 border rounded" />
+          <button onClick={handleCreateEvent} className="mt-2 bg-green-500 text-white py-2 px-4 rounded">Create Event</button>
         </div>
       </div>
     </div>

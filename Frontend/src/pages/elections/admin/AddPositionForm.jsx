@@ -124,19 +124,19 @@ const AddPositionForm = () => {
           </div>
         </div>
 
-        {/* Branch Restriction (Multi-select Checkboxes) */}
+        {/* Department Restriction (Multi-select Checkboxes) */}
         <div>
-          <label className="block font-medium mb-1">Branch Restriction</label>
+          <label className="block font-medium mb-1">Department Restriction</label>
           <div className="flex flex-wrap gap-2">
-            {branchOptions.map((branch) => (
-              <label key={branch} className="inline-flex items-center space-x-2">
+            {branchOptions.map((Department) => (
+              <label key={Department} className="inline-flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={branchRestriction.includes(branch)}
-                  onChange={() => handleCheckboxChange(branch, setBranchRestriction, branchRestriction)}
+                  checked={branchRestriction.includes(Department)}
+                  onChange={() => handleCheckboxChange(Department, setBranchRestriction, branchRestriction)}
                   className="form-checkbox"
                 />
-                <span>{branch}</span>
+                <span>{Department}</span>
               </label>
             ))}
           </div>

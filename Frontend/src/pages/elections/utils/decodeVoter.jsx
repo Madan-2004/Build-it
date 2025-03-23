@@ -22,14 +22,14 @@ export const decodeVoterEmail = (email) => {
         'che': 'CHE', 'ep': 'EP', 'sse': 'SSE', 'mc': 'MC'
     };
 
-    let degree, branch;
+    let degree, Department;
 
     if (['phd', 'mt', 'msc'].includes(prefix)) {
         degree = degreeMap[prefix];
-        branch = null; // No specific branch for PhD, MTech, MSc
+        Department = null; // No specific Department for PhD, MTech, MSc
     } else {
         degree = 'BTech';
-        branch = branchMap[branchOrBatch] || 'Unknown Branch';
+        Department = branchMap[branchOrBatch] || 'Unknown Department';
     }
 
     // Determine academic status
@@ -52,7 +52,7 @@ export const decodeVoterEmail = (email) => {
     return {
         email,
         degree,
-        branch,
+        Department,
         status,
         rollNo: `${branchOrBatch}${rollNumber}` // Ensure proper roll number format
     };
@@ -85,22 +85,22 @@ export const decodeVoterEmail = (email) => {
 //         'cse': 'CSE', 'ee': 'EE', 'me': 'ME', 'civil': 'CIVIL', 'mems': 'MEMS'
 //     };
     
-//     let degree, branch;
+//     let degree, Department;
     
-//     // Determine degree and branch based on prefix
+//     // Determine degree and Department based on prefix
 //     if (prefix === 'phd') {
 //         degree = 'PHD';
-//         branch = null; // No specific branch for PhD
+//         Department = null; // No specific Department for PhD
 //     } else if (prefix === 'mt') {
 //         degree = 'MTech';
-//         branch = null; // No specific branch for MTech
+//         Department = null; // No specific Department for MTech
 //     } else if (prefix.startsWith('b') || /^\d{2}$/.test(branchOrBatch)) {
 //         degree = 'BTech';
-//         branch = branchMap[branchOrBatch] || 'Unknown Branch';
+//         Department = branchMap[branchOrBatch] || 'Unknown Department';
 //     } else {
-//         // Default case - BTech with branch determined by first characters
+//         // Default case - BTech with Department determined by first characters
 //         degree = 'BTech';
-//         branch = branchMap[prefix] || 'Unknown Branch';
+//         Department = branchMap[prefix] || 'Unknown Department';
 //     }
     
 //     // Calculate academic year status
@@ -122,7 +122,7 @@ export const decodeVoterEmail = (email) => {
 //     return {
 //         email,
 //         degree,
-//         branch,
+//         Department,
 //         status,
 //         rollNo: year + rollNo // Complete roll number including year
 //     };

@@ -63,10 +63,10 @@ class Position(models.Model):
         help_text="List of eligible batches that can vote."
     )
 
-    # ✅ Store multiple branch restrictions as JSON or ArrayField
+    # ✅ Store multiple Department restrictions as JSON or ArrayField
     branch_restriction = models.JSONField(
         default=list,  # Defaults to allowing all
-        help_text="List of eligible branches that can vote."
+        help_text="List of eligible departments that can vote."
     )
 
     class Meta:
@@ -85,7 +85,7 @@ class Candidate(models.Model):
         choices=[("BTech", "BTech"), ("MTech", "MTech"), ("PHD", "PHD"), ("MSC", "MSC")],
         default="BTech"
     )  # ✅ Added degree field with choices
-    branch = models.CharField(max_length=100, default="CSE")  # ✅ Branch-based elections
+    Department = models.CharField(max_length=100, default="CSE")  # ✅ Department-based elections
     photo = models.ImageField(upload_to='candidates/', blank=True, null=True)
     approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)

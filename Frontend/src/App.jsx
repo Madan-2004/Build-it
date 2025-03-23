@@ -111,12 +111,46 @@ function App() {
           <Route path="/auth/success" element={<AuthSuccess />} />
 
           {/* ✅ Elections - Voting */}
-          <Route path="/elections" element={<ElectionPage />} />
-          <Route path="/vote/:electionId" element={<VotePage />} />
-          <Route path="/elections/:electionId/results" element={<ElectionResultPage />} />
-          <Route path="/elections/:electionId/detailed-results" element={<DetailedResultsView />} />
-          <Route path="/vote-confirmation" element={<VotingConfirmationPage />} />
-
+          <Route 
+            path="/elections" 
+            element={
+              <ProtectedRoute>
+                <ElectionPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/vote/:electionId" 
+            element={
+              <ProtectedRoute>
+                <VotePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/elections/:electionId/results" 
+            element={
+              <ProtectedRoute>
+                <ElectionResultPage />
+              </ProtectedRoute>
+            } 
+          />
+         <Route 
+            path="/elections/:electionId/detailed-results" 
+            element={
+              <ProtectedRoute>
+                <DetailedResultsView />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/vote-confirmation" 
+            element={
+              <ProtectedRoute>
+                <VotingConfirmationPage />
+              </ProtectedRoute>
+            } 
+          />
           {/* ✅ Admin Election Management (Protected) */}
           <Route 
             path="/admin/elections" 

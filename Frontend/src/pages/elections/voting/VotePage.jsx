@@ -97,10 +97,10 @@ useEffect(() => {
         const eligible = positions.filter(position => {
             // If the position allows "All Branches", allow all users
             const branchEligible = position.branch_restriction.includes("All Branches") || 
-                position.branch_restriction.includes(voterInfo.branch);
+                position.branch_restriction.includes(voterInfo.Department);
             
             // Skip batch check for PhD, MTech, MSc; otherwise, check batch restriction
-            const batchEligible = ["PHD", "MTech", "MSC"].includes(voterInfo.branch) || 
+            const batchEligible = ["PHD", "MTech", "MSC"].includes(voterInfo.Department) || 
                 position.batch_restriction.includes("All Batches") || 
                 position.batch_restriction.includes(voterInfo.status);
 
@@ -144,7 +144,7 @@ useEffect(() => {
                 candidateName: candidate?.name || "Unnamed Candidate",
                 degree: candidate?.degree || "N/A",
                 rollNumber: candidate?.roll_no || "Unknown",
-                department: candidate?.branch || "Unknown"
+                department: candidate?.Department || "Unknown"
             };
         });
     
@@ -177,7 +177,7 @@ useEffect(() => {
                             <p>Your details:</p>
                             <ul className="list-disc list-inside mt-2">
                                 <li>Degree: {voterInfo.degree}</li>
-                                <li>Branch: {voterInfo.branch}</li>
+                                <li>Department: {voterInfo.Department}</li>
                                 <li>Year: {voterInfo.status}</li>
                             </ul>
                         </div>
@@ -231,7 +231,7 @@ useEffect(() => {
                                             <span className="mr-2">Year: {position.batch_restriction.join(', ')}</span>
                                         )}
                                         {position.branch_restriction.length > 0 && (
-                                            <span>Branch: {position.branch_restriction.join(', ')}</span>
+                                            <span>Department: {position.branch_restriction.join(', ')}</span>
                                         )}
                                     </div>
                                 )}
@@ -296,7 +296,7 @@ useEffect(() => {
                                                                             {candidate.degree}
                                                                         </span>
                                                                         <span className="inline-block bg-green-100 text-green-800 rounded px-2 py-1 text-xs">
-                                                                            {candidate.branch}
+                                                                            {candidate.Department}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -338,7 +338,7 @@ useEffect(() => {
                                 </svg>
                                 Submitting Vote...
                             </span>
-                        ) : 'Submit Vote'}
+                        ) : 'Next'}
                     </button>
                 </div>
             </div>

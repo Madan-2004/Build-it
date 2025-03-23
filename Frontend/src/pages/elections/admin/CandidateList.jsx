@@ -21,7 +21,7 @@ const CandidateList = () => {
     name: "",
     roll_no: "",
     degree: "BTech",
-    branch: "CSE",
+    Department: "CSE",
     photo: null,
   });
 
@@ -120,7 +120,7 @@ const CandidateList = () => {
       name: candidate.name || "",
       roll_no: candidate.roll_no || "",
       degree: candidate.degree || "BTech",
-      branch: candidate.branch || "CSE",
+      Department: candidate.Department || "CSE",
       // We don't set the photo as it can't be pre-filled in the file input
     });
   };
@@ -151,7 +151,7 @@ const CandidateList = () => {
       submitData.append("name", formData.name);
       submitData.append("roll_no", formData.roll_no);
       submitData.append("degree", formData.degree);
-      submitData.append("branch", formData.branch);
+      submitData.append("Department", formData.Department);
       if (formData.photo) {
         submitData.append("photo", formData.photo);
       }
@@ -180,7 +180,7 @@ const CandidateList = () => {
         name: "",
         roll_no: "",
         degree: "BTech",
-        branch: "CSE",
+        Department: "CSE",
         photo: null,
       });
       
@@ -199,7 +199,7 @@ const CandidateList = () => {
       name: "",
       roll_no: "",
       degree: "BTech",
-      branch: "CSE",
+      Department: "CSE",
       photo: null,
     });
   };
@@ -293,11 +293,11 @@ const CandidateList = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-gray-700 mb-2">branch</label>
+                  <label className="block text-gray-700 mb-2">Department</label>
                   <input
                     type="text"
-                    name="branch"
-                    value={formData.branch}
+                    name="Department"
+                    value={formData.Department}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -377,7 +377,7 @@ const CandidateList = () => {
                     <th className="p-3 text-left">Name</th>
                     <th className="p-3 text-left">Roll No</th>
                     <th className="p-3 text-left">Degree</th>
-                    <th className="p-3 text-left">branch</th>
+                    <th className="p-3 text-left">Department</th>
                     <th className="p-3 text-center">Status</th>
                     <th className="p-3 text-center">Actions</th>
                   </tr>
@@ -401,7 +401,7 @@ const CandidateList = () => {
                       <td className="p-3 font-medium">{candidate.name || "N/A"}</td>
                       <td className="p-3">{candidate.roll_no || "N/A"}</td>
                       <td className="p-3">{candidate.degree || "N/A"}</td>
-                      <td className="p-3">{candidate.branch || "N/A"}</td>
+                      <td className="p-3">{candidate.Department || "N/A"}</td>
                       <td className="p-3 text-center">
                         {candidate.approved ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

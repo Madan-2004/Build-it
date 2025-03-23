@@ -36,7 +36,7 @@ for i, club in enumerate(club_data, start=1):  # Start from 1 for roll numbers
 
     user, created = User.objects.update_or_create(
         email=email.lower(),  # Ensure lowercase email
-        defaults={"name": name, "roll_no": roll_no, "branch": default_branch, "degree": default_degree}
+        defaults={"name": name, "roll_no": roll_no, "Department": default_branch, "degree": default_degree}
     )
 
     if created:
