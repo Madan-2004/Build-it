@@ -40,7 +40,7 @@ export default function EventsPage() {
 
   const createEvent = async (newEvent) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/events`, newEvent);
+      const response = await axios.post(`${API_BASE_URL}/events/create/`, newEvent);
       setEvents([...events, response.data]);
       setShowForm(false);
     } catch (err) {

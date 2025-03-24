@@ -1,7 +1,8 @@
+import { formatDate } from 'date-fns';
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'react-feather';
 
-export default function EventForm({ onSubmit, onClose, initialData = null }) {
+export default function EventForm({ onSubmit, onClose, initialData = null, isClubLocked = false}) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -98,7 +99,30 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
               { label: 'Location', name: 'location', type: 'text' },
               { label: 'Start Date', name: 'start_date', type: 'datetime-local' },
               { label: 'End Date', name: 'end_date', type: 'datetime-local' },
-              { label: 'Club Name', name: 'club_name', type: 'text' },
+            ].map(({ label, name, type }) => (
+              <div key={name}>
+                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                <input
+                  type={type}
+                  name={name}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#002c59] focus:ring-[#002c59]"
+                />
+              </div>
+            ))}
+            {/* Club Name Field (Locked if isClubLocked is true) */}
+            {formData.club_name && <div>
+              <label className="block text-sm font-medium text-gray-700">Club Name</label>
+              <input
+                type="text"
+                name="club_name"
+                value={formData.club_name || ""} // Ensure it's never undefined
+                disabled // Ensure it's always a boolean
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100"
+              />
+            </div>}
+            {[
               { label: 'Fees', name: 'fees', type: 'text' },
               { label: 'Register Link', name: 'register_link', type: 'url' },
             ].map(({ label, name, type }) => (
@@ -113,6 +137,7 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
                 />
               </div>
             ))}
+            
 
             {/* Status Dropdown */}
             <div>

@@ -646,7 +646,7 @@ const ClubProfile = () => {
             </div>
           </div>
         ) : (
-          <ClubEvents clubId={club.id} darkMode={darkMode} />
+          <ClubEvents clubId={club.id} clubName={clubName} darkMode={darkMode} />
         )}
       </div>
 

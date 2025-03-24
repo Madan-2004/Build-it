@@ -143,14 +143,14 @@ export default function EventDetails() {
           <div className="flex items-center justify-between mb-6">
             {/* Back Button */}
             <button
-              onClick={() => navigate("/events")}
+              onClick={() => navigate(-1)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 
                  rounded-md shadow-sm text-sm font-medium text-gray-700 
                  bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 
                  focus:ring-offset-2 focus:ring-blue-500 md:px-3 md:py-2"
             >
               <ArrowLeft className="w-5 h-5 md:w-4 md:h-4" />
-              <span className="hidden md:inline ml-2">Back to Events</span>
+              <span className="hidden md:inline ml-2">Back</span>
             </button>
 
             {/* Button Group */}
@@ -229,6 +229,7 @@ export default function EventDetails() {
                 "yyyy-MM-dd'T'HH:mm"
               ),
               end_date: format(new Date(event.end_date), "yyyy-MM-dd'T'HH:mm"),
+              club_name: event.club.name || null,
             }}
           />
         )}
