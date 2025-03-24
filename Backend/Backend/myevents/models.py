@@ -54,3 +54,42 @@ class Event(models.Model):
     def is_ongoing_event(self):
         now = timezone.now()
         return self.start_date <= now <= self.end_date
+class EventInventory(models.Model):
+    """🔹 Inventory for Events"""
+    event = models.OneToOneField(
+        Event, on_delete=models.CASCADE, related_name="inventory"
+    )
+    budget_allocated = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    budget_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"Inventory for Event: {self.event.title}"
+
+    @property
+    def remaining_budget(self):
+        return self.budget_allocated - self.budget_used
+
+
+class InventoryItemEvents(models.Model):
+    """🔹 Inventory Items for Project and Event Inventories"""
+    CONSUMABLE_CHOICES = [
+        ('consumable', 'Consumable'),
+        ('non_consumable', 'Non-Consumable'),
+    ]
+
+    event_inventory = models.ForeignKey(
+        EventInventory, on_delete=models.CASCADE, related_name="items", null=True, blank=True
+    )
+
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField()
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    consumable = models.CharField(max_length=15, choices=CONSUMABLE_CHOICES)
+
+    def __str__(self):
+        return f"{self.name} ({self.consumable}) - {self.event_inventory.event.title}"
+
+    @property
+    def total_cost(self):
+        """🔹 Calculate total cost of items"""
+        return self.quantity * self.cost

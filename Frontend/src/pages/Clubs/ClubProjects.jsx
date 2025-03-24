@@ -276,14 +276,8 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
   };
 
   // Handle navigation to the project's inventory page
-  const handleViewInventory = (projectId, e) => {
-    e?.stopPropagation();
-    navigate(`/inventory/${projectId}`);
-  };
-
-  // Get image placeholder with project title
-  const getImagePlaceholder = (title) => {
-    return `https://via.placeholder.com/600x400?text=${encodeURIComponent(title || 'No Image')}`;
+  const handleViewInventory = (id) => {
+    navigate(`/inventory/projects/${id}`);
   };
 
   return (
@@ -476,49 +470,53 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
             } rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with compact design */}
-            <div className={`p-6 ${darkMode ? "bg-gray-900" : "bg-gray-100"} border-b ${darkMode ? "border-gray-700" : "border-gray-200"}`}>
-              <div className="flex justify-between items-center">
-                <h2 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
-                  {selectedProject.title}
-                </h2>
-                <div className="flex gap-2">
-                  <Tooltip title="Edit Project">
-                    <IconButton
-                      onClick={(e) => openEditDialog(selectedProject, e)}
-                      className={`${darkMode ? "bg-blue-500/10 text-blue-400" : "bg-blue-100 text-blue-600"} hover:bg-blue-500/20`}
-                      size="small"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete Project">
-                    <IconButton
-                      onClick={(e) => handleDelete(selectedProject.id, e)}
-                      className={`${darkMode ? "bg-red-500/10 text-red-400" : "bg-red-100 text-red-600"} hover:bg-red-500/20`}
-                      size="small"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="View Inventory">
-                    <IconButton
-                      onClick={(e) => handleViewInventory(selectedProject.id, e)}
-                      className={`${darkMode ? "bg-green-500/10 text-green-400" : "bg-green-100 text-green-600"} hover:bg-green-500/20`}
-                      size="small"
-                    >
-                      <InventoryIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Close">
-                    <IconButton
-                      onClick={closeProjectDetails}
-                      className={`${darkMode ? "bg-gray-500/10 text-gray-400" : "bg-gray-100 text-gray-600"} hover:bg-gray-500/20`}
-                      size="small"
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+            {/* Modern Header */}
+            <div className="relative h-64 md:h-[5rem]">
+              <div className="absolute inset-0">
+                <img
+                  src={selectedProject.images?.[0]?.image || "https://via.placeholder.com/1200x400"}
+                  alt=""
+                  className="w-full h-full object-cover filter blur-sm opacity-30"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/70 to-gray-900"></div>
+              </div>
+              
+              <div className="relative h-full flex flex-col justify-between p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                      {selectedProject.title}
+                    </h2>
+                  </div>
+                  <div className="flex gap-2">
+        <IconButton
+          onClick={(e) => openEditDialog(selectedProject, e)}
+          className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
+        >
+          <EditIcon />
+        </IconButton>
+        <IconButton
+          onClick={(e) => handleDelete(selectedProject.id, e)}
+          className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
+        >
+          <DeleteIcon />
+        </IconButton>
+
+         {/* Inventory Button */}
+         <IconButton
+            onClick={() => navigate(`/inventory/projects/${selectedProject.id}`)}   // Navigate to inventory page
+            className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
+          >
+          <InventoryIcon sx={{ fontSize: 20 }} />            
+          </IconButton>
+
+        <IconButton
+          onClick={closeProjectDetails}
+          className="bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 hover:text-white transition-colors"
+  >
+    <CloseIcon sx={{ fontSize: 28 }} /> {/* Increased icon size */}
+        </IconButton>
+      </div>
                 </div>
               </div>
             </div>

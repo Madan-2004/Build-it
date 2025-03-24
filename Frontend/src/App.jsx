@@ -59,6 +59,7 @@ import styled from 'styled-components';
 import axios from "axios";
 import FAQPage from './pages/FAQS/FAQPage';
 import ScrollToTop from './components/ScrollToTop';
+import EventInventory from './pages/Clubs/EventInventory';
 
 // Add this to your main app file (e.g., index.js or App.js)
 axios.defaults.withCredentials = true;
@@ -231,7 +232,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
 
           {/* Inventory routes */}
-          <Route path='inventory/:projectId' element={<ProjectInventory />} />
+          <Route path='inventory/projects/:projectId' element={<ProjectInventory />} />
+          <Route path='inventory/events/:eventId' element={<EventInventory />} />
         </Routes>
       </ConditionalWrapper>
       <ToastContainer position="top-right" autoClose={5000} />

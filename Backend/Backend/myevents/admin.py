@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Event, EventCategory
+from .models import Event, EventCategory, EventInventory, InventoryItemEvents
 
 
 
@@ -34,3 +34,6 @@ class EventAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         })
     )
+
+admin.site.register(EventInventory)
+admin.site.register(InventoryItemEvents)    

@@ -7,6 +7,7 @@ from .views import (
     EventDeleteView,
     ClubEventsView,
 )
+from .views import EventInventoryView, EventInventoryCreateView, EventInventoryDeleteView, InventoryItemCreateView, InventoryItemUpdateView, InventoryItemDeleteView
 
 app_name = 'myevents'
 
@@ -20,4 +21,11 @@ urlpatterns = [
     
     # Club specific routes
     path('clubs/<int:club_id>/events/', ClubEventsView.as_view(), name='club-events'),
+
+    # Event Inventory
+    path('events/<int:event_id>/inventory/', EventInventoryView.as_view(), name='event-inventory'),
+    path('events/<int:event_id>/inventory/create/', EventInventoryCreateView.as_view(), name='event-inventory-create'),
+    path('events/<int:event_id>/inventory/items/create/', InventoryItemCreateView.as_view(), name='inventory-item-create'),
+    path('events/inventory/items/update/<int:pk>/', InventoryItemUpdateView.as_view(), name='inventory-item-update'),
+    path('events/inventory/delete/<int:pk>/', EventInventoryDeleteView.as_view(), name='inventory-delete'),
 ]
