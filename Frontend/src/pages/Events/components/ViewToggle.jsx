@@ -1,25 +1,25 @@
-import React from 'react';
-import { Grid, List } from 'react-feather';
+import React from "react";
+import { Grid, List } from "react-feather";
 
 export default function ViewToggle({ viewMode, setViewMode }) {
   return (
-    <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+    <div className="flex items-center space-x-2 bg-[#ffffff] rounded-lg p-1 border border-[#ddd]">
       <button
-        onClick={() => setViewMode('grid')}
+        onClick={() => setViewMode("grid")}
         className={`p-2 rounded ${
-          viewMode === 'grid' 
-            ? 'bg-white shadow text-blue-600' 
-            : 'text-gray-600 hover:text-gray-900'
+          viewMode === "grid"
+            ? "bg-[#007BFF] text-[#ffffff]"
+            : "text-gray-600 hover:text-[#002147]"
         }`}
       >
         <Grid className="w-5 h-5" />
       </button>
       <button
-        onClick={() => setViewMode('list')}
+        onClick={() => setViewMode("list")}
         className={`p-2 rounded ${
-          viewMode === 'list' 
-            ? 'bg-white shadow text-blue-600' 
-            : 'text-gray-600 hover:text-gray-900'
+          viewMode === "list"
+            ? "bg-[#007BFF] text-[#ffffff]"
+            : "text-gray-600 hover:text-[#002147]"
         }`}
       >
         <List className="w-5 h-5" />

@@ -1,5 +1,31 @@
 /* Council.css - Enhanced styling */
 
+/* Text Shadow */
+.text-shadow-lg {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Gold Line Before Text */
+.before-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: #FFD700;
+}
+
+/* Gold Decorative Shapes */
+.clip-polygon {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.rounded-shape {
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+}
+
 .council-container {
   max-width: 1200px;
   margin: 0 auto;

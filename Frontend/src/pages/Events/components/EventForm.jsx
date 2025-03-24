@@ -9,15 +9,16 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
     start_date: '',
     end_date: '',
     image: null,
-    pdf: null,  // PDF field
+    pdf: null,
     status: 'draft',
     club_name: '',
     category: '',
     register_link: '',
     fees: 'Free Entry',
     contact: 'info@iitindore.ac.in',
-    ...initialData
+    ...initialData,
   });
+
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -31,20 +32,15 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
     e.preventDefault();
     try {
       const formDataToSend = new FormData();
-      
-      // Append all non-file fields
-      Object.keys(formData).forEach(key => {
+      Object.keys(formData).forEach((key) => {
         if (key !== 'image' && key !== 'pdf') {
           formDataToSend.append(key, formData[key] || '');
         }
       });
 
-      // Append image file if exists
       if (formData.image instanceof File) {
         formDataToSend.append('image', formData.image);
       }
-
-      // Append PDF file if exists
       if (formData.pdf instanceof File) {
         formDataToSend.append('pdf', formData.pdf);
       }
@@ -58,15 +54,10 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    
+
     if (name === 'image' && files?.length > 0) {
       const file = files[0];
-      setFormData(prev => ({
-        ...prev,
-        image: file
-      }));
-      
-      // Create image preview
+      setFormData((prev) => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -74,106 +65,63 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
       reader.readAsDataURL(file);
     } else if (name === 'pdf' && files?.length > 0) {
       const file = files[0];
-      setFormData(prev => ({
-        ...prev,
-        pdf: file
-      }));
+      setFormData((prev) => ({ ...prev, pdf: file }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleClearImage = () => {
-    setFormData(prev => ({ ...prev, image: null }));
+    setFormData((prev) => ({ ...prev, image: null }));
     setImagePreview(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Clear the file input
+      fileInputRef.current.value = '';
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-lg">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold text-gray-900">
-            {initialData ? 'Edit Event' : 'Create New Event'}
-          </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-            <X className="w-6 h-6 text-gray-600" />
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200">
+        {/* Header */}
+        <div className="flex justify-between items-center p-5 bg-[#002c59] text-white rounded-t-lg">
+          <h2 className="text-xl font-bold">{initialData ? 'Edit Event' : 'Create New Event'}</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white hover:text-[#002c59] rounded">
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4" encType="multipart/form-data">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" encType="multipart/form-data">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { label: 'Title', name: 'title', type: 'text' },
+              { label: 'Location', name: 'location', type: 'text' },
+              { label: 'Start Date', name: 'start_date', type: 'datetime-local' },
+              { label: 'End Date', name: 'end_date', type: 'datetime-local' },
+              { label: 'Club Name', name: 'club_name', type: 'text' },
+              { label: 'Fees', name: 'fees', type: 'text' },
+              { label: 'Register Link', name: 'register_link', type: 'url' },
+            ].map(({ label, name, type }) => (
+              <div key={name}>
+                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                <input
+                  type={type}
+                  name={name}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#002c59] focus:ring-[#002c59]"
+                />
+              </div>
+            ))}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Date</label>
-              <input
-                type="datetime-local"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">End Date</label>
-              <input
-                type="datetime-local"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Club Name</label>
-              <input
-                type="text"
-                name="club_name"
-                value={formData.club_name}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
+            {/* Status Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Status</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#002c59] focus:ring-[#002c59]"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -181,60 +129,35 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
                 <option value="completed">Completed</option>
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Fees</label>
-              <input
-                type="text"
-                name="fees"
-                value={formData.fees}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Register Link</label>
-              <input
-                type="url"
-                name="register_link"
-                value={formData.register_link}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              required
               rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#002c59] focus:ring-[#002c59]"
             />
           </div>
 
+          {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Image</label>
-            <div className="mt-1 flex items-center space-x-4">
+            <div className="mt-2 flex items-center space-x-4">
               <input
                 type="file"
                 name="image"
                 onChange={handleChange}
                 accept="image/*"
-                className="mt-1 block w-full"
                 ref={fileInputRef}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
               />
               {imagePreview && (
                 <div className="relative w-24 h-24">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover rounded"
-                  />
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" />
                   <button
                     type="button"
                     onClick={handleClearImage}
@@ -247,6 +170,7 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
             </div>
           </div>
 
+          {/* PDF Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700">PDF</label>
             <input
@@ -254,21 +178,22 @@ export default function EventForm({ onSubmit, onClose, initialData = null }) {
               name="pdf"
               onChange={handleChange}
               accept="application/pdf"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#002c59] focus:ring-[#002c59]"
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          {/* Buttons */}
+          <div className="flex justify-end space-x-3 pt-6">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-5 py-2 bg-[#002c59] text-white rounded-lg hover:bg-[#004080]"
             >
               {initialData ? 'Update Event' : 'Create Event'}
             </button>

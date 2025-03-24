@@ -1,13 +1,13 @@
-import React from 'react';
-import { Search, Calendar } from 'react-feather';
+import React from "react";
+import { Search, Calendar } from "react-feather";
 
 export default function EventFilters({ filters, setFilters }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4 space-y-4">
-      <h2 className="text-lg font-semibold">Filters</h2>
-      
+    <div className="bg-[#ffffff] rounded-lg shadow p-4 space-y-4 border border-[#ddd]">
+      <h2 className="text-lg font-semibold text-[#002147]">Filters</h2>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-[#002147] mb-1">
           Search
         </label>
         <div className="relative">
@@ -16,7 +16,7 @@ export default function EventFilters({ filters, setFilters }) {
             type="text"
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="pl-10 w-full rounded-md bg-[#ffffff] border border-[#ddd] shadow-sm focus:border-[#007BFF] focus:ring-[#007BFF]"
             placeholder="Search events..."
           />
         </div>

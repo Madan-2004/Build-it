@@ -33,7 +33,7 @@ import UpcomingEvents from "./UpcomingEvents";
 const slides = [
   {
     img: img1,
-    title: "Students' Gymkhana, IIT Indore",
+    title: "Students' Gymkhana IIT Indore",
     subtitle: "Welcome to",
     alt: "Welcome to Students' Gymkhana IIT Indore",
   },
