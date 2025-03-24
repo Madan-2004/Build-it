@@ -29,10 +29,10 @@ def decode_voter_email(email):
 
     if prefix.lower() in ["phd", "mt", "msc"]:
         degree = degree_map[prefix.lower()]
-        branch = None  # No specific branch for PhD, MTech, MSc
+        Department = None  # No specific Department for PhD, MTech, MSc
     else:
         degree = "BTech"
-        branch = branch_map.get(branch_or_batch.lower(), "Unknown Branch")
+        Department = branch_map.get(branch_or_batch.lower(), "Unknown Department")
 
     # Determine academic status
     def year_suffix(yr):
@@ -47,7 +47,7 @@ def decode_voter_email(email):
     return {
         "email": email,
         "degree": degree,
-        "branch": branch,
+        "Department": Department,
         "status": status,
         "roll_no": f"{branch_or_batch}{roll_number}"  # Combine text + number part of roll number
     }
@@ -86,7 +86,7 @@ def decode_voter_email(email):
 #                     "roll_no": row["Roll Number"].strip(),
 #                     "name": row["Name"].strip(),
 #                     "degree": row["Program"].strip(),
-#                     "branch": row["Department"].strip(),
+#                     "Department": row["Department"].strip(),
 #                 }
 
 #         # ✅ Print the top 5 voter entries after reading the CSV file
@@ -122,7 +122,7 @@ def load_voter_data():
                     "roll_no": row["Roll Number"].strip(),
                     "name": row["Name"].strip(),
                     "degree": row["Program"].strip(),
-                    "branch": row["Department"].strip(),
+                    "Department": row["Department"].strip(),
                 }
 
         # ✅ Store data in Django's cache

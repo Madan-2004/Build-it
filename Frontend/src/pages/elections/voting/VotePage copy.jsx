@@ -142,7 +142,7 @@ const VotePage = () => {
                 candidateName: candidate?.name || "Unnamed Candidate",
                 degree: candidate?.degree || "N/A",
                 rollNumber: candidate?.roll_no || "Unknown",
-                department: candidate?.branch || "Unknown"
+                department: candidate?.Department || "Unknown"
             };
         });
     
@@ -246,7 +246,7 @@ const VotePage = () => {
                                                                             {candidate.degree}
                                                                         </span>
                                                                         <span className="inline-block bg-green-100 text-green-800 rounded px-2 py-1 text-xs">
-                                                                            {candidate.branch}
+                                                                            {candidate.Department}
                                                                         </span>
                                                                     </div>
                                                                 </div>

@@ -54,9 +54,9 @@
 
         <div id="rolePage" class="hidden">
             <label class="block text-lg font-medium">Role:</label>
-            <input type="text" id="branch" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+            <input type="text" id="Department" class="w-full p-2 border border-gray-300 rounded-md mb-4">
            
-            <label class="font-bold">Branch</label>
+            <label class="font-bold">Department</label>
             <div id="branchSelection"></div>
 
             <label class="font-bold">Batch</label>
@@ -151,7 +151,7 @@
 
         function addMoreRoles() {
             alert('Role saved! Add a new role now.');
-            document.getElementById('branch').value = '';
+            document.getElementById('Department').value = '';
             document.getElementById('batch').value = '';
             document.getElementById('candidateList').innerHTML = '';
         }

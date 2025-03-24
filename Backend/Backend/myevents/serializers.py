@@ -89,3 +89,19 @@ class EventDetailSerializer(serializers.ModelSerializer):
             instance.categories.set(categories)
             
         return instance
+
+from rest_framework import serializers
+from .models import EventInventory, InventoryItemEvents
+
+class InventoryItemEventsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InventoryItemEvents
+        fields = ["id", "name", "quantity", "cost", "consumable"]
+
+class EventInventorySerializer(serializers.ModelSerializer):
+    items = InventoryItemEventsSerializer(many=True, read_only=True)
+    event_name = serializers.CharField(source='event.title', read_only=True)  # Include event name
+
+    class Meta:
+        model = EventInventory
+        fields = ["id", "event_name", "budget_allocated", "budget_used", "items", "remaining_budget"]

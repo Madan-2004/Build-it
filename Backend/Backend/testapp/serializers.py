@@ -15,12 +15,12 @@ class CandidateSerializer(serializers.ModelSerializer):
     # name = serializers.CharField(required=False, allow_blank=True, allow_null=True)  # ✅ Fix here
     votes_count = serializers.SerializerMethodField()  # ✅ Compute votes dynamically
     roll_no = serializers.CharField(default="Unknown Roll No")  # ✅ Default roll number
-    branch = serializers.CharField(default="CSE")  # ✅ Default branch
+    Department = serializers.CharField(default="CSE")  # ✅ Default Department
     degree = serializers.ChoiceField(choices=[("BTech", "BTech"), ("MTech", "MTech"), ("PHD", "PHD"),("MSC","MSC")], default="BTech")  # ✅ Degree choices
 
     class Meta:
         model = Candidate
-        fields = ['id', 'position', 'name', 'roll_no', 'branch', 'degree', 'photo', 'approved', 'votes_count']
+        fields = ['id', 'position', 'name', 'roll_no', 'Department', 'degree', 'photo', 'approved', 'votes_count']
         read_only_fields = ['votes_count']
 
     # def get_votes_count(self, obj):
@@ -68,10 +68,10 @@ class PositionSerializer(serializers.ModelSerializer):
         return value
 
     def validate_branch_restriction(self, value):
-        """Ensure branch restriction is a list and contains valid choices"""
-        valid_choices = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MC","CHE","MTECH", "MSC", "PHD"]
-        if not all(branch in valid_choices for branch in value):
-            raise serializers.ValidationError("Invalid branch selection.")
+        """Ensure Department restriction is a list and contains valid choices"""
+        valid_choices = ["All Branches", "CSE", "MECH", "CIVIL", "EE", "EP", "SSE", "MEMS", "MC","CHE","MTech", "MSC", "PHD"]
+        if not all(Department in valid_choices for Department in value):
+            raise serializers.ValidationError("Invalid Department selection.")
         return value
 
 
@@ -174,19 +174,19 @@ class VoteSerializer(serializers.ModelSerializer):
         return obj.candidate.position.election.title  # ✅ Fetch election name
     def validate(self, data):
         """
-        Validate voter's email to ensure they meet batch & branch restrictions.
+        Validate voter's email to ensure they meet batch & Department restrictions.
         """
         voter = self.context['request'].user  # ✅ Get the voter
         voter_info = decode_voter_email(voter.email)  # ✅ Decode email
 
-        # Ensure degree and branch match the election rules
+        # Ensure degree and Department match the election rules
         candidate = data['candidate']
         position = candidate.position
 
-        # ✅ Restrict based on branch
+        # ✅ Restrict based on Department
         if position.branch_restriction and "All Branches" not in position.branch_restriction:
-            if voter_info["branch"] not in position.branch_restriction:
-                raise serializers.ValidationError(f"Only {', '.join(position.branch_restriction)} branches can vote for {position.title}.")
+            if voter_info["Department"] not in position.branch_restriction:
+                raise serializers.ValidationError(f"Only {', '.join(position.branch_restriction)} departments can vote for {position.title}.")
 
         # ✅ Restrict based on batch
         if position.batch_restriction and "All Batches" not in position.batch_restriction:
@@ -217,7 +217,7 @@ class ElectionResultSerializer(serializers.ModelSerializer):
                     'name': candidate.name,
                     'roll_no': candidate.roll_no,
                     'degree': candidate.degree,
-                    'branch': candidate.branch,
+                    'Department': candidate.Department,
                     'photo': candidate.photo.url if candidate.photo else None,
                     'votes_count': votes_count,
                     'approved': candidate.approved,

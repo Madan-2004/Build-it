@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams,useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { ArrowLeft } from "lucide-react";
 
 const API_URL = "http://localhost:8000/api/";
 
 const ElectionResultPage = () => {
   const { electionId } = useParams();
+  const navigate = useNavigate();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -75,12 +77,12 @@ const ElectionResultPage = () => {
   
       // Generate candidates table
       autoTable(doc, {
-        head: [['Candidate', 'Roll No', 'Degree', 'Branch', 'Votes', 'Status']],
+        head: [['Candidate', 'Roll No', 'Degree', 'Department', 'Votes', 'Status']],
         body: position.candidates.map((candidate, idx) => [
           candidate.name || 'N/A',
           candidate.roll_no || 'Unknown Roll No',
           candidate.degree || 'BTech',
-          candidate.branch || 'CSE',
+          candidate.Department || 'CSE',
           candidate.votes_count || 0,
           idx === 0 ? 'WINNER' : 'Runner-up'
         ]),
@@ -158,7 +160,7 @@ const ElectionResultPage = () => {
           'Candidate Name': candidate.name || 'N/A',
           'Roll Number': candidate.roll_no || 'Unknown Roll No',
           'Degree': candidate.degree || 'BTech',
-          'Branch': candidate.branch || 'CSE',
+          'Department': candidate.Department || 'CSE',
           'Votes Received': candidate.votes_count,
           'Status': index === 0 ? 'Winner' : 'Runner-up',
           'Created At': new Date(candidate.created_at).toLocaleDateString(),
@@ -172,7 +174,7 @@ const ElectionResultPage = () => {
         { wch: 30 }, // Name
         { wch: 15 }, // Roll No
         { wch: 10 }, // Degree
-        { wch: 20 }, // Branch
+        { wch: 20 }, // Department
         { wch: 15 }, // Votes
         { wch: 10 }, // Status
         { wch: 15 }, // Created At
@@ -201,6 +203,12 @@ const ElectionResultPage = () => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="max-w-4xl mx-auto bg-white p-8 shadow-lg rounded-lg">
+      <button 
+          onClick={() => navigate('/admin/elections')}
+          className="flex items-center text-blue-600 hover:text-blue-800 mb-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Elections
+        </button>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{results.title} - Results</h1>
           <div className="flex gap-4">
@@ -224,6 +232,8 @@ const ElectionResultPage = () => {
             </button>
           </div>
         </div>
+       
+
 
         {results.positions.map((position) => (
           <div key={position.id} className="mb-8">

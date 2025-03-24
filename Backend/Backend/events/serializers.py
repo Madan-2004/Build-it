@@ -103,11 +103,17 @@ class EventSerializer(serializers.ModelSerializer):
 
         return super().to_internal_value(data)
 
-    def to_representation(self, instance):
-        """
-        Customize the output representation of the event
-        """
-        representation = super().to_representation(instance)
-        representation['agenda'] = AgendaSerializer(instance.agendas.all(), many=True).data
-        representation['speakers'] = SpeakerSerializer(instance.speakers.all(), many=True).data
-        return representation
+from rest_framework import serializers
+from .models import EventInventory, InventoryItemEvents
+
+class InventoryItemEventsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InventoryItemEvents
+        fields = ["id", "name", "quantity", "cost", "consumable"]
+
+class EventInventorySerializer(serializers.ModelSerializer):
+    items = InventoryItemEventsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = EventInventory
+        fields = ["id", "budget_allocated", "budget_used", "items", "remaining_budget"]
