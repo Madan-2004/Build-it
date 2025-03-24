@@ -100,7 +100,8 @@ class InventoryItemEventsSerializer(serializers.ModelSerializer):
 
 class EventInventorySerializer(serializers.ModelSerializer):
     items = InventoryItemEventsSerializer(many=True, read_only=True)
+    event_name = serializers.CharField(source='event.title', read_only=True)  # Include event name
 
     class Meta:
         model = EventInventory
-        fields = ["id", "budget_allocated", "budget_used", "items", "remaining_budget"]
+        fields = ["id", "event_name", "budget_allocated", "budget_used", "items", "remaining_budget"]

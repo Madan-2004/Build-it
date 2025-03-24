@@ -37,6 +37,7 @@ const EventInventory = () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/events/${eventId}/inventory/`);
         setInventory(response.data);
+        console.log(response.data)
         setLoading(false);
       } catch (error) {
         console.error("Error loading inventory:", error);
@@ -115,9 +116,9 @@ const EventInventory = () => {
         // Reset inventory state to null to trigger the create inventory view
         setInventory(null);
         // Keep the current event name if available
-        if (data.event_name) {
-          setEventName(data.event_name);
-        }
+        // if (data.event_name) {
+        //   setEventName(data.event_name);
+        // }
         window.location.reload();
       })
       .catch((error) => {
@@ -131,25 +132,26 @@ const EventInventory = () => {
       alert("Please enter a budget.");
       return;
     }
+     
+    const budgetValue = parseFloat(budget);
     fetch(`${API_BASE_URL}/api/events/${eventId}/inventory/create/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        budget_allocated: budget
-      }),
+      body: JSON.stringify({ budget_allocated: budget }),
     })
       .then((response) => {
+        window.location.reload();  // Reload the page after successful creation
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        // return response.json();
-        window.location.reload();
+        return response.json();  // Ensure you wait for the JSON response
       })
-      // .then(() => {
-      //   window.location.reload();
-      // })
+      .then(() => {
+        console.log("Inventory created successfully!");
+      })
       .catch((error) => console.error("Error creating inventory:", error));
-  };  
+  };
+  
 
   const openEditDialog = (item) => {
     setEditItem({
@@ -184,7 +186,7 @@ const EventInventory = () => {
               fontWeight: 'bold'
             }}
           >
-            {eventName}
+          
           </Typography>
           <h2 className="text-3xl font-bold mb-4 text-center text-blue-600">Create Inventory</h2>
           <p className="text-gray-600 mb-6 text-center">Set up a new inventory by allocating a budget for this event.</p>
@@ -244,7 +246,7 @@ const EventInventory = () => {
             fontWeight: 'bold'
           }}
         >
-          {eventName + ' Inventory'} 
+          {inventory.event_name + ' Inventory'} 
         </Typography>
 
         {/* Budget Progress */}

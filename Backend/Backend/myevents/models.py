@@ -67,6 +67,8 @@ class EventInventory(models.Model):
 
     @property
     def remaining_budget(self):
+        budget_allocated = float(self.budget_allocated)
+        budget_used = float(self.budget_used)
         return self.budget_allocated - self.budget_used
 
 

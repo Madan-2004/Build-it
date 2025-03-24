@@ -132,12 +132,10 @@ class EventInventoryView(generics.RetrieveAPIView):
     lookup_field = "event_id"
 
     def get_object(self):
-        event_id = self.kwargs['event_id']
-        try:
-            return EventInventory.objects.get(event_id=event_id)
-        except EventInventory.DoesNotExist:
-            return Response({"error": "Inventory not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        event_id = self.kwargs.get("event_id")
+        
+        # Use get_object_or_404 for automatic 404 handling
+        return get_object_or_404(EventInventory, event_id=event_id)
 class EventInventoryCreateView(generics.CreateAPIView):
     queryset = EventInventory.objects.all()
     serializer_class = EventInventorySerializer
