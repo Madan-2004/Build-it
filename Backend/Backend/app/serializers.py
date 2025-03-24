@@ -60,15 +60,45 @@ class ProjectImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 class ProjectSerializer(serializers.ModelSerializer):
-    images = ProjectImageSerializer(many=True, read_only=True)  # Retrieve images
+    images = ProjectImageSerializer(many=True, read_only=True)
     image_uploads = serializers.ListField(
         child=serializers.ImageField(), write_only=True, required=False
-    )  # Accept multiple images
+    )
+    is_ongoing = serializers.BooleanField(read_only=True)
+    is_completed = serializers.BooleanField(read_only=True)
+    status = serializers.ChoiceField(choices=Project.STATUS_CHOICES, required=False)
 
     class Meta:
         model = Project
-        fields = ['id', 'club', 'title', 'description', 'images', 'image_uploads', 'created_at']
-        read_only_fields = ['club']  # Prevent changing club
+        fields = [
+            'id', 
+            'club', 
+            'title', 
+            'description', 
+            'start_date',
+            'end_date',
+            'status',
+            'is_ongoing',
+            'is_completed',
+            'images', 
+            'image_uploads', 
+            'created_at'
+        ]
+        read_only_fields = ['club']
+
+    def validate(self, data):
+        """
+        Validate the project dates.
+        """
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError({
+                "end_date": "End date cannot be before start date"
+            })
+
+        return data
 
     def create(self, validated_data):
         image_uploads = validated_data.pop("image_uploads", [])
@@ -91,7 +121,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         project = super().update(instance, validated_data)
 
         if image_uploads:
-            ProjectImage.objects.filter(project=project).delete()  # Remove old images
+            ProjectImage.objects.filter(project=project).delete()
             for image in image_uploads:
                 ProjectImage.objects.create(project=project, image=image)
 

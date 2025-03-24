@@ -22,9 +22,21 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PendingIcon from "@mui/icons-material/Pending";
 import axios from "axios";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
+import MenuItem from '@mui/material/MenuItem';
 
 const API_BASE_URL = "http://localhost:8000";
+
+const getImagePlaceholder = (title) => {
+  // Generate a placeholder image URL based on the project title
+  return `https://placehold.co/300x200`;
+};
 
 const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
   const [projects, setProjects] = useState([]);
@@ -32,6 +44,9 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
     title: "",
     description: "",
     images: [],
+    start_date: null,
+    end_date: null,
+    status: "ongoing"
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("add");
@@ -141,6 +156,9 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
       title: project.title,
       description: project.description,
       images: project.images || [],
+      start_date: project.start_date,
+      end_date: project.end_date,
+      status: project.status
     });
     setDialogMode("edit");
     setDialogOpen(true);
@@ -166,16 +184,17 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
       const formData = new FormData();
       formData.append("title", currentProject.title.trim());
       formData.append("description", currentProject.description.trim());
+      formData.append("start_date", dayjs(currentProject.start_date).format('YYYY-MM-DD'));
+      formData.append("status", currentProject.status);
+      
+      if (currentProject.end_date) {
+        formData.append("end_date", dayjs(currentProject.end_date).format('YYYY-MM-DD'));
+      }
   
       if (currentProject.images) {
-        // Handle existing images
         const existingImages = currentProject.images.filter(img => !(img instanceof File));
         const newImages = currentProject.images.filter(img => img instanceof File);
-  
-        // Send existing images as a JSON string
         formData.append("existing_images", JSON.stringify(existingImages.map(img => img.image || img)));
-  
-        // Append new images
         newImages.forEach(img => {
           formData.append("image_uploads", img);
         });
@@ -442,6 +461,27 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
                 <p className={`${darkMode ? "text-gray-300" : "text-gray-600"} line-clamp-3 mb-4 text-sm flex-grow`}>
                   {project.description}
                 </p>
+                {/* <div className="mb-3">
+                  <div className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    Started: {dayjs(project.start_date).format('MMM D, YYYY')}
+                  </div>
+                  {project.end_date && (
+                    <div className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                      Ends: {dayjs(project.end_date).format('MMM D, YYYY')}
+                    </div>
+                  )}
+                </div> */}
+                {/* <div className="flex items-center gap-2">
+                  {project.status === "completed" ? (
+                    <Tooltip title="Completed">
+                      <CheckCircleIcon className="text-green-500" />
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="Ongoing">
+                      <PendingIcon className="text-blue-500" />
+                    </Tooltip>
+                  )}
+                </div> */}
                 <div className={`flex justify-between items-center mt-auto pt-3 border-t ${darkMode ? "border-gray-700" : "border-gray-200"}`}>
                   <span className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
                     {project.images?.length || 0} {project.images?.length === 1 ? "image" : "images"}
@@ -746,6 +786,57 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
             onChange={handleInputChange}
             required
           />
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+              <DatePicker
+                label="Start Date"
+                value={dayjs(currentProject.start_date)}
+                onChange={(newValue) => {
+                  setCurrentProject(prev => ({
+                    ...prev,
+                    start_date: newValue
+                  }));
+                }}
+                slotProps={{
+                  textField: {
+                    required: true,
+                    fullWidth: true,
+                    className: darkMode ? "bg-gray-700 rounded-lg" : ""
+                  }
+                }}
+              />
+              <DatePicker
+                label="End Date"
+                value={currentProject.end_date ? dayjs(currentProject.end_date) : null}
+                onChange={(newValue) => {
+                  setCurrentProject(prev => ({
+                    ...prev,
+                    end_date: newValue
+                  }));
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    className: darkMode ? "bg-gray-700 rounded-lg" : ""
+                  }
+                }}
+              />
+            </div>
+          </LocalizationProvider>
+          <TextField
+            select
+            label="Status"
+            fullWidth
+            variant="outlined"
+            margin="normal"
+            name="status"
+            value={currentProject.status}
+            onChange={handleInputChange}
+            className={darkMode ? "bg-gray-700 rounded-lg" : ""}
+          >
+            <MenuItem value="ongoing">Ongoing</MenuItem>
+            <MenuItem value="completed">Completed</MenuItem>
+          </TextField>
           <div className="mt-4">
             <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
               Project Images (up to 5)

@@ -7,6 +7,8 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { ArrowLeft } from "lucide-react";
+import { jwtDecode } from 'jwt-decode';
+
 
 const API_URL = "http://localhost:8000/api/";
 
@@ -28,7 +30,34 @@ const ElectionResultPage = () => {
       .finally(() => {
         setLoading(false);
       });
+      isUserAdmin();
   }, [electionId]);
+
+
+  const getUserFromToken = () => {
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("access_token=")) // ✅ Uses correct key
+        ?.split("=")[1];
+        console.log("Cookies:", document.cookie,token);
+
+      if (!token) return null;
+  
+      return jwtDecode(token); // ✅ Correct function usage
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  };
+  
+  const isUserAdmin = () => {
+    const adminEmail = "";
+    const user = getUserFromToken();
+    console.log("User:", user);
+    if (!user) return false;
+    return user.email === adminEmail;
+  };
 
  
   

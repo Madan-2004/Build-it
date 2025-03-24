@@ -65,13 +65,49 @@ class ClubMembership(models.Model):
 
 
 class Project(models.Model):
+    STATUS_CHOICES = [
+        ('ongoing', 'Ongoing'),
+        ('completed', 'Completed'),
+    ]
+
     club = models.ForeignKey("Club", on_delete=models.CASCADE, related_name="projects")
     title = models.CharField(max_length=255)
     description = models.TextField()
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    status = models.CharField(
+        max_length=10, 
+        choices=STATUS_CHOICES, 
+        default='ongoing'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_ongoing(self):
+        """Check if the project is ongoing"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return (
+            self.status == 'ongoing' and 
+            self.start_date <= today and 
+            (self.end_date is None or self.end_date >= today)
+        )
+
+    @property
+    def is_completed(self):
+        """Check if the project is completed"""
+        return self.status == 'completed'
+
+    def mark_as_completed(self):
+        """Mark the project as completed"""
+        from django.utils import timezone
+        self.status = 'completed'
+        if not self.end_date:
+            self.end_date = timezone.now().date()
+        self.save()
 
 
 class ProjectImage(models.Model):

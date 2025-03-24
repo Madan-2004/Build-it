@@ -852,6 +852,12 @@ class ProjectListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         club_id = self.kwargs.get("club_id")
         return Project.objects.filter(club_id=club_id)
+         # Filter by status if provided in query params
+        status = self.request.query_params.get('status', None)
+        if status:
+            queryset = queryset.filter(status=status)
+            
+        return queryset
     
     def perform_create(self, serializer):
         club_id = self.kwargs.get("club_id")
@@ -861,11 +867,13 @@ class ProjectListCreateView(generics.ListCreateAPIView):
         # Debug logging
         print("Request data:", request.data)
         
-        if "title" not in request.data or "description" not in request.data:
-            return Response(
-                {"error": "Missing title or description"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        required_fields = ['title', 'description', 'start_date']
+        for field in required_fields:
+            if field not in request.data:
+                return Response(
+                    {"error": f"Missing required field: {field}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
         try:
             return super().create(request, *args, **kwargs)
@@ -888,6 +896,10 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         partial = kwargs.pop("partial", False)
 
+        # Handle project completion
+        if 'status' in request.data and request.data['status'] == 'completed':
+            instance.mark_as_completed()
+
         # Handle existing images
         existing_images = request.data.getlist("existing_images[]", [])
         if existing_images:
@@ -907,16 +919,16 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
                         {"error": f"Invalid image: {str(e)}"},
                         status=status.HTTP_400_BAD_REQUEST
                     )
+        # Update project fields
+        update_data = {
+            'title': request.data.get('title', instance.title),
+            'description': request.data.get('description', instance.description),
+            'start_date': request.data.get('start_date', instance.start_date),
+            'end_date': request.data.get('end_date', instance.end_date),
+            'status': request.data.get('status', instance.status)
+        }        
 
-        # Update other fields
-        serializer = self.get_serializer(
-            instance,
-            data={
-                'title': request.data.get('title', instance.title),
-                'description': request.data.get('description', instance.description)
-            },
-            partial=True
-        )
+        serializer = self.get_serializer(instance, data=update_data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -1373,3 +1385,17 @@ def delete_inventory(request, project_id):
     
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
+# Add new endpoint to mark project as completed
+@api_view(['POST'])
+def mark_project_completed(request, club_id, project_id):
+    """Mark a project as completed and set the end date"""
+    try:
+        project = get_object_or_404(Project, id=project_id, club_id=club_id)
+        project.mark_as_completed()
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
