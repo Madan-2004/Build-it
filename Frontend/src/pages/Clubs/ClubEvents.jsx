@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import EventCard from "../Events/components/EventCard";
 import EventForm from "../Events/components/EventForm";
 
@@ -68,7 +69,12 @@ const ClubEvents = ({ clubId, clubName, darkMode }) => {
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} viewMode="grid" />
+            <div key={event.id}>
+              <EventCard event={event} viewMode="grid" />
+              <Link to={`/inventory/events/${event.id}/`} className={`block mt-4 text-center py-2 rounded-lg ${darkMode ? "bg-green-600 text-white hover:bg-green-700" : "bg-green-500 text-white hover:bg-green-600"} transition duration-150`}>
+                View Inventory
+              </Link>
+            </div>
           ))}
         </div>
 
