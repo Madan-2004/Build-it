@@ -15,7 +15,7 @@ import {
   NavContainer,
   CloseIcon,
 } from "./NavbarElements";
-import Logo from "../../Images/general/logo.jpg";
+import Logo from "../../images/general/logo.jpg";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
