@@ -30,6 +30,7 @@ export const TextOverlay = styled.div`
   width: 80%;
   padding: 1.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), -1px -1px 0 rgba(0, 0, 0, 0.3); /* Multi-layer shadow */
+  // text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), -1px -1px 0 rgba(0, 0, 0, 0.3); /* Multi-layer shadow */
   font-weight: 700;
   letter-spacing: 0.5px;
 

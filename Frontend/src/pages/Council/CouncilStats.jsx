@@ -12,7 +12,7 @@ const CouncilStats = ({ councilName }) => {
     const fetchInventoryData = () => {
         axios.get(`${BASE_URL}/api/councils/${encodeURIComponent(councilName)}/inventory/`)
             .then((response) => {
-                setInventory(response.data);
+                setInventory(response.data[0]);
                 setLoading(false);
             })
             .catch((error) => {

@@ -1075,9 +1075,11 @@ class CouncilInventoryView(generics.RetrieveAPIView):
         council = get_object_or_404(Council, name=council_name)
 
         # Retrieve the inventory for the council
-        inventory = Inventory.objects.filter(council=council).first()
+        inventory = Inventory.objects.filter(council=council,
+        club=None)
 
         if inventory:
+            print("hi")
             return inventory
         else:
             # Raise a 404 if no inventory is found
@@ -1091,7 +1093,7 @@ class CouncilInventoryView(generics.RetrieveAPIView):
         inventory = self.get_object()
 
         if inventory:
-            serializer = InventorySerializer(inventory)
+            serializer = InventorySerializer(inventory, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         # Return 404 if no inventory exists
@@ -1160,6 +1162,7 @@ def update_club_inventory(request, club_name):
         
         if serializer.is_valid():
             serializer.save()
+            recalculate_council_budget(club.council.id)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
