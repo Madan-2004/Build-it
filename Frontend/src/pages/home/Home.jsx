@@ -179,8 +179,8 @@ export default function Home() {
                   })`,
                 }}
               >
-                <span className="subtitle">{slide.subtitle}</span>
-                <span className="title">{slide.title}</span>
+                <span className="subtitle" style={{color: "rgb(0,168,232)"}}>{slide.subtitle}</span>
+                <span className="title" style={{color: "#ffffff"}}>{slide.title}</span>
               </TextOverlay>
             </ImageWrapper>
           ))}

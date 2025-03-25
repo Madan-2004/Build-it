@@ -126,6 +126,55 @@ from rest_framework.views import APIView
 from .models import EventInventory, InventoryItemEvents
 from .serializers import EventInventorySerializer, InventoryItemEventsSerializer
 
+from django.db.models import Sum
+from django.utils import timezone
+from app.models import Club, Council, Project, Inventory
+from .models import Event
+
+def recalculate_budget_club(club_id):
+    club = Club.objects.get(id=club_id)
+    
+    # Get the current financial year
+    today = timezone.now().date()
+    financial_year_start = today.replace(month=4, day=1)
+    if today.month < 4:
+        financial_year_start = financial_year_start.replace(year=today.year - 1)
+    
+    # Calculate budget used from projects
+    projects_budget = Project.objects.filter(
+        club=club,
+        start_date__gte=financial_year_start
+    ).aggregate(total=Sum('inventory__budget_allocated'))['total'] or 0
+
+    # Calculate budget used from events
+    events_budget = Event.objects.filter(
+        club=club,
+        start_date__gte=financial_year_start
+    ).aggregate(total=Sum('inventory__budget_allocated'))['total'] or 0
+
+    # Update club's inventory
+    inventory, created = Inventory.objects.get_or_create(club=club)
+    inventory.budget_used = projects_budget + events_budget
+    inventory.save()
+
+def recalculate_budget_council(council_id):
+    council = Council.objects.get(id=council_id)
+    
+    # Calculate total budget allocated and used for all clubs under the council
+    club_budgets = Inventory.objects.filter(club__council=council).aggregate(
+        total_allocated=Sum('budget_allocated'),
+        total_used=Sum('budget_used')
+    )
+
+    # Update council's inventory
+    council_inventory, created = Inventory.objects.get_or_create(
+        council=council,
+        club=None  # This ensures we get the inventory entry specific to the council
+    )
+    council_inventory.budget_allocated = club_budgets['total_allocated'] or 0
+    council_inventory.budget_used = club_budgets['total_used'] or 0
+    council_inventory.save()
+
 class EventInventoryView(generics.RetrieveAPIView):
     queryset = EventInventory.objects.all()
     serializer_class = EventInventorySerializer
@@ -136,6 +185,7 @@ class EventInventoryView(generics.RetrieveAPIView):
         
         # Use get_object_or_404 for automatic 404 handling
         return get_object_or_404(EventInventory, event_id=event_id)
+
 class EventInventoryCreateView(generics.CreateAPIView):
     queryset = EventInventory.objects.all()
     serializer_class = EventInventorySerializer
@@ -150,6 +200,8 @@ class EventInventoryCreateView(generics.CreateAPIView):
             return Response({"error": "Budget is required"}, status=status.HTTP_400_BAD_REQUEST)
         
         serializer.save(event=event, budget_allocated=budget_allocated)
+        recalculate_budget_club(event.club.id)
+        recalculate_budget_council(event.club.council.id)
 
 class EventInventoryDeleteView(APIView):
     def delete(self, request, pk):
@@ -159,6 +211,8 @@ class EventInventoryDeleteView(APIView):
             return Response({"error": "Inventory not found"}, status=status.HTTP_404_NOT_FOUND)
         
         event_inventory.delete()
+        recalculate_budget_club(event_inventory.event.club.id)
+        recalculate_budget_council(event_inventory.event.club.council.id)
         return Response({"message": "Inventory deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class InventoryItemCreateView(generics.CreateAPIView):

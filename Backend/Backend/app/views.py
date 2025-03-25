@@ -1202,72 +1202,116 @@ from django.core.exceptions import ObjectDoesNotExist
 from .models import Project, ProjectInventory, InventoryItem
 import json
 
-from django.shortcuts import get_object_or_404
 from django.db.models import Sum
-from .models import Club, Council, Inventory, ProjectInventory, Project
-
+from django.utils import timezone
+from .models import Club, Council, Project, Inventory
+from myevents.models import Event
 
 def recalculate_club_budget(club_id):
-    """
-    Recalculate the budget utilized for a club based on all its projects.
+    club = Club.objects.get(id=club_id)
     
-    This function:
-    1. Gets all projects under the club
-    2. Sums the budget_allocated fields from all project inventories
-    3. Updates the club's inventory budget_utilized field
-    """
-    club = get_object_or_404(Club, id=club_id)
+    # Get the current financial year
+    today = timezone.now().date()
+    financial_year_start = today.replace(month=4, day=1)
+    if today.month < 4:
+        financial_year_start = financial_year_start.replace(year=today.year - 1)
     
-    # Get all projects for this club
-    projects = Project.objects.filter(club=club)
-    
-    # Sum budget_allocated from all project inventories
-    total_budget_allocated = ProjectInventory.objects.filter(
-        project__in=projects
-    ).aggregate(total=Sum('budget_allocated'))['total'] or 0
-    
-    # Get or create club inventory
-    club_inventory, created = Inventory.objects.get_or_create(club=club)
-    
-    # Update the budget_used field with the total from projects
-    club_inventory.budget_used = total_budget_allocated
-    club_inventory.save()
+    # Calculate budget used from projects
+    projects_budget = Project.objects.filter(
+        club=club,
+        start_date__gte=financial_year_start
+    ).aggregate(total=Sum('inventory__budget_allocated'))['total'] or 0
 
+    # Calculate budget used from events
+    events_budget = Event.objects.filter(
+        club=club,
+        start_date__gte=financial_year_start
+    ).aggregate(total=Sum('inventory__budget_allocated'))['total'] or 0
+
+    # Update club's inventory
+    inventory, created = Inventory.objects.get_or_create(club=club)
+    inventory.budget_used = projects_budget + events_budget
+    inventory.save()
 
 def recalculate_council_budget(council_id):
-    """
-    Recalculate both budget_allocated and budget_utilized for a council.
+    council = Council.objects.get(id=council_id)
     
-    This function:
-    1. Sums budget_allocated from all clubs under the council
-    2. Sums budget_used from all clubs under the council
-    3. Updates the council's inventory accordingly
-    """
-    council = get_object_or_404(Council, id=council_id)
-    
-    # Get all clubs in this council
-    clubs = Club.objects.filter(council=council)
-    
-    # Get club inventories
-    club_inventories = Inventory.objects.filter(club__in=clubs)
-    
-    # Sum budget_allocated from all clubs
-    total_budget_allocated = club_inventories.aggregate(
-        total=Sum('budget_allocated')
-    )['total'] or 0
-    
-    # Sum budget_used from all clubs
-    total_budget_used = club_inventories.aggregate(
-        total=Sum('budget_used')
-    )['total'] or 0
-    
-    # Get or create council inventory
-    council_inventory, created = Inventory.objects.get_or_create(council=council)
-    
-    # Update both budget fields
-    council_inventory.budget_allocated = total_budget_allocated
-    council_inventory.budget_used = total_budget_used
+    # Calculate total budget allocated and used for all clubs under the council
+    club_budgets = Inventory.objects.filter(club__council=council).aggregate(
+        total_allocated=Sum('budget_allocated'),
+        total_used=Sum('budget_used')
+    )
+
+    # Update council's inventory
+    council_inventory, created = Inventory.objects.get_or_create(
+        council=council,
+        club=None  # This ensures we get the inventory entry specific to the council
+    )
+    council_inventory.budget_allocated = club_budgets['total_allocated'] or 0
+    council_inventory.budget_used = club_budgets['total_used'] or 0
     council_inventory.save()
+
+# def recalculate_club_budget(club_id):
+#     """
+#     Recalculate the budget utilized for a club based on all its projects.
+    
+#     This function:
+#     1. Gets all projects under the club
+#     2. Sums the budget_allocated fields from all project inventories
+#     3. Updates the club's inventory budget_utilized field
+#     """
+#     club = get_object_or_404(Club, id=club_id)
+    
+#     # Get all projects for this club
+#     projects = Project.objects.filter(club=club)
+    
+#     # Sum budget_allocated from all project inventories
+#     total_budget_allocated = ProjectInventory.objects.filter(
+#         project__in=projects
+#     ).aggregate(total=Sum('budget_allocated'))['total'] or 0
+    
+#     # Get or create club inventory
+#     club_inventory, created = Inventory.objects.get_or_create(club=club)
+    
+#     # Update the budget_used field with the total from projects
+#     club_inventory.budget_used = total_budget_allocated
+#     club_inventory.save()
+
+
+# def recalculate_council_budget(council_id):
+#     """
+#     Recalculate both budget_allocated and budget_utilized for a council.
+    
+#     This function:
+#     1. Sums budget_allocated from all clubs under the council
+#     2. Sums budget_used from all clubs under the council
+#     3. Updates the council's inventory accordingly
+#     """
+#     council = get_object_or_404(Council, id=council_id)
+    
+#     # Get all clubs in this council
+#     clubs = Club.objects.filter(council=council)
+    
+#     # Get club inventories
+#     club_inventories = Inventory.objects.filter(club__in=clubs)
+    
+#     # Sum budget_allocated from all clubs
+#     total_budget_allocated = club_inventories.aggregate(
+#         total=Sum('budget_allocated')
+#     )['total'] or 0
+    
+#     # Sum budget_used from all clubs
+#     total_budget_used = club_inventories.aggregate(
+#         total=Sum('budget_used')
+#     )['total'] or 0
+    
+#     # Get or create council inventory
+#     council_inventory, created = Inventory.objects.get_or_create(council=council)
+    
+#     # Update both budget fields
+#     council_inventory.budget_allocated = total_budget_allocated
+#     council_inventory.budget_used = total_budget_used
+#     council_inventory.save()
 
 # Get inventory details
 def get_inventory(request, project_id):
