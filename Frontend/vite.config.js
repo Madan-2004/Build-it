@@ -4,11 +4,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 
 const manifestForPlugIn = {
+  devOptions: {
+    enabled: true
+    /* other options */
+  },
   registerType: 'prompt',
   workbox: {
     maximumFileSizeToCacheInBytes: 7000000,
   },
-  includeAssests: ['favicon.ico', "apple-touc-icon.png", "masked-icon.svg"],
+  includeAssests: ['favicon.ico', "apple-touch-icon.png", "masked-icon.svg"],
   manifest: {
     "theme_color": "#8936FF",
     "background_color": "#2EC6FE",
@@ -60,7 +64,8 @@ const manifestForPlugIn = {
 export default defineConfig({
   base: './',
   plugins: [
+
+    VitePWA(manifestForPlugIn),
     react(),
-    VitePWA(manifestForPlugIn)
   ],
 })

@@ -107,7 +107,7 @@ function App() {
           <Route path="/clubs/:clubName" element={<ClubProfile />} />
 
           {/* ✅ Authentication */}
-          <Route path="/login" element={<LoginPage />} />
+          {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/auth/callback" element={<CallbackPage />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
 

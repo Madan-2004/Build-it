@@ -1144,6 +1144,8 @@ class InventoryListCreateView(generics.ListCreateAPIView):
 
 # Retrieve, update, or delete a specific inventory item
 
+
+
 @api_view(['PATCH'])
 def update_club_inventory(request, club_name):
     try:
