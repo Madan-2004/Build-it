@@ -13,11 +13,16 @@ const CreateElectionForm = () => {
     start_date: "",
     end_date: "",
   });
+  const [voterFile, setVoterFile] = useState(null);
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const handleFileChange = (e) => {
+    setVoterFile(e.target.files[0]); 
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,15 +34,23 @@ const CreateElectionForm = () => {
       const userProfile = await authService.getUserProfile();
       console.log("profile:", userProfile);
       console.log("Creating election:", formData);
-      const response = await axios.post(`${API_URL}api/elections/`, 
-        {
-          ...formData,
-          created_by: userProfile.id  // Explicitly include the user ID
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("description", formData.description);
+      data.append("start_date", formData.start_date);
+      data.append("end_date", formData.end_date);
+      data.append("display_results", false);  // Explicitly set true
+      data.append("display_election", true);
+      data.append("created_by", userProfile.id); // Explicitly include the user ID
+      if (voterFile) {
+        data.append("voter_file", voterFile); // Attach the voter file
+      }
+      const response = await axios.post(`${API_URL}api/elections/`, data, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data", // Ensure the correct content type
         },
-        {
-          withCredentials: true
-        }
-      );
+      });
       navigate("/admin/elections");
     } catch (error) {
       console.error("Error creating election:", error);
@@ -84,6 +97,13 @@ const CreateElectionForm = () => {
             onChange={handleChange}
             className="w-full p-3 border rounded"
             required
+          />
+          <input
+            type="file"
+            name="voter_file "
+            accept=".csv" // Restrict to CSV files
+            onChange={handleFileChange}
+            className="w-full p-3 border rounded"
           />
           <button
             type="submit"

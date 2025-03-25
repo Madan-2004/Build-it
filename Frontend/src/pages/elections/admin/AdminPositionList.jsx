@@ -24,9 +24,9 @@ const AdminPositionList = () => {
 
   const fetchElectionInfo = async () => {
     try {
-      const response = await axios.get(`${API_URL}elections/${electionId}/`, 
-        { withCredentials: true }
-      );
+      const response = await axios.get(`${API_URL}elections/${electionId}/`, {
+        withCredentials: true,
+      });
       setElectionInfo(response.data);
     } catch (error) {
       console.error("Error fetching election info:", error);
@@ -36,10 +36,9 @@ const AdminPositionList = () => {
   const fetchPositions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}elections/${electionId}/positions/`, 
-        { withCredentials: true }
-      );
-      console.log("Fetched Positions:", response.data);
+      const response = await axios.get(`${API_URL}elections/${electionId}/positions/`, {
+        withCredentials: true,
+      });
       setPositions(response.data);
       setError(null);
     } catch (error) {
@@ -52,15 +51,19 @@ const AdminPositionList = () => {
   };
 
   const handleDelete = async (positionId, positionTitle) => {
-    if (!window.confirm(`Are you sure you want to delete the position "${positionTitle}"? This will also delete all candidates for this position.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the position "${positionTitle}"? This will also delete all candidates for this position.`
+      )
+    ) {
       return;
     }
-    
+
     try {
       setLoading(true);
-      await axios.delete(`${API_URL}elections/${electionId}/positions/${positionId}/`, 
-        { withCredentials: true }
-      );
+      await axios.delete(`${API_URL}elections/${electionId}/positions/${positionId}/`, {
+        withCredentials: true,
+      });
       toast.success("Position deleted successfully");
       fetchPositions();
     } catch (error) {
@@ -84,16 +87,7 @@ const AdminPositionList = () => {
     fetchPositions();
   };
 
-  if (loading && positions.length === 0) {
-    return (
-      <div className="p-6 bg-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p>Loading positions...</p>
-        </div>
-      </div>
-    );
-  }
+  const isPastElection = electionInfo && new Date(electionInfo.end_date) < new Date();
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -102,24 +96,29 @@ const AdminPositionList = () => {
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
             <div>
-              <button 
-                onClick={() => navigate('/admin/elections')}
+              <button
+                onClick={() => navigate("/admin/elections")}
                 className="flex items-center text-blue-600 hover:text-blue-800 mb-2"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back to Elections
               </button>
               <h1 className="text-2xl font-bold">
-                {electionInfo ? electionInfo.title : 'Election'} Positions
+                {electionInfo ? electionInfo.title : "Election"} Positions
               </h1>
               {electionInfo && (
                 <p className="text-gray-600 mt-1">
-                  {new Date(electionInfo.start_date).toLocaleDateString()} - {new Date(electionInfo.end_date).toLocaleDateString()}
+                  {new Date(electionInfo.start_date).toLocaleDateString()} -{" "}
+                  {new Date(electionInfo.end_date).toLocaleDateString()}
                 </p>
               )}
             </div>
             <Link
               to={`/admin/elections/${electionId}/positions/add`}
-              className="bg-blue-600 text-white px-4 py-2 rounded flex items-center hover:bg-blue-700 transition duration-200 mt-2 md:mt-0"
+              className={`${isPastElection
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+                } px-4 py-2 rounded flex items-center transition duration-200 mt-2 md:mt-0`}
+              onClick={(e) => isPastElection && e.preventDefault()} // Prevent navigation if past election
             >
               <Plus className="mr-2 h-5 w-5" />
               Add New Position
@@ -139,7 +138,7 @@ const AdminPositionList = () => {
                 <p className="text-2xl font-bold">{positions.length}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center pl-4">
               <div className="rounded-full bg-green-100 p-3 mr-4">
                 <Users className="h-6 w-6 text-green-600" />
@@ -147,7 +146,7 @@ const AdminPositionList = () => {
               <div>
                 <p className="text-gray-500 text-sm">Total Candidates</p>
                 <p className="text-2xl font-bold">
-                {positions.reduce((total, position) => total + position.candidates.length, 0)}
+                  {positions.reduce((total, position) => total + position.candidates.length, 0)}
                 </p>
               </div>
             </div>
@@ -159,10 +158,7 @@ const AdminPositionList = () => {
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex justify-between">
               <span>{error}</span>
-              <button 
-                className="text-blue-600 hover:underline" 
-                onClick={fetchPositions}
-              >
+              <button className="text-blue-600 hover:underline" onClick={fetchPositions}>
                 Try Again
               </button>
             </div>
@@ -171,8 +167,8 @@ const AdminPositionList = () => {
           {editingPosition ? (
             <div className="bg-gray-50 p-4 rounded-lg border mb-6">
               <h3 className="text-lg font-medium mb-4">Edit Position</h3>
-              <EditPositionForm 
-                position={editingPosition} 
+              <EditPositionForm
+                position={editingPosition}
                 onPositionUpdated={handlePositionUpdated}
                 onCancel={handleCancelEdit}
                 electionId={electionId}
@@ -199,7 +195,11 @@ const AdminPositionList = () => {
                         <p className="mb-4">No positions found.</p>
                         <Link
                           to={`/admin/elections/${electionId}/positions/add`}
-                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                          className={`${isPastElection
+                              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                              : "bg-blue-600 text-white hover:bg-blue-700"
+                            } px-3 py-1 rounded`}
+                          onClick={(e) => isPastElection && e.preventDefault()} // Prevent navigation if past election
                         >
                           Add your first position
                         </Link>
@@ -211,37 +211,49 @@ const AdminPositionList = () => {
                     <tr key={position.id} className="border-t hover:bg-gray-50">
                       <td className="p-3 font-medium">{position.title}</td>
                       <td className="p-3 text-gray-600">
-                        {position.description 
-                          ? position.description.substring(0, 50) + (position.description.length > 50 ? "..." : "") 
+                        {position.description
+                          ? position.description.substring(0, 50) +
+                          (position.description.length > 50 ? "..." : "")
                           : "No description"}
                       </td>
-                      
+
                       <td className="p-3 text-center">
                         <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                          {position.candidates.length| 0}
+                          {position.candidates.length || 0}
                         </span>
                       </td>
                       <td className="p-3">
                         <div className="flex justify-center space-x-2">
                           <Link
                             to={`/admin/elections/${electionId}/positions/${position.id}/candidates`}
-                            className="bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 transition-colors"
+                            className={`${isPastElection
+                                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                                : "bg-indigo-500 text-white hover:bg-indigo-600"
+                              } p-2 rounded transition-colors`}
                             title="View Candidates"
+                            onClick={(e) => isPastElection && e.preventDefault()} // Prevent navigation if past election
                           >
                             <Users className="h-4 w-4" />
                           </Link>
-                          <button 
-                            onClick={() => handleEdit(position)} 
-                            className="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 transition-colors"
+                          <button
+                            onClick={() => handleEdit(position)}
+                            className={`${isPastElection
+                                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                                : "bg-yellow-500 text-white hover:bg-yellow-600"
+                              } p-2 rounded transition-colors`}
                             title="Edit Position"
+                            disabled={isPastElection}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button 
-                            onClick={() => handleDelete(position.id, position.title)} 
-                            className="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition-colors"
-                            disabled={loading}
+                          <button
+                            onClick={() => handleDelete(position.id, position.title)}
+                            className={`${isPastElection
+                                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                                : "bg-red-500 text-white hover:bg-red-600"
+                              } p-2 rounded transition-colors`}
                             title="Delete Position"
+                            disabled={isPastElection}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

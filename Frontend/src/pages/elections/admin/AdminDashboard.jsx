@@ -4,6 +4,7 @@ import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Link } from "react-router-dom";
 import AdminElectionsList from "./AdminElectionsList";
+import { checkAuth } from "../../../utils/authUtils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
@@ -13,55 +14,35 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [recentElections, setRecentElections] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
+
   const [trendType, setTrendType] = useState("monthly");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const authCheck = await axios.get(`$http://localhost:8000/api/auth/check/`, { withCredentials: true });
-        if (!authCheck.data.isAuthenticated) {
-          console.log("User is not authenticated. Attempting to refresh session.");
-          await refreshSession();  // Try refreshing session
-        }
-        else{
-          console.log("User is authenticated");
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+          console.error("User is not authenticated. Redirecting to login...");
+          // Optionally redirect to login page
+          return;
         }
         const statsResponse = await axios.get(API_URL);
         console.log("Dashboard Stats:", statsResponse.data);
         setStats(statsResponse.data);
         
-        // Keep the existing mock data for recentElections and recentActivity
-        // ...
+     
 
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("Error fetching dashboard data: Try Re-logining", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-    const refreshSession = async () => {
-      try {
-        const response = await axios.post(
-          `http://localhost:8000/api/auth/token/refresh/`,
-          {},  // No need to manually include token in body, it should be sent via cookies
-          {
-            withCredentials: true,  // Ensures cookies are sent
-          }
-        );
-    
-        console.log("Session refreshed successfully.", response.data);
-        // localStorage.setItemr("access_token", response.data.access);
-      } catch (error) {
-        console.error("Session refresh failed:", error.response?.data || error.message);
-      }
-    };
+   
   }, []);
 
-  // ... (keep existing loading and error checks)
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

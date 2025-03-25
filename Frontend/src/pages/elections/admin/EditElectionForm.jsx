@@ -16,6 +16,8 @@ const EditElectionForm = () => {
     display_election: true, // Default true
     display_results: false, // Default false
   });
+  const [voterFile, setVoterFile] = useState(null); // State for new voter file
+  const [existingVoterFile, setExistingVoterFile] = useState(null); // State for existing voter file
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -25,7 +27,8 @@ const EditElectionForm = () => {
         // Format datetime to match `datetime-local` input type
         const startDate = response.data.start_date.replace("Z", "").slice(0, 16);
         const endDate = response.data.end_date.replace("Z", "").slice(0, 16);
-
+        console.log("titiiititit",response.data.voter_files[0]);
+        
         setFormData({
           title: response.data.title,
           description: response.data.description,
@@ -34,6 +37,11 @@ const EditElectionForm = () => {
           display_election: response.data.display_election,
           display_results: response.data.display_results,
         });
+         // Set the existing voter file if available
+         if (response.data.voter_files && response.data.voter_files.length > 0) {
+          setExistingVoterFile(response.data.voter_files[0]); // Assuming one voter file per election
+          
+        }
       })
       .catch(() => setError("Election not found."));
   }, [electionId]);
@@ -47,6 +55,9 @@ const EditElectionForm = () => {
       [name]: type === "checkbox" ? checked : value, // Handle checkboxes
     });
   };
+  const handleFileChange = (e) => {
+    setVoterFile(e.target.files[0]); // Set the new voter file
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +66,25 @@ const EditElectionForm = () => {
       return;
     }
     try {
-      await axios.put(`${API_URL}elections/${electionId}/`, formData, { withCredentials: true });
+      // Create a FormData object to handle file uploads
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("description", formData.description);
+      data.append("start_date", formData.start_date);
+      data.append("end_date", formData.end_date);
+      data.append("display_election", formData.display_election);
+      data.append("display_results", formData.display_results);
+
+      // Attach the new voter file if provided
+      if (voterFile) {
+        data.append("voter_file", voterFile);
+      }
+      await axios.put(`${API_URL}elections/${electionId}/`, data, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data", // Ensure the correct content type
+        },
+      });
       navigate("/admin/elections");
     } catch (error) {
       console.error("Error updating election:", error);
@@ -137,6 +166,32 @@ const EditElectionForm = () => {
             />
             <span className="text-gray-700">Display Election Results</span>
           </label>
+
+          {/* Existing Voter File */}
+          {existingVoterFile && (
+            <div className="bg-gray-100 p-3 rounded border">
+              <p className="text-gray-700">
+                Existing Voter File:{" "}
+                <a
+                  href={`http://localhost:8000${existingVoterFile.file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  Download
+                </a>
+              </p>
+            </div>
+          )}
+
+          {/* Upload New Voter File */}
+          <input
+            type="file"
+            name="voter_file"
+            accept=".csv"
+            onChange={handleFileChange}
+            className="w-full p-3 border rounded"
+          />
 
           {/* Buttons */}
           <div className="flex justify-between">

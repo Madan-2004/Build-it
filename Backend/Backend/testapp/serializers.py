@@ -84,12 +84,13 @@ class ElectionSerializer(serializers.ModelSerializer):
     candidates_count = serializers.SerializerMethodField()
     votes_count = serializers.SerializerMethodField()
     has_voted = serializers.SerializerMethodField() 
+    voter_files = serializers.SerializerMethodField()
 
     class Meta:
         model = Election
         fields = ['id', 'title', 'description', 'start_date', 'end_date', 'created_by',
-                  'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'positions', 'has_voted', 'display_results', 'display_election']
-        read_only_fields = ['created_by', 'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'has_voted']
+                  'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'positions', 'has_voted', 'display_results', 'display_election', 'voter_files']
+        read_only_fields = ['created_by', 'is_active', 'is_upcoming', 'is_completed', 'candidates_count', 'votes_count', 'has_voted','voter_files']
     
     def get_has_voted(self, obj):
         """Check if the current user has voted in this election."""
@@ -132,6 +133,11 @@ class ElectionSerializer(serializers.ModelSerializer):
 
     def get_votes_count(self, obj):
         return Vote.objects.filter(candidate__position__election=obj).count()
+    
+    def get_voter_files(self, obj):
+        # Return the voter file URLs if they exist
+        voter_files = obj.voter_files.all()
+        return [{'id': vf.id, 'file': vf.file.url} for vf in voter_files]
 
 
 

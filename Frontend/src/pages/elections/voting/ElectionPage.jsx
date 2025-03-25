@@ -129,7 +129,7 @@ const ElectionPage = () => {
           <>
             <ElectionSection
               title="Ongoing Elections"
-              elections={elections.ongoing}
+              elections={elections.ongoing.filter((election) => election.display_election)} // Filter by display_election
               type="ongoing"
               now={now}
               color="blue"
@@ -163,6 +163,7 @@ const ElectionSection = ({ title, elections, type, now, color }) => {
     green: "text-green-600 border-green-600",
     gray: "text-gray-600 border-gray-600"
   };
+  console.log("onoging Elections:", elections);
 
   return (
     <section className="mb-8">

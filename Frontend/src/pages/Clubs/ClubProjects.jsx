@@ -305,18 +305,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Club Projects</h2>
         <div className="flex items-center gap-3">
-          <Tooltip title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-lg transition-colors duration-200 ${
-                darkMode 
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-              }`}
-            >
-              {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-            </button>
-          </Tooltip>
+         
           <Button
             variant="contained"
             color="primary"
@@ -521,7 +510,8 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
                 <div className="absolute inset-0 bg-gradient-to-b from-gray-900/70 to-gray-900"></div>
               </div>
               
-              <div className="relative h-full flex flex-col justify-between p-6">
+              <div class="relative h-full flex flex-col justify-between p-6 bg-gradient-to-r from-blue-600 to-indigo-700">
+
                 <div className="flex justify-between items-start">
                   <div>
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">

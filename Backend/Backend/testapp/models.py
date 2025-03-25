@@ -119,3 +119,15 @@ class Vote(models.Model):
 class VoterFile(models.Model):
     file = models.FileField(upload_to="voter_files/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    election = models.ForeignKey(
+    Election,
+    on_delete=models.CASCADE,
+    related_name="voter_files",
+    help_text="The election this voter file is associated with.",
+    null=True,
+    blank=True
+)
+    def __str__(self):
+        if self.election:
+            return f"Voter File for {self.election.title} uploaded at {self.uploaded_at}"
+        return f"Voter File uploaded at {self.uploaded_at}"
