@@ -444,6 +444,7 @@ const ClubProfile = () => {
         handleUpdateClub={handleUpdateClub}
         darkMode={darkMode}
         setAddMemberDialogOpen={setAddMemberDialogOpen}
+        isAdmin={isAdmin}
       />
 
       {/* Main Content */}
@@ -641,7 +642,7 @@ const ClubProfile = () => {
               />
 
               <div id="club-projects" className="mt-8">
-                <ClubProjects clubId={club.id} darkMode={darkMode} />
+                <ClubProjects clubId={club.id} darkMode={darkMode} isAdmin={isAdmin}/>
               </div>
             </div>
           </div>

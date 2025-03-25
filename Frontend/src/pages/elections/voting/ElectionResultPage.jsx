@@ -8,6 +8,9 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { ArrowLeft } from "lucide-react";
 import { jwtDecode } from 'jwt-decode';
+import authService from "../../../services/auth";
+import { isAdmin as checkIsAdmin } from "../../../utils/adminCheck";
+
 
 
 const API_URL = "http://localhost:8000/api/";
@@ -17,6 +20,7 @@ const ElectionResultPage = () => {
   const navigate = useNavigate();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
     axios
@@ -30,8 +34,13 @@ const ElectionResultPage = () => {
       .finally(() => {
         setLoading(false);
       });
-      isUserAdmin();
-  }, [electionId]);
+  
+    const userData = authService.getUserFromCookie();
+    if (userData && userData.email) {
+      setIsAdminUser(checkIsAdmin(userData.email));  // ✅ Update state
+    }
+  }, [electionId]); // ✅ Dependency array ensures this runs when electionId changes
+  
 
 
   const getUserFromToken = () => {
@@ -51,14 +60,7 @@ const ElectionResultPage = () => {
     }
   };
   
-  const isUserAdmin = () => {
-    const adminEmail = "";
-    const user = getUserFromToken();
-    console.log("User:", user);
-    if (!user) return false;
-    return user.email === adminEmail;
-  };
-
+  
  
   
   const generatePDF = () => {
@@ -240,6 +242,7 @@ const ElectionResultPage = () => {
         </button>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{results.title} - Results</h1>
+          {isAdminUser && (
           <div className="flex gap-4">
             <button
               onClick={generatePDF}
@@ -260,6 +263,7 @@ const ElectionResultPage = () => {
               Download Excel
             </button>
           </div>
+          )}
         </div>
        
 

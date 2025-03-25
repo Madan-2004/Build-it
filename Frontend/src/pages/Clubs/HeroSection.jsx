@@ -147,6 +147,7 @@ const HeroSection = ({
   handleUpdateClub,
   darkMode,
   setAddMemberDialogOpen,
+  isAdmin
 }) => {
   // Default to dark theme to match the navbar in the image
   const isDark = darkMode !== undefined ? darkMode : true;
@@ -454,9 +455,53 @@ const HeroSection = ({
   function renderActionButtons() {
     return (
       <div className="flex flex-wrap gap-4 justify-center md:justify-start mt-6">
+        {isAdmin && (
+          <>
+            {/* Edit Club Button */}
+            <button
+              className={`px-6 py-3 ${isDark ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"} text-white rounded-lg shadow-lg transition duration-200 flex items-center transform hover:scale-105 hover:shadow-xl`}
+              onClick={() => setEditMode(true)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+              Edit Club
+            </button>
+  
+            {/* Add Member Button */}
+            <button
+              className={`px-6 py-3 ${isDark ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-500 hover:bg-indigo-600"} text-white rounded-lg shadow-lg transition duration-200 flex items-center transform hover:scale-105 hover:shadow-xl`}
+              onClick={() => setAddMemberDialogOpen(true)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+              </svg>
+              Add Member
+            </button>
+          </>
+        )}
+  
+        {/* View Projects Button - Visible to Everyone */}
         <button
-          className={`px-6 py-3 ${isDark ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"} text-white rounded-lg shadow-lg transition duration-200 flex items-center transform hover:scale-105 hover:shadow-xl`}
-          onClick={() => setEditMode(true)}
+          onClick={() => {
+            const projectsSection = document.getElementById("club-projects");
+            if (projectsSection) {
+              const offset = 80; // Adjust this value as needed
+              const sectionTop = projectsSection.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo({ top: sectionTop - offset, behavior: "smooth" });
+            }
+          }}
+          className={`px-6 py-3 ${isDark ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-500 hover:bg-purple-600"} text-white rounded-lg shadow-lg transition duration-200 flex items-center transform hover:scale-105 hover:shadow-xl`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -464,53 +509,18 @@ const HeroSection = ({
             viewBox="0 0 20 20"
             fill="currentColor"
           >
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            <path
+              fillRule="evenodd"
+              d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z"
+              clipRule="evenodd"
+            />
           </svg>
-          Edit Club
+          View Projects
         </button>
-        <button
-          className={`px-6 py-3 ${isDark ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-500 hover:bg-indigo-600"} text-white rounded-lg shadow-lg transition duration-200 flex items-center transform hover:scale-105 hover:shadow-xl`}
-          onClick={() => setAddMemberDialogOpen(true)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-          </svg>
-          Add Member
-        </button>
-        <button
-  onClick={() => {
-    const projectsSection = document.getElementById("club-projects");
-    if (projectsSection) {
-      const offset = 80; // Adjust this value as needed
-      const sectionTop = projectsSection.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: sectionTop - offset, behavior: "smooth" });
-    }
-  }}
-  className={`px-6 py-3 ${isDark ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-500 hover:bg-purple-600"} text-white rounded-lg shadow-lg transition duration-200 flex items-center transform hover:scale-105 hover:shadow-xl`}
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5 mr-2"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-  >
-    <path
-      fillRule="evenodd"
-      d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z"
-      clipRule="evenodd"
-    />
-  </svg>
-  View Projects
-</button>
-
       </div>
     );
   }
+  
 };
 
 export default HeroSection;

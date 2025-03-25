@@ -38,7 +38,7 @@ const getImagePlaceholder = (title) => {
   return `https://placehold.co/300x200`;
 };
 
-const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
+const ClubProjects = ({ clubId, darkMode, setDarkMode ,isAdmin}) => {
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState({
     title: "",
@@ -304,6 +304,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Club Projects</h2>
+        {isAdmin && (
         <div className="flex items-center gap-3">
          
           <Button
@@ -316,6 +317,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
             Add Project
           </Button>
         </div>
+         )}
       </div>
 
       {/* Error Banner (if any) */}
@@ -361,6 +363,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
           <p className={`${darkMode ? "text-gray-400" : "text-gray-500"} mb-6`}>
             Showcase your club's achievements by adding your first project!
           </p>
+          {isAdmin && (
           <Button
             variant="contained"
             color="primary"
@@ -370,6 +373,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
           >
             Create First Project
           </Button>
+        )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -414,6 +418,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
                   <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-gray-900"} group-hover:text-blue-400 transition-colors duration-300 flex-grow line-clamp-1`}>
                     {project.title}
                   </h3>
+                  {isAdmin && (
                   <div className="flex space-x-1 ml-2">
                     <Tooltip title="Edit Project">
                       <IconButton
@@ -446,6 +451,7 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
                       </IconButton>
                     </Tooltip>
                   </div>
+                  )}
                 </div>
                 <p className={`${darkMode ? "text-gray-300" : "text-gray-600"} line-clamp-3 mb-4 text-sm flex-grow`}>
                   {project.description}
@@ -518,35 +524,43 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode }) => {
                       {selectedProject.title}
                     </h2>
                   </div>
+              
                   <div className="flex gap-2">
-        <IconButton
-          onClick={(e) => openEditDialog(selectedProject, e)}
-          className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
-        >
-          <EditIcon />
-        </IconButton>
-        <IconButton
-          onClick={(e) => handleDelete(selectedProject.id, e)}
-          className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
-        >
-          <DeleteIcon />
-        </IconButton>
+  {/* Only admins can see Edit, Delete, and Inventory buttons */}
+  {isAdmin && (
+    <>
+      <IconButton
+        onClick={(e) => openEditDialog(selectedProject, e)}
+        className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
+      >
+        <EditIcon />
+      </IconButton>
 
-         {/* Inventory Button */}
-         <IconButton
-            onClick={() => navigate(`/inventory/projects/${selectedProject.id}`)}   // Navigate to inventory page
-            className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
-          >
-          <InventoryIcon sx={{ fontSize: 20 }} />            
-          </IconButton>
+      <IconButton
+        onClick={(e) => handleDelete(selectedProject.id, e)}
+        className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
+      >
+        <DeleteIcon />
+      </IconButton>
 
-        <IconButton
-          onClick={closeProjectDetails}
-          className="bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 hover:text-white transition-colors"
+      <IconButton
+        onClick={() => navigate(`/inventory/projects/${selectedProject.id}`)} // Navigate to inventory page
+        className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
+      >
+        <InventoryIcon sx={{ fontSize: 20 }} />
+      </IconButton>
+    </>
+  )}
+
+  {/* Close button is visible to everyone */}
+  <IconButton
+    onClick={closeProjectDetails}
+    className="bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 hover:text-white transition-colors"
   >
     <CloseIcon sx={{ fontSize: 28 }} /> {/* Increased icon size */}
-        </IconButton>
-      </div>
+  </IconButton>
+</div>
+
                 </div>
               </div>
             </div>
