@@ -1100,6 +1100,12 @@ class CouncilInventoryView(generics.RetrieveAPIView):
             status=status.HTTP_404_NOT_FOUND
         )
 
+from rest_framework import generics, status
+from rest_framework.response import Response
+from django.http import Http404
+from .models import Inventory
+from .serializers import InventorySerializer
+
 class InventoryListCreateView(generics.ListCreateAPIView):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
@@ -1137,19 +1143,30 @@ class InventoryListCreateView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # Retrieve, update, or delete a specific inventory item
-class InventoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Inventory.objects.all()
-    serializer_class = InventorySerializer
 
-    def get_object(self):
-        """Retrieve the specific inventory object by club_id and pk"""
-        club_id = self.kwargs.get('club_id')
-        pk = self.kwargs.get('pk')
+@api_view(['PATCH'])
+def update_club_inventory(request, club_name):
+    try:
+        # Find the club
+        club = Club.objects.get(name=club_name)
         
-        try:
-            return Inventory.objects.get(club_id=club_id, pk=pk)
-        except Inventory.DoesNotExist:
-            raise generics.Http404    
+        # Find or create the club's inventory
+        inventory, created = Inventory.objects.get_or_create(club=club)
+        
+        # Update the inventory with the provided data
+        serializer = InventorySerializer(inventory, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Club.DoesNotExist:
+        return Response({"error": "Club not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+  
 from allauth.socialaccount.models import SocialAccount
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response

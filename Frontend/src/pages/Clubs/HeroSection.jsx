@@ -177,8 +177,9 @@ const HeroSection = ({
           ></div>
           <img
             src={
-              club.image ||
-              "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80"
+            club.image 
+            ? `${import.meta.env.VITE_API_BASE_URL}${club.image}`  // Append base URL
+            : "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80"
             }
             alt={club.name}
             className={`w-48 h-48 md:w-56 md:h-56 object-cover rounded-full border-4 ${isDark ? "border-blue-600" : "border-blue-400"} shadow-2xl relative z-10`}

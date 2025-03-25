@@ -6,10 +6,8 @@ from .views import (
     clubs_by_council_crud, club_crud, get_club_by_name, AddMemberView, 
     RemoveMemberView, EditMemberView, get_user_profile, FeedbackView, CustomTokenRefreshView,
     update_club, delete_club, google_auth_url, google_callback, check_auth, logout,
-    ProjectListCreateView, ProjectDetailView, CouncilHeadDetailView,CouncilHeadListCreateView,InventoryDetailView
-    ,InventoryListCreateView,CouncilInventoryView, get_inventory, create_inventory, add_inventory_item, update_inventory_item, delete_inventory
-    # UploadProjectImagesView  # Added project views
-)
+    ProjectListCreateView, ProjectDetailView, CouncilHeadDetailView,CouncilHeadListCreateView,
+    InventoryListCreateView,CouncilInventoryView, update_club_inventory, get_inventory, create_inventory, add_inventory_item, update_inventory_item, delete_inventory)
 
 urlpatterns = [
     # Councils
@@ -70,9 +68,8 @@ urlpatterns = [
 
     # Inventory Management
     # List/Create inventory for a club
-   path("api/clubs/<str:club_name>/inventory/", InventoryListCreateView.as_view(), name="club-inventory"),
+    path("api/clubs/<str:club_name>/inventory/", InventoryListCreateView.as_view(), name="club-inventory"),
 
     # Retrieve, update, or delete specific inventory item
-   path("api/clubs/<int:club_id>/inventory/<int:pk>/", InventoryDetailView.as_view(), name="inventory-detail"),
-
+    path('api/clubs/<str:club_name>/inventory/update/', update_club_inventory, name='update_club_inventory'),
 ]

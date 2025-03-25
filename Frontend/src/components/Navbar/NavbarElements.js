@@ -16,11 +16,24 @@ export const Nav = styled.nav`
   }};
   transition: all 0.3s ease-in-out;
 
-  /* Added smoother transitions for mid-sized screens */
+  @media screen and (max-width: 1200px) {
+    padding: ${({ scrolled, isHomepage }) => {
+      if (!isHomepage) return "0";
+      return scrolled ? "0" : "22px 0";
+    }};
+  }
+
   @media screen and (max-width: 992px) {
     padding: ${({ scrolled, isHomepage }) => {
       if (!isHomepage) return "0";
       return scrolled ? "0" : "20px 0";
+    }};
+  }
+
+  @media screen and (max-width: 768px) {
+    padding: ${({ scrolled, isHomepage }) => {
+      if (!isHomepage) return "0";
+      return scrolled ? "0" : "18px 0";
     }};
   }
 
@@ -78,7 +91,14 @@ export const NavContainer = styled.div`
   }};
   transition: all 0.3s ease-in-out;
 
-  /* Added intermediate breakpoint for smoother transitions */
+  @media screen and (max-width: 1200px) {
+    padding: 0 40px;
+    height: ${({ scrolled, isHomepage }) => {
+      if (!isHomepage) return "85px";
+      return scrolled ? "85px" : "95px";
+    }};
+  }
+
   @media screen and (max-width: 992px) {
     padding: 0 30px;
     height: ${({ scrolled, isHomepage }) => {
@@ -119,7 +139,10 @@ export const NavLogo = styled(Link)`
     color: #007ea7;
   }
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) {
+    gap: 0.9rem;
+  }
+
   @media screen and (max-width: 992px) {
     gap: 0.8rem;
   }
@@ -136,9 +159,16 @@ export const LogoText = styled.div`
   flex-direction: column;
   line-height: 1.2;
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) {
+    line-height: 1.18;
+  }
+
   @media screen and (max-width: 992px) {
     line-height: 1.15;
+  }
+
+  @media screen and (max-width: 768px) {
+    line-height: 1.12;
   }
 
   @media screen and (max-width: 480px) {
@@ -152,7 +182,10 @@ export const InstituteName = styled.span`
   color: #f7f7f7;
   letter-spacing: 0.5px;
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) {
+    font-size: 1.5rem;
+  }
+
   @media screen and (max-width: 992px) {
     font-size: 1.4rem;
   }
@@ -171,7 +204,10 @@ export const SubHeading = styled.span`
   color: ${({ scrolled }) => (scrolled ? "#8d99ae" : "#f7f7f7")};
   transition: color 0.3s ease;
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) {
+    font-size: 0.98rem;
+  }
+
   @media screen and (max-width: 992px) {
     font-size: 0.95rem;
   }
@@ -190,7 +226,10 @@ export const LogoImage = styled.img`
   width: auto;
   border-radius: 50%;
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) {
+    height: 60px;
+  }
+
   @media screen and (max-width: 992px) {
     height: 55px;
   }
@@ -239,14 +278,17 @@ export const NavLink = styled(Link)`
     }
   }
 
-  /* Added intermediate breakpoint with improved spacing */
+  @media screen and (max-width: 1200px) {
+    padding: 0 1rem;
+    font-size: 1.02rem;
+  }
+
   @media screen and (max-width: 992px) {
     padding: 0 0.8rem;
     font-size: 1rem;
   }
 
-  /* Modified mobile menu behavior to start at a more appropriate breakpoint */
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 1260px) {
     padding: 1.5rem 0;
     font-size: 1.2rem;
     width: 100%;
@@ -262,7 +304,8 @@ export const NavLink = styled(Link)`
 export const Bars = styled(FaBars)`
   display: none;
   color: #00a8e8;
-  @media screen and (max-width: 768px) {
+  
+  @media screen and (max-width: 1260px) {
     display: block;
     font-size: 1.8rem;
     cursor: pointer;
@@ -277,7 +320,7 @@ export const CloseIcon = styled(IoMdClose)`
   display: none;
   color: #00a8e8;
 
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 1260px) {
     display: block;
     font-size: 2rem;
     cursor: pointer;
@@ -294,12 +337,15 @@ export const NavMenu = styled.div`
   align-items: center;
   height: 100%;
 
-  /* Added adjustments for immediate pre-mobile resolutions */
-  @media screen and (max-width: 992px) and (min-width: 769px) {
-    gap: 0.2rem; /* Reduce spacing between nav items */
+  @media screen and (max-width: 1200px) and (min-width: 1261px) {
+    gap: 0.3rem;
   }
 
-  @media (max-width: 768px) {
+  @media screen and (max-width: 992px) and (min-width: 769px) {
+    gap: 0.2rem;
+  }
+
+  @media (max-width: 1260px) {
     display: ${({ isOpen }) => (isOpen ? "flex" : "none")};
     flex-direction: column;
     width: 100%;
@@ -325,12 +371,15 @@ export const NavBtn = styled.nav`
   align-items: center;
   margin-left: 1.5rem;
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) and (min-width: 1261px) {
+    margin-left: 1.2rem;
+  }
+
   @media screen and (max-width: 992px) and (min-width: 769px) {
     margin-left: 1rem;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1260px) {
     width: 100%;
     margin: 2rem 0 0;
     justify-content: center;
@@ -352,6 +401,7 @@ export const NavBtnLink = styled(Link)`
   outline: none;
   border: 2px solid #00a8e8;
   transition: all 0.2s ease-in-out;
+  text-decoration: none;
 
   &:hover {
     background: #007ea7;
@@ -360,13 +410,17 @@ export const NavBtnLink = styled(Link)`
     transform: translateY(-2px);
   }
 
-  /* Added intermediate breakpoint */
+  @media screen and (max-width: 1200px) and (min-width: 1261px) {
+    padding: 11px 20px;
+    font-size: 1.02rem;
+  }
+
   @media screen and (max-width: 992px) and (min-width: 769px) {
     padding: 10px 18px;
     font-size: 1rem;
   }
 
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 1260px) {
     width: 80%;
     text-align: center;
     padding: 14px 0;

@@ -25,30 +25,43 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
 
 class ClubSerializer(serializers.ModelSerializer):
     head = UsersSerializer(required=False, allow_null=True)  # Show full head details
-    # members = serializers.SerializerMethodField()  # Get members' details
-    # council = CouncilSerializer()  # Show full council details
     members_count = serializers.SerializerMethodField()
     projects_count = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
+    
+    # ✅ Added image field
+    image = serializers.ImageField(required=False, allow_null=True)
 
+    # Primary Key Fields
     head_id = serializers.PrimaryKeyRelatedField(
         queryset=Users.objects.all(), source="head", write_only=True, required=False
     )
-    members = serializers.SerializerMethodField()
-    council = serializers.PrimaryKeyRelatedField(queryset=Council.objects.all())  # ✅ This accepts an ID
+    council = serializers.PrimaryKeyRelatedField(queryset=Council.objects.all())  # Accepts ID
+    
     website = serializers.URLField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
+
     class Meta:
         model = Club
-        fields = ['id', 'name', 'head', 'head_id', 'description', 'members_count', 
-              'projects_count', 'members', 'council', 'website', 'email']
+        fields = [
+            'id', 'name', 'head', 'head_id', 'description', 'members_count',
+            'projects_count', 'members', 'council', 'website', 'email', 'image'
+        ]
+
     def get_members(self, obj):
+        """Retrieve and serialize the members of the club."""
         members = ClubMembership.objects.filter(club=obj)
         return ClubMembershipSerializer(members, many=True).data
+
     def get_members_count(self, obj):
+        """Get the member count using the cached or direct count."""
         return getattr(obj, 'db_members_count', obj.members_count)
 
     def get_projects_count(self, obj):
+        """Get the project count using the cached or direct count."""
         return getattr(obj, 'db_projects_count', obj.projects_count)
+
+        
 from .models import Project
 
 from rest_framework import serializers

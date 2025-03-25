@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from "react";
-import clsx from "clsx";  // Install using: npm install clsx
+import { 
+  Button, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  TextField 
+} from "@mui/material";
+import clsx from "clsx";
+
 const API_BASE_URL = "http://localhost:8000";
 
 const ClubStats = ({ club, darkMode }) => {
   const [inventory, setInventory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editInventory, setEditInventory] = useState({
+    budget_allocated: 0,
+    budget_used: 0
+  });
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -19,7 +33,7 @@ const ClubStats = ({ club, darkMode }) => {
         }
 
         const data = await response.json();
-        setInventory(data[0] || {});  // Access the first inventory item
+        setInventory(data[0] || {});
         setLoading(false);
       } catch (error) {
         console.error("Failed to fetch inventory:", error);
@@ -30,6 +44,40 @@ const ClubStats = ({ club, darkMode }) => {
 
     fetchInventory();
   }, [club?.name]);
+
+  const handleEditOpen = () => {
+    setEditInventory({
+      budget_allocated: inventory?.budget_allocated || 0,
+      budget_used: inventory?.budget_used || 0
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/clubs/${club.name}/inventory/update/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          budget_allocated: editInventory.budget_allocated,
+          budget_used: editInventory.budget_used,
+        }),
+      });
+      
+      if (!response.ok) {
+        console.log(response);
+        throw new Error(`Error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      setInventory(data);
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to update inventory:", error);
+    }
+  };
 
   if (loading) {
     return <div className="text-center p-6 text-lg">Loading...</div>;
@@ -88,8 +136,105 @@ const ClubStats = ({ club, darkMode }) => {
               </p>
             </div>
           </div>
+          <Button 
+            onClick={handleEditOpen}
+            variant="contained"
+            style={{ 
+              marginTop: '1rem',
+              borderRadius: "30px", 
+              padding: "10px 20px",
+              backgroundColor: "#9C27B0",
+              textTransform: "none",
+              fontWeight: "bold",
+              transition: "transform 0.3s, box-shadow 0.3s",
+            }}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#AB47BC",
+                transform: "scale(1.05)",
+                boxShadow: "0 6px 12px rgba(156,39,176,0.3)"
+              }
+            }}
+          >
+            Edit
+          </Button>
         </div>
       </div>
+
+      {/* Edit Inventory Dialog */}
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)} 
+        fullWidth 
+        maxWidth="sm"
+      >
+        <DialogTitle className="text-xl font-bold bg-gray-50 py-4">
+          Edit Club Inventory
+        </DialogTitle>
+        <DialogContent className="flex flex-col gap-4 pt-4 mt-2">
+          <TextField
+            label="Budget Allocated (₹)"
+            type="number"
+            fullWidth
+            value={editInventory.budget_allocated}
+            onChange={(e) => setEditInventory({
+              ...editInventory, 
+              budget_allocated: Number(e.target.value)
+            })}
+            variant="outlined"
+            margin="dense"
+          />
+          <TextField
+            label="Budget Used (₹)"
+            type="number"
+            fullWidth
+            value={editInventory.budget_used}
+            onChange={(e) => setEditInventory({
+              ...editInventory, 
+              budget_used: Number(e.target.value)
+            })}
+            variant="outlined"
+            margin="dense"
+          />
+        </DialogContent>
+        <DialogActions className="bg-gray-50 py-3 px-4">
+          <Button 
+            onClick={() => setEditDialogOpen(false)} 
+            color="secondary"
+            style={{ 
+              borderRadius: "20px",
+              textTransform: "none",
+              transition: "transform 0.2s"
+            }}
+            sx={{
+              "&:hover": {
+                transform: "scale(1.05)"
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleEditSubmit} 
+            variant="contained"
+            style={{ 
+              borderRadius: "20px",
+              backgroundColor: "#00C853",
+              textTransform: "none",
+              transition: "transform 0.2s, box-shadow 0.2s"
+            }}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#00E676",
+                transform: "scale(1.05)",
+                boxShadow: "0 4px 8px rgba(0,200,83,0.3)"
+              }
+            }}
+          >
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
