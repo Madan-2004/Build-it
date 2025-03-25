@@ -24,7 +24,25 @@ const manifestForPlugIn = {
         "sizes": "512x512",
         "src": "icon512_rounded.png",
         "type": "image/png"
-      }
+      },
+      {
+        "purpose": "any",
+        "sizes": "192x192",
+        "src": "android-chrome-192x192.png",
+        "type": "image/png"
+      },
+      {
+        "purpose": "any",
+        "sizes": "512x512",
+        "src": "android-chrome-512x512.png",
+        "type": "image/png"
+      },
+      {
+        "purpose": "apple touch icon",
+        "sizes": "512x512",
+        "src": "apple-touch-icon.png",
+        "type": "image/png"
+      },
     ],
     "orientation": "any",
     "display": "standalone",
