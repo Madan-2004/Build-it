@@ -17,8 +17,10 @@ def populate_inventory():
     # ✅ Create inventory for each club
     clubs = Club.objects.select_related('council')
     for club in clubs:
-        budget_allocated = round((10000 + club.id * 500), 2)  # Example allocation logic
-        budget_used = round((budget_allocated * 0.6), 2)  # Example usage logic (60% used)
+        # budget_allocated = round((10000 + club.id * 500), 2)  # Example allocation logic
+        # budget_used = round((budget_allocated * 0.6), 2)  # Example usage logic (60% used)
+        budget_allocated  = 0
+        budget_used = 0
 
         Inventory.objects.create(
             club=club,
@@ -31,13 +33,15 @@ def populate_inventory():
     # ✅ Create inventory for each council (aggregated from clubs)
     councils = Council.objects.prefetch_related('clubs')
     for council in councils:
-        total_allocated = council.clubs.aggregate(
-            total_allocated=Sum('inventory__budget_allocated'),
-            total_used=Sum('inventory__budget_used')
-        )
+        # total_allocated = council.clubs.aggregate(
+        #     # total_allocated=Sum('inventory__budget_allocated'),
+        #     # total_used=Sum('inventory__budget_used')
+        # )
 
-        budget_allocated = total_allocated['total_allocated'] or 0
-        budget_used = total_allocated['total_used'] or 0
+        # budget_allocated = total_allocated['total_allocated'] or 0
+        # budget_used = total_allocated['total_used'] or 0
+        budget_allocated = 0
+        budget_used = 0
 
         Inventory.objects.create(
             club=None,
