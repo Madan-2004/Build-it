@@ -18,6 +18,7 @@ import {
 } from "react-feather";
 import EventForm from "./components/EventForm";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie"; 
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
@@ -29,6 +30,20 @@ export default function EventDetails() {
   const [error, setError] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+   const [isAdmin, setIsAdmin] = useState(false);
+    useEffect(() => {
+      // Fetch `is_authenticated` from cookies
+      const isAuthenticated = Cookies.get("is_authenticated") === "true";
+      const userRole = Cookies.get("user_role");  // Example: get role from cookie
+      console.log("User role:", isAuthenticated);
+  
+      // Set admin status based on authentication and role
+      if (isAuthenticated ) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    }, []);
 
   useEffect(() => {
     fetchEventDetails();
@@ -153,7 +168,7 @@ export default function EventDetails() {
               <span className="hidden md:inline ml-2">Back</span>
             </button>
 
-            {/* Button Group */}
+            {/* Button Group */} {isAdmin&& ( 
             <div className="flex items-center space-x-2 md:space-x-3">
               {/* Share Button */}
               <div className="relative">
@@ -213,7 +228,7 @@ export default function EventDetails() {
                 <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
                 <span className="hidden md:inline ml-2">Delete</span>
               </button>
-            </div>
+            </div>)}
           </div>
         </div>
 

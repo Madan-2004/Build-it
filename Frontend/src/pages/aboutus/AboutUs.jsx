@@ -44,7 +44,7 @@ export default function AboutUs() {
         </S.SectionLeft>
         <S.SectionRight>
           <S.SectionImage
-            src="../../../public/coverpage.jpg"
+            src="../../../public/maskable-icon.png"
             alt="Student Constitution Document"
           />
         </S.SectionRight>

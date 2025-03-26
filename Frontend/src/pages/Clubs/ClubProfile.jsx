@@ -504,7 +504,7 @@ const ClubProfile = () => {
                   isAdmin={isAdmin}
                 />
 
-                <ClubStats club={club} darkMode={darkMode} />
+                <ClubStats club={club} darkMode={darkMode} isAdmin={isAdmin} />
 
                 {/* Quick Links Card */}
                 <div
@@ -647,7 +647,7 @@ const ClubProfile = () => {
             </div>
           </div>
         ) : (
-          <ClubEvents clubId={club.id} clubName={clubName} darkMode={darkMode} />
+          <ClubEvents clubId={club.id} clubName={clubName} darkMode={darkMode} isAdmin={isAdmin}/>
         )}
       </div>
 

@@ -11,7 +11,7 @@ import clsx from "clsx";
 
 const API_BASE_URL = "http://localhost:8000";
 
-const ClubStats = ({ club, darkMode }) => {
+const ClubStats = ({ club, darkMode,isAdmin }) => {
   const [inventory, setInventory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -114,7 +114,7 @@ const ClubStats = ({ club, darkMode }) => {
         </div>
 
         {/* Inventory Details */}
-        <div className="mt-6">
+        {isAdmin && (<div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">📦 Inventory Details</h3>
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div className={clsx(darkMode ? "bg-gray-700" : "bg-gray-100", "p-4 rounded-lg text-center")}>
@@ -158,7 +158,7 @@ const ClubStats = ({ club, darkMode }) => {
           >
             Edit
           </Button>
-        </div>
+        </div>)}
       </div>
 
       {/* Edit Inventory Dialog */}

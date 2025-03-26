@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, MapPin, DollarSign, Link, Mail } from "react-feather";
 import { format } from "date-fns";
+import Cookies from "js-cookie"; 
 
 export default function EventCard({ event, viewMode }) {
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    // Fetch `is_authenticated` from cookies
+    const isAuthenticated = Cookies.get("is_authenticated") === "true";
+    const userRole = Cookies.get("user_role");  // Example: get role from cookie
+    console.log("User role:", isAuthenticated);
+
+    // Set admin status based on authentication and role
+    if (isAuthenticated && userRole === "admin") {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, []);
 
   const handleClick = () => {
     navigate(`/events/${event.id}`);

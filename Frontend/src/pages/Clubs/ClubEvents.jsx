@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import EventCard from "../Events/components/EventCard";
 import EventForm from "../Events/components/EventForm";
 
-const ClubEvents = ({ clubId, clubName, darkMode }) => {
+const ClubEvents = ({ clubId, clubName, darkMode,isAdmin}) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -71,22 +71,22 @@ const ClubEvents = ({ clubId, clubName, darkMode }) => {
           {events.map((event) => (
             <div key={event.id}>
               <EventCard event={event} viewMode="grid" />
-              <Link to={`/inventory/events/${event.id}/`} className={`block mt-4 text-center py-2 rounded-lg ${darkMode ? "bg-green-600 text-white hover:bg-green-700" : "bg-green-500 text-white hover:bg-green-600"} transition duration-150`}>
+             {isAdmin&& ( <Link to={`/inventory/events/${event.id}/`} className={`block mt-4 text-center py-2 rounded-lg ${darkMode ? "bg-green-600 text-white hover:bg-green-700" : "bg-green-500 text-white hover:bg-green-600"} transition duration-150`}>
                 View Inventory
-              </Link>
+              </Link>)}
             </div>
           ))}
         </div>
 
         {/* Create Event Button */}
-        <div className="mt-8 flex justify-center">
+        {isAdmin&& (  <div className="mt-8 flex justify-center">
           <button
             onClick={() => setIsFormOpen(true)}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             Create New Event
           </button>
-        </div>
+        </div>)}
 
         {/* Event Form Modal */}
         {isFormOpen && (
