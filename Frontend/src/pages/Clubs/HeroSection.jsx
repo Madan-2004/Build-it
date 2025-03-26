@@ -269,14 +269,22 @@ const HeroSection = ({
       <div className="space-y-6">
         {fields.map((field) => {
           const error = field.validation?.(field.value);
+          const baseInputClasses = `w-full rounded-xl transition-all duration-200 py-2.5 px-3.5 ${
+            isDark 
+              ? "bg-gray-800 border-gray-700 text-white focus:border-blue-600 border" 
+              : "bg-white border-gray-300 text-gray-900 focus:border-blue-500 border"
+          } ${error ? "border-red-500" : ""}
+            shadow-sm focus:ring-2 focus:ring-blue-500/30 outline-none`;
+    
+          const labelClasses = `block text-sm font-medium mb-2 ${
+            isDark ? "text-gray-300" : "text-gray-700"
+          }`;
           
           return (
             <div key={field.id} className="relative">
               <label
                 htmlFor={field.id}
-                className={`block text-sm font-medium mb-2 ${
-                  isDark ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={labelClasses}
               >
                 {field.label}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -286,12 +294,7 @@ const HeroSection = ({
                 <textarea
                   id={field.id}
                   rows={field.rows}
-                  className={`w-full rounded-lg transition-all duration-200 ${
-                    isDark 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-blue-500" 
-                      : "bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-400"
-                  } ${error ? "border-red-500" : "border-gray-300"}
-                    shadow-sm focus:ring-2 focus:ring-opacity-50 focus:ring-blue-500`}
+                  className={baseInputClasses}
                   value={field.value}
                   onChange={(e) => {
                     setEditClub({ ...editClub, [field.id]: e.target.value });
@@ -303,12 +306,7 @@ const HeroSection = ({
                 <input
                   id={field.id}
                   type={field.type}
-                  className={`w-full rounded-lg transition-all duration-200 ${
-                    isDark 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-blue-500" 
-                      : "bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-400"
-                  } ${error ? "border-red-500" : "border-gray-300"}
-                    shadow-sm focus:ring-2 focus:ring-opacity-50 focus:ring-blue-500`}
+                  className={baseInputClasses}
                   value={field.value}
                   onChange={(e) => {
                     setEditClub({ ...editClub, [field.id]: e.target.value });

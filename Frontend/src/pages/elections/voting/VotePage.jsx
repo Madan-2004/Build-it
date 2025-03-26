@@ -238,12 +238,12 @@ const VotePage = () => {
                     </div>
                 )}
 
-                {voterInfo && positions.length !== eligiblePositions.length && (
+                {/* {voterInfo && positions.length !== eligiblePositions.length && (
                     <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 text-sm">
                         <p className="font-medium">Note: Some positions are not displayed because you don't meet their eligibility criteria.</p>
                         <p className="mt-1">You are only shown positions you are eligible to vote for .</p>
                     </div>
-                )}
+                )} */}
 
                 <div className="space-y-6">
                     {eligiblePositions.map((position) => (

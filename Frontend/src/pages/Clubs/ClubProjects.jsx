@@ -743,176 +743,245 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode ,isAdmin}) => {
         </div>
       )}
 
-      {/* Add/Edit Project Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          style: {
-            backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-            color: darkMode ? '#ffffff' : '#111827',
-          },
-          className: `${darkMode ? "border border-gray-700" : "border border-gray-200"}`,
-        }}
-      >
-        <DialogTitle className={darkMode ? "text-white" : "text-gray-900"}>
-          {dialogMode === "add" ? "Add New Project" : "Edit Project"}
-        </DialogTitle>
-        <DialogContent className={darkMode ? "bg-gray-800" : "bg-white"}>
-          <TextField
-            label="Project Title"
-            fullWidth
-            variant="outlined"
-            margin="normal"
-            name="title"
-            value={currentProject.title}
-            onChange={handleInputChange}
-            required
-            className={darkMode ? "bg-gray-700 rounded-lg" : ""}
-            InputLabelProps={{
-              style: { color: darkMode ? '#9ca3af' : undefined },
-            }}
-            InputProps={{
-              style: { color: darkMode ? '#ffffff' : undefined },
-            }}
-          />
-          <TextField
-            label="Project Description"
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            margin="normal"
-            name="description"
-            value={currentProject.description}
-            onChange={handleInputChange}
-            required
-            InputLabelProps={{
-              style: { color: darkMode ? '#9ca3af' : undefined },
-            }}
-            InputProps={{
-              style: { color: darkMode ? '#ffffff' : undefined },
-            }}
-          />
-       <LocalizationProvider dateAdapter={AdapterDayjs}>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-    <DatePicker
-      label="Start Date"
-      value={dayjs(currentProject.start_date)}
-      onChange={(newValue) => {
-        setCurrentProject(prev => ({
-          ...prev,
-          start_date: newValue
-        }));
+<Dialog
+  open={dialogOpen}
+  onClose={() => setDialogOpen(false)}
+  maxWidth="md"
+  fullWidth
+  PaperProps={{
+    style: {
+      backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+      color: darkMode ? '#ffffff' : '#111827',
+      borderRadius: '12px', // More rounded corners
+      boxShadow: darkMode 
+        ? '0 10px 25px rgba(0, 0, 0, 0.3)' 
+        : '0 10px 25px rgba(0, 0, 0, 0.1)', // Enhanced shadow
+    },
+    className: `${darkMode 
+      ? "border border-gray-700 ring-2 ring-gray-800" 
+      : "border border-gray-200"}`
+  }}
+>
+  <DialogTitle 
+    className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}
+  >
+    {dialogMode === "add" ? "Add New Project" : "Edit Project"}
+  </DialogTitle>
+  
+  <DialogContent className={`space-y-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+    <TextField
+      label="Project Title"
+      fullWidth
+      variant="outlined"
+      margin="normal"
+      name="title"
+      value={currentProject.title}
+      onChange={handleInputChange}
+      required
+      className={darkMode ? "bg-gray-700/50 rounded-xl" : ""}
+      InputLabelProps={{
+        style: { 
+          color: darkMode ? '#a1a1aa' : undefined,
+          fontWeight: 500
+        },
       }}
-      slotProps={{
-        textField: {
-          required: true,
-          fullWidth: true,
-          className: darkMode ? " bg-gray-700 rounded-lg" : "",
-          InputProps: {
-            className: darkMode ? "text-white" : ""
-          },
-          InputLabelProps: {
-            className: darkMode ? "text-white" : ""
-          }
-        }
+      InputProps={{
+        style: { 
+          color: darkMode ? '#ffffff' : undefined,
+          borderRadius: '10px',
+        },
+        className: darkMode ? "text-white placeholder-gray-400" : ""
       }}
     />
-    <DatePicker
-      label="End Date"
-      value={currentProject.end_date ? dayjs(currentProject.end_date) : null}
-      onChange={(newValue) => {
-        setCurrentProject(prev => ({
-          ...prev,
-          end_date: newValue
-        }));
+    
+    <TextField
+      label="Project Description"
+      fullWidth
+      multiline
+      rows={4}
+      variant="outlined"
+      margin="normal"
+      name="description"
+      value={currentProject.description}
+      onChange={handleInputChange}
+      required
+      className={darkMode ? "bg-gray-700/50 rounded-xl" : ""}
+      InputLabelProps={{
+        style: { 
+          color: darkMode ? '#a1a1aa' : undefined,
+          fontWeight: 500
+        },
       }}
-      slotProps={{
-        textField: {
-          fullWidth: true,
-          className: darkMode ? "bg-gray-700 rounded-lg" : "",
-          InputProps: {
-            className: darkMode ? "text-white" : ""
-          },
-          InputLabelProps: {
-            className: darkMode ? "text-white" : ""
-          }
-        }
+      InputProps={{
+        style: { 
+          color: darkMode ? '#ffffff' : undefined,
+          borderRadius: '10px',
+        },
+        className: darkMode ? "text-white placeholder-gray-400" : ""
       }}
     />
-  </div>
-</LocalizationProvider>
-          <TextField
-            select
-            label="Status"
-            fullWidth
-            variant="outlined"
-            margin="normal"
-            name="status"
-            value={currentProject.status}
-            onChange={handleInputChange}
-            className={darkMode ? "bg-gray-700 rounded-lg" : ""}
-            InputLabelProps={{
-              style: { color: darkMode ? '#9ca3af' : undefined },
-            }}
-            InputProps={{
-              style: { color: darkMode ? '#ffffff' : undefined },
-            }}
-          >
-            <MenuItem value="ongoing">Ongoing</MenuItem>
-            <MenuItem value="completed">Completed</MenuItem>
-          </TextField>
-          <div className="mt-4">
-            <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-              Project Images (up to 5)
-            </p>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className={`w-full border p-2 rounded ${
-                darkMode 
-                  ? "bg-gray-700 border-gray-600 text-gray-300" 
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-              disabled={currentProject?.images?.length >= 5}
+   
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DatePicker
+          label="Start Date"
+          value={dayjs(currentProject.start_date)}
+          onChange={(newValue) => {
+            setCurrentProject(prev => ({
+              ...prev,
+              start_date: newValue
+            }));
+          }}
+          slotProps={{
+            textField: {
+              required: true,
+              fullWidth: true,
+              className: darkMode 
+                ? "bg-gray-700/50 rounded-xl" 
+                : "rounded-xl",
+              InputProps: {
+                style: { 
+                  color: darkMode ? '#ffffff' : undefined,
+                  borderRadius: '10px',
+                },
+                className: darkMode 
+                  ? "text-white placeholder-gray-400" 
+                  : ""
+              },
+              InputLabelProps: {
+                style: { 
+                  color: darkMode ? '#a1a1aa' : undefined,
+                  fontWeight: 500
+                },
+              }
+            }
+          }}
+        />
+        <DatePicker
+          label="End Date"
+          value={currentProject.end_date ? dayjs(currentProject.end_date) : null}
+          onChange={(newValue) => {
+            setCurrentProject(prev => ({
+              ...prev,
+              end_date: newValue
+            }));
+          }}
+          slotProps={{
+            textField: {
+              fullWidth: true,
+              className: darkMode 
+                ? "bg-gray-700/50 rounded-xl" 
+                : "rounded-xl",
+              InputProps: {
+                style: { 
+                  color: darkMode ? '#ffffff' : undefined,
+                  borderRadius: '10px',
+                },
+                className: darkMode 
+                  ? "text-white placeholder-gray-400" 
+                  : ""
+              },
+              InputLabelProps: {
+                style: { 
+                  color: darkMode ? '#a1a1aa' : undefined,
+                  fontWeight: 500
+                },
+              }
+            }
+          }}
+        />
+      </div>
+    </LocalizationProvider>
+    
+    <TextField
+      select
+      label="Status"
+      fullWidth
+      variant="outlined"
+      margin="normal"
+      name="status"
+      value={currentProject.status}
+      onChange={handleInputChange}
+      className={darkMode ? "bg-gray-700/50 rounded-xl" : ""}
+      InputLabelProps={{
+        style: { 
+          color: darkMode ? '#a1a1aa' : undefined,
+          fontWeight: 500
+        },
+      }}
+      InputProps={{
+        style: { 
+          color: darkMode ? '#ffffff' : undefined,
+          borderRadius: '10px',
+        },
+        className: darkMode ? "text-white" : ""
+      }}
+    >
+      <MenuItem value="ongoing">Ongoing</MenuItem>
+      <MenuItem value="completed">Completed</MenuItem>
+    </TextField>
+    
+    <div className="mt-4">
+      <p className={`mb-2 font-medium ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+        Project Images (up to 5)
+      </p>
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleImageChange}
+        className={`w-full border p-2.5 rounded-xl transition-all duration-300 ${
+          darkMode 
+            ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/30" 
+            : "bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500/30"
+        }`}
+        disabled={currentProject?.images?.length >= 5}
+      />
+      <div className="flex flex-wrap mt-2 gap-2">
+        {currentProject?.images?.map((image, index) => (
+          <div key={index} className="relative group">
+            <img
+              src={
+                image instanceof File
+                  ? URL.createObjectURL(image)
+                  : image.image || image
+              }
+              alt={`Project image ${index + 1}`}
+              className="w-24 h-24 object-cover rounded-lg"
             />
-            <div className="flex flex-wrap mt-2">
-              {currentProject?.images?.map((image, index) => (
-                <div key={index} className="relative m-1">
-                  <img
-                    src={
-                      image instanceof File
-                        ? URL.createObjectURL(image)
-                        : image.image || image
-                    }
-                    alt={`Project image ${index + 1}`}
-                    className="w-20 h-20 object-cover"
-                  />
-                  <button
-                    onClick={() => removeImage(index)}
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={() => removeImage(index)}
+              className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 
+                flex items-center justify-center opacity-0 group-hover:opacity-100 
+                transition-opacity duration-300 transform -translate-y-1/4 translate-x-1/4"
+            >
+              ×
+            </button>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} color="primary" variant="contained">
-            {dialogMode === "add" ? "Add Project" : "Update Project"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        ))}
+      </div>
+    </div>
+  </DialogContent>
+  
+  <DialogActions className="p-4">
+    <Button 
+      onClick={() => setDialogOpen(false)} 
+      color="secondary"
+      variant="outlined"
+      className="mr-2"
+    >
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleSubmit} 
+      color="primary" 
+      variant="contained"
+      className="shadow-md hover:shadow-lg transition-shadow"
+    >
+      {dialogMode === "add" ? "Add Project" : "Update Project"}
+    </Button>
+  </DialogActions>
+</Dialog>
     </div>
   );
 };
