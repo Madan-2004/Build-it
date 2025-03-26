@@ -48,10 +48,15 @@ class Position(models.Model):
         ('EP', 'EP'),
         ('SSE', 'SSE'),
         ('MC', 'MC'), 
+       
+    ]
+    DEGREE_SELECTION_CHOICES = [
+        ('B.Tech', 'B.Tech'),
+        ('MTech', 'MTech'),
         ('MSC', 'MSC'),
         ('PHD', 'PHD'),
-        ("MTech", "MTech"),
     ]
+    
         # chemiscla mtech phd
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255)
@@ -67,6 +72,11 @@ class Position(models.Model):
     branch_restriction = models.JSONField(
         default=list,  # Defaults to allowing all
         help_text="List of eligible departments that can vote."
+    )
+    # Store multiple degree restrictions as JSONField
+    degree_restriction = models.JSONField(
+        default=list,
+        help_text="List of eligible degrees that can vote."
     )
 
     class Meta:

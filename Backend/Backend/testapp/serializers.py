@@ -43,12 +43,15 @@ class PositionSerializer(serializers.ModelSerializer):
     branch_restriction = serializers.ListField(
         child=serializers.CharField(), required=False  # ✅ Store as a list
     )
+    degree_restriction = serializers.ListField(
+        child=serializers.CharField(), required=False  # Store as a list
+    )
 
     class Meta:
         model = Position
         fields = [
             'id', 'election', 'title', 'description',
-             'batch_restriction', 'branch_restriction', 'candidates'
+             'batch_restriction', 'branch_restriction', 'degree_restriction', 'candidates'
         ]
 
     def get_candidates(self, obj):
@@ -73,7 +76,13 @@ class PositionSerializer(serializers.ModelSerializer):
         if not all(Department in valid_choices for Department in value):
             raise serializers.ValidationError("Invalid Department selection.")
         return value
-
+    
+    def validate_degree_restriction(self, value):
+        """Ensure degree restriction is a list and contains valid choices"""
+        valid_choices = ["B.Tech", "MTech", "MSC", "PHD"]
+        if not all(degree in valid_choices for degree in value):
+            raise serializers.ValidationError("Invalid degree selection.")
+        return value
 
 
 class ElectionSerializer(serializers.ModelSerializer):

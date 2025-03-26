@@ -420,35 +420,32 @@ const AddPositionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Map degrees to backend-specific case-sensitive strings
     const degreeMapping = {
       "MTech": "MTech",
       "MSC": "MSC",
       "PHD": "PHD"
     };
-
-    // Prepare branch restriction with non-B.Tech degrees
-    const finalBranchRestriction = [
-      ...branchRestriction,
-      ...selectedDegrees
-        .filter(degree => degree !== "B.Tech")
-        .map(degree => degreeMapping[degree] || degree)
-    ];
-
+  
+    // Prepare branch restriction for B.Tech and non-B.Tech degrees
+    const finalBranchRestriction = branchRestriction.length
+      ? branchRestriction
+      : ["All Branches"];
+  
     const newPosition = {
       election: electionId,
       title,
       description,
-      batch_restriction: selectedDegrees.includes("B.Tech") 
-        ? (batchRestriction.includes("All Batches") 
-          ? ["All Batches"] 
+      batch_restriction: selectedDegrees.includes("B.Tech")
+        ? (batchRestriction.includes("All Batches")
+          ? ["All Batches"]
           : batchRestriction.filter(b => b !== "All Batches"))
         : ["All Batches"],
-      branch_restriction: finalBranchRestriction.length ? finalBranchRestriction : ["All Branches"],
+      branch_restriction: finalBranchRestriction,
       degree_restriction: selectedDegrees.length ? selectedDegrees : ["All Degrees"]
     };
-
+  
     try {
       console.log("Adding position:", newPosition);
       await axios.post(`${API_URL}elections/${electionId}/positions/`, newPosition, { withCredentials: true });

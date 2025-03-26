@@ -88,14 +88,15 @@ class PositionViewSet(viewsets.ModelViewSet):
         # ✅ Ensure lists are received correctly for batch and Department restrictions
         batch_restriction = request.data.get('batch_restriction', [])
         branch_restriction = request.data.get('branch_restriction', [])
+        degree_restriction = request.data.get('degree_restriction', [])
 
-        if not isinstance(batch_restriction, list) or not isinstance(branch_restriction, list):
+        if not isinstance(batch_restriction, list) or not isinstance(branch_restriction, list)or not isinstance(degree_restriction, list):
             return Response({"error": "Batch and Department restrictions must be lists."}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Serialize and update
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        serializer.save(batch_restriction=batch_restriction, branch_restriction=branch_restriction)
+        serializer.save(batch_restriction=batch_restriction, branch_restriction=branch_restriction,degree_restriction=degree_restriction)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
