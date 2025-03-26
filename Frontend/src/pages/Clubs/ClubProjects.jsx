@@ -789,44 +789,62 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode ,isAdmin}) => {
             value={currentProject.description}
             onChange={handleInputChange}
             required
+            InputLabelProps={{
+              style: { color: darkMode ? '#9ca3af' : undefined },
+            }}
+            InputProps={{
+              style: { color: darkMode ? '#ffffff' : undefined },
+            }}
           />
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-              <DatePicker
-                label="Start Date"
-                value={dayjs(currentProject.start_date)}
-                onChange={(newValue) => {
-                  setCurrentProject(prev => ({
-                    ...prev,
-                    start_date: newValue
-                  }));
-                }}
-                slotProps={{
-                  textField: {
-                    required: true,
-                    fullWidth: true,
-                    className: darkMode ? "bg-gray-700 rounded-lg" : ""
-                  }
-                }}
-              />
-              <DatePicker
-                label="End Date"
-                value={currentProject.end_date ? dayjs(currentProject.end_date) : null}
-                onChange={(newValue) => {
-                  setCurrentProject(prev => ({
-                    ...prev,
-                    end_date: newValue
-                  }));
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    className: darkMode ? "bg-gray-700 rounded-lg" : ""
-                  }
-                }}
-              />
-            </div>
-          </LocalizationProvider>
+       <LocalizationProvider dateAdapter={AdapterDayjs}>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+    <DatePicker
+      label="Start Date"
+      value={dayjs(currentProject.start_date)}
+      onChange={(newValue) => {
+        setCurrentProject(prev => ({
+          ...prev,
+          start_date: newValue
+        }));
+      }}
+      slotProps={{
+        textField: {
+          required: true,
+          fullWidth: true,
+          className: darkMode ? " bg-gray-700 rounded-lg" : "",
+          InputProps: {
+            className: darkMode ? "text-white" : ""
+          },
+          InputLabelProps: {
+            className: darkMode ? "text-white" : ""
+          }
+        }
+      }}
+    />
+    <DatePicker
+      label="End Date"
+      value={currentProject.end_date ? dayjs(currentProject.end_date) : null}
+      onChange={(newValue) => {
+        setCurrentProject(prev => ({
+          ...prev,
+          end_date: newValue
+        }));
+      }}
+      slotProps={{
+        textField: {
+          fullWidth: true,
+          className: darkMode ? "bg-gray-700 rounded-lg" : "",
+          InputProps: {
+            className: darkMode ? "text-white" : ""
+          },
+          InputLabelProps: {
+            className: darkMode ? "text-white" : ""
+          }
+        }
+      }}
+    />
+  </div>
+</LocalizationProvider>
           <TextField
             select
             label="Status"
@@ -837,6 +855,12 @@ const ClubProjects = ({ clubId, darkMode, setDarkMode ,isAdmin}) => {
             value={currentProject.status}
             onChange={handleInputChange}
             className={darkMode ? "bg-gray-700 rounded-lg" : ""}
+            InputLabelProps={{
+              style: { color: darkMode ? '#9ca3af' : undefined },
+            }}
+            InputProps={{
+              style: { color: darkMode ? '#ffffff' : undefined },
+            }}
           >
             <MenuItem value="ongoing">Ongoing</MenuItem>
             <MenuItem value="completed">Completed</MenuItem>

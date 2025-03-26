@@ -424,7 +424,7 @@ DEPARTMENT_MAPPING = {
 }
 # Define degree mapping
 DEGREE_MAPPING = {
-    "B.Tech.": "BTech",
+    "B.Tech.": "B.Tech",
     "Ph.D.": "PHD",
     "M.Tech.": "MTech",
     "M.Sc.": "MSC",
