@@ -86,7 +86,7 @@ docs/                    # Auto-generated API documentation
 
 ## ⚡ Quick Start
 
-### 🔙 Backend
+### Backend
 
 ```bash
 python -m venv venv && source venv/bin/activate
@@ -95,7 +95,7 @@ python Backend/Backend/manage.py migrate
 python Backend/Backend/manage.py runserver
 ```
 
-### 🖥️ Frontend (in a new terminal)
+### Frontend (in a new terminal)
 
 ```bash
 cd Frontend
